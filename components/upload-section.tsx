@@ -1,6 +1,6 @@
 'use client';
 
-import { Upload, Send, Info, Plus, X, Bot, Database, Cpu, Share2, Terminal, CloudUpload, Lightbulb, UserPlus } from 'lucide-react';
+import { Upload, Send, Plus, X, Bot, Database, Terminal, CloudUpload, Lightbulb, UserPlus } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
@@ -14,6 +14,133 @@ interface FlowStep {
 interface EnvKey {
   id: string;
   name: string;
+}
+
+type JsonRecord = Record<string, any>;
+
+function cleanNodeType(value: unknown) {
+  if (typeof value !== 'string') return '';
+  return value.replace(/^n8n-nodes-base\./, '').replace(/([a-z])([A-Z])/g, '$1 $2');
+}
+
+function toTitleCase(value: string) {
+  const acronyms = new Set(['api', 'ai', 'aws', 'crm', 'ftp', 'http', 'https', 'imap', 'oauth', 'pdf', 's3', 'smtp', 'sql', 'ssh', 'url']);
+
+  return value
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => (acronyms.has(word.toLowerCase()) ? word.toUpperCase() : word.charAt(0).toUpperCase() + word.slice(1)))
+    .join(' ');
+}
+
+function credentialTypeToPlatform(value: unknown) {
+  if (typeof value !== 'string') return '';
+
+  const normalized = value
+    .replace(/^n8n-nodes-base\./, '')
+    .replace(/OAuth2Api$/i, '')
+    .replace(/OAuth1Api$/i, '')
+    .replace(/OAuth2$/i, '')
+    .replace(/OAuth1$/i, '')
+    .replace(/Api$/i, '')
+    .replace(/Credentials?$/i, '')
+    .replace(/Account$/i, '')
+    .replace(/Auth$/i, '')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/[_-]+/g, ' ')
+    .trim();
+
+  return normalized ? toTitleCase(normalized) : '';
+}
+
+function extractCredentialPlatform(credential: JsonRecord | string) {
+  if (typeof credential === 'string') return credentialTypeToPlatform(credential) || credential;
+  return credentialTypeToPlatform(credential.type || credential.service || credential.platform || credential.app || credential.name || credential.id);
+}
+
+function extractNodeCredentials(nodes: JsonRecord[]) {
+  const names = new Set<string>();
+
+  nodes.forEach((node) => {
+    const credentials = node.credentials;
+    if (!credentials || typeof credentials !== 'object') return;
+
+    Object.entries(credentials).forEach(([credentialType, credentialValue]) => {
+      if (credentialValue && typeof credentialValue === 'object') {
+        const platform = credentialTypeToPlatform(credentialType) || extractCredentialPlatform(credentialValue as JsonRecord);
+        if (platform) {
+          names.add(platform);
+          return;
+        }
+      }
+
+      names.add(credentialTypeToPlatform(credentialType) || credentialType);
+    });
+  });
+
+  return Array.from(names);
+}
+
+function extractCredentialPlatformsFromNodes(nodes: JsonRecord[]) {
+  const ignoredNodeTypes = new Set([
+    'code',
+    'execute workflow',
+    'filter',
+    'form trigger',
+    'http request',
+    'if',
+    'manual trigger',
+    'merge',
+    'no operation, do nothing',
+    'respond to webhook',
+    'schedule trigger',
+    'set',
+    'sticky note',
+    'switch',
+    'wait',
+    'webhook',
+  ]);
+  const platformAllowList = new Set([
+    'airtable',
+    'aws',
+    'discord',
+    'facebook',
+    'github',
+    'gmail',
+    'google analytics',
+    'google calendar',
+    'google drive',
+    'google gemini',
+    'google palm',
+    'google sheets',
+    'hubspot',
+    'jira',
+    'line',
+    'mailchimp',
+    'microsoft excel',
+    'microsoft outlook',
+    'mysql',
+    'notion',
+    'open ai',
+    'postgres',
+    'postgresql',
+    'salesforce',
+    'slack',
+    'stripe',
+    'telegram',
+    'twilio',
+    'x',
+    'zendesk',
+    'zoom',
+  ]);
+
+  return nodes.reduce<string[]>((platforms, node) => {
+    const platform = credentialTypeToPlatform(node.type || node.nodeName || node.app || node.service);
+    if (!platform || ignoredNodeTypes.has(platform.toLowerCase())) return platforms;
+    if (!platformAllowList.has(platform.toLowerCase())) return platforms;
+    if (!platforms.includes(platform)) platforms.push(platform);
+    return platforms;
+  }, []);
 }
 
 export function SkeletonCard() {
@@ -30,20 +157,76 @@ export function SkeletonCard() {
 export function UploadSection() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [steps, setSteps] = useState<FlowStep[]>([
-    { id: '1', title: 'Fetch renewals list', nodeName: 'Google Sheets' },
-    { id: '2', title: 'Score accounts with AI', nodeName: 'GPT-4' }
-  ]);
-  const [keys, setKeys] = useState<EnvKey[]>([
-    { id: '1', name: 'Google Sheets' },
-    { id: '2', name: 'OpenAI API' }
-  ]);
+  const [steps, setSteps] = useState<FlowStep[]>([]);
+  const [keys, setKeys] = useState<EnvKey[]>([]);
   const [newStep, setNewStep] = useState({ title: '', nodeName: '' });
   const [newKey, setNewKey] = useState('');
   const [contributors, setContributors] = useState<{ id: string; name: string; email: string }[]>([
     { id: 'me', name: 'You (Creator)', email: 'me@flowshare.com' }
   ]);
   const [newEmail, setNewEmail] = useState('');
+  const [submitState, setSubmitState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [statusMessage, setStatusMessage] = useState('');
+  const [rawJson, setRawJson] = useState<unknown>(null);
+
+  const applyJsonWorkflow = (data: JsonRecord) => {
+    setRawJson(data);
+
+    const source = data.workflow || data;
+    const importedTitle = source.title || source.name || source.workflowName;
+    const importedDescription = source.description || source.summary || source.notes;
+    const importedNodes = Array.isArray(source.nodes) ? source.nodes : Array.isArray(source.steps) ? source.steps : [];
+    const importedCredentials = Array.isArray(source.credentials)
+      ? source.credentials
+      : Array.isArray(source.keys)
+        ? source.keys
+        : [];
+    const nodeCredentials = extractNodeCredentials(importedNodes);
+    const nodePlatforms = extractCredentialPlatformsFromNodes(importedNodes);
+
+    if (importedTitle) setTitle(String(importedTitle));
+    if (importedDescription) setDescription(String(importedDescription));
+
+    if (importedNodes.length) {
+      setSteps(
+        importedNodes.map((node: JsonRecord, index: number) => ({
+          id: String(node.id || index + 1),
+          title: String(node.title || node.name || node.label || `Step ${index + 1}`),
+          nodeName: String(node.nodeName || cleanNodeType(node.type) || node.app || node.service || 'Workflow Node'),
+        })),
+      );
+    }
+
+    if (importedCredentials.length || nodeCredentials.length || nodePlatforms.length) {
+      const credentialNames = [
+        ...importedCredentials.map(extractCredentialPlatform),
+        ...nodeCredentials,
+        ...nodePlatforms,
+      ].filter(Boolean);
+
+      setKeys(
+        Array.from(new Set(credentialNames)).map((name, index) => ({
+          id: String(index + 1),
+          name,
+        })),
+      );
+    }
+
+    setSubmitState('idle');
+    setStatusMessage('JSON imported. Review the preview, then ship it to Google Sheet via n8n.');
+  };
+
+  const handleJsonFile = async (file?: File) => {
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      applyJsonWorkflow(JSON.parse(text));
+    } catch {
+      setSubmitState('error');
+      setStatusMessage('Could not parse that JSON file. Please check the file format.');
+    }
+  };
 
   const addContributor = () => {
     if (newEmail && newEmail.includes('@')) {
@@ -80,6 +263,42 @@ export function UploadSection() {
     setKeys(keys.filter(k => k.id !== id));
   };
 
+  const submitWorkflow = async () => {
+    setSubmitState('saving');
+    setStatusMessage('Sending workflow to n8n...');
+
+    try {
+      const response = await fetch('/api/workflows', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          description,
+          keys: keys.map((key) => key.name),
+          creators: contributors.map((contributor) => ({
+            name: contributor.name,
+            email: contributor.email,
+          })),
+          steps,
+          rawJson,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        const n8nStatus = data.n8nStatus ? ` n8n status: ${data.n8nStatus}` : '';
+        const detail = data.detail ? ` Detail: ${data.detail}` : '';
+        throw new Error(`${data.error || 'Workflow save failed.'}${n8nStatus}.${detail}`);
+      }
+
+      setSubmitState('saved');
+      setStatusMessage('Saved. n8n received it and can append it to Google Sheet now.');
+    } catch (error) {
+      setSubmitState('error');
+      setStatusMessage(error instanceof Error ? error.message : 'Workflow save failed.');
+    }
+  };
+
   return (
     <section id="upload" className="grid gap-8 sm:gap-10 my-8 sm:my-14 pb-20">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
@@ -104,7 +323,13 @@ export function UploadSection() {
             </h2>
             
             <div className="grid gap-6 text-left">
-              <div className="upload-zone rounded-2xl border-2 border-dashed border-[var(--border-strong)] bg-[var(--surface-alt)]/20 p-10 text-center shadow-[var(--panel-inset)] transition-all hover:border-[var(--accent)] group cursor-pointer">
+              <label className="upload-zone block rounded-2xl border-2 border-dashed border-[var(--border-strong)] bg-[var(--surface-alt)]/20 p-10 text-center shadow-[var(--panel-inset)] transition-all hover:border-[var(--accent)] group cursor-pointer">
+                <input
+                  type="file"
+                  accept="application/json,.json"
+                  className="hidden"
+                  onChange={(event) => handleJsonFile(event.target.files?.[0])}
+                />
                 <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)] group-hover:scale-110 transition-transform shadow-sm">
                   <Upload size={24} />
                 </div>
@@ -114,7 +339,7 @@ export function UploadSection() {
                 <p className="mt-2 text-sm text-[var(--muted)] font-medium">
                   We&apos;ll automatically extract steps and credentials.
                 </p>
-              </div>
+              </label>
 
               <div className="grid gap-4">
                 <input 
@@ -343,6 +568,27 @@ export function UploadSection() {
                 </div>
               </div>
 
+              <div className="grid gap-3 bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-inner">
+                <div className="flex items-center gap-2">
+                   <div className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
+                   <span className="text-[0.65rem] font-black uppercase tracking-widest opacity-50">Required Credentials</span>
+                </div>
+                {keys.length === 0 ? (
+                  <div className="text-xs text-[var(--muted)] font-medium italic opacity-40">Upload JSON or add credentials to see them here...</div>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {keys.map((key) => (
+                      <span
+                        key={key.id}
+                        className="rounded-lg border border-[var(--border)] bg-[var(--surface-alt)] px-3 py-1.5 text-[0.68rem] font-black uppercase tracking-wider text-[var(--text-subtle)]"
+                      >
+                        {key.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div className="grid gap-3 p-1">
                 <div className="flex items-center gap-2 mb-1">
                    <div className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
@@ -371,9 +617,23 @@ export function UploadSection() {
                 </div>
               </div>
 
-              <button className="group relative mt-2 flex w-full items-center justify-center gap-3 overflow-hidden rounded-2xl bg-[var(--accent)] py-4.5 text-[0.8rem] font-bold uppercase tracking-[0.2em] text-white shadow-2xl shadow-[var(--accent-glow)] transition-all hover:scale-[1.02] active:scale-95">
+              {statusMessage && (
+                <div className={`rounded-2xl border px-4 py-3 text-xs font-bold leading-relaxed ${
+                  submitState === 'error'
+                    ? 'border-red-500/30 bg-red-500/10 text-red-500'
+                    : 'border-[var(--border)] bg-[var(--surface)] text-[var(--muted-strong)]'
+                }`}>
+                  {statusMessage}
+                </div>
+              )}
+
+              <button
+                onClick={submitWorkflow}
+                disabled={submitState === 'saving' || !title || !description}
+                className="group relative mt-2 flex w-full items-center justify-center gap-3 overflow-hidden rounded-2xl bg-[var(--accent)] py-4.5 text-[0.8rem] font-bold uppercase tracking-[0.2em] text-white shadow-2xl shadow-[var(--accent-glow)] transition-all hover:scale-[1.02] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+              >
                 <Send size={16} className="transition-transform group-hover:translate-x-1" />
-                <span className="relative z-10">Ship Workflow</span>
+                <span className="relative z-10">{submitState === 'saving' ? 'Shipping...' : 'Ship Workflow'}</span>
               </button>
             </div>
           </div>

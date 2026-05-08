@@ -3,46 +3,8 @@
 import { Navbar } from '@/components/navbar';
 import { Hero } from '@/components/hero';
 import { WorkflowCard } from '@/components/workflow-card';
-import { RotateCw } from 'lucide-react';
-
-const FEATURED_WORKFLOWS = [
-  {
-    id: 'gmail-triage',
-    title: 'Customer Support Triage with Sentiment Analysis',
-    description: 'Automatically analyze incoming Gmail support requests using OpenAI, tag by sentiment, and route to the correct team.',
-    tags: ['AI', 'Gmail', 'Support'],
-    keys: ['OpenAI', 'Gmail API'],
-    creators: [{ name: 'Jordan Kim' }],
-    nodes: 5
-  },
-  {
-    id: 'revenue-alerts',
-    title: 'Real-time Revenue Monitoring to Slack',
-    description: 'Stay on top of your business health. Sync Stripe subscription events directly to a dedicated Slack channel with daily growth reports.',
-    tags: ['Finance', 'Slack', 'Ops'],
-    keys: ['Stripe', 'Slack Bot'],
-    creators: [{ name: 'Priya Desai' }],
-    nodes: 3
-  },
-  {
-    id: 'landing-tracker',
-    title: 'Competitor Intelligence & Website Tracking',
-    description: 'Monitor competitor landing pages weekly. Automatically scrape changes and summarize technical shifts using GPT-4o.',
-    tags: ['Scraping', 'AI', 'Marketing'],
-    keys: ['OpenAI', 'Crawler API'],
-    creators: [{ name: 'Ren Ito' }],
-    nodes: 4
-  },
-  {
-    id: 'feedback-notion',
-    title: 'User Feedback Aggregator to Notion',
-    description: 'Collect user reviews and feedback from various sources, clean the data with AI, and maintain an organized roadmap in Notion.',
-    tags: ['AI', 'Notion', 'Product'],
-    keys: ['OpenAI', 'Notion API'],
-    creators: [{ name: 'Elisa Gomez' }],
-    nodes: 6
-  }
-];
+import { useEffect, useState } from 'react';
+import { type WorkflowTemplate } from '@/lib/workflows';
 
 const CATEGORIES = [
   { name: 'All Templates', active: true },
@@ -55,6 +17,38 @@ const CATEGORIES = [
 ];
 
 export default function Home() {
+  const [workflows, setWorkflows] = useState<WorkflowTemplate[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [backendWarning, setBackendWarning] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadWorkflows() {
+      try {
+        const response = await fetch('/api/workflows', { cache: 'no-store' });
+        const data = await response.json();
+
+        if (!isMounted) return;
+        if (Array.isArray(data.workflows) && data.workflows.length) {
+          setWorkflows(data.workflows);
+        }
+        setBackendWarning(data.warning || '');
+      } catch {
+        if (isMounted) {
+          setBackendWarning('Backend is not reachable. Check your n8n list webhook or Google Sheet CSV URL.');
+        }
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+
+    loadWorkflows();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   return (
     <main className="min-h-screen">
       <Navbar />
@@ -105,16 +99,31 @@ export default function Home() {
               
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1.5 rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] px-4 py-2 text-[0.75rem] font-bold text-[var(--muted-strong)]">
-                  <span>Showing 4 templates</span>
+                  <span>{isLoading ? 'Syncing templates...' : `Showing ${workflows.length} templates`}</span>
                 </div>
               </div>
             </div>
 
-            <div className="grid gap-8 sm:grid-cols-2">
-              {FEATURED_WORKFLOWS.map((wf, i) => (
-                <WorkflowCard key={i} {...wf} />
-              ))}
-            </div>
+            {backendWarning && (
+              <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-alt)] px-5 py-4 text-sm font-bold text-[var(--muted-strong)]">
+                {backendWarning}
+              </div>
+            )}
+
+            {workflows.length > 0 ? (
+              <div className="grid gap-8 sm:grid-cols-2">
+                {workflows.map((wf, i) => (
+                  <WorkflowCard key={i} {...wf} />
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface-alt)]/30 px-6 py-12 text-center">
+                <h3 className="text-lg font-black text-[var(--text)]">No workflows from Google Sheet yet</h3>
+                <p className="mx-auto mt-2 max-w-xl text-sm font-medium leading-relaxed text-[var(--muted)]">
+                  Upload a JSON workflow from the Create page, or check that your n8n list webhook returns a workflows array.
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
