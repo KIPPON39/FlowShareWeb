@@ -18,6 +18,10 @@ interface EnvKey {
 
 type JsonRecord = Record<string, any>;
 
+function nameFromEmail(email: string) {
+  return email.split('@')[0]?.trim() || 'Creator';
+}
+
 function cleanNodeType(value: unknown) {
   if (typeof value !== 'string') return '';
   return value.replace(/^n8n-nodes-base\./, '').replace(/([a-z])([A-Z])/g, '$1 $2');
@@ -161,13 +165,21 @@ export function UploadSection() {
   const [keys, setKeys] = useState<EnvKey[]>([]);
   const [newStep, setNewStep] = useState({ title: '', nodeName: '' });
   const [newKey, setNewKey] = useState('');
-  const [contributors, setContributors] = useState<{ id: string; name: string; email: string }[]>([
-    { id: 'me', name: 'You (Creator)', email: 'me@flowshare.com' }
-  ]);
+  const [creatorEmail, setCreatorEmail] = useState('');
+  const [contributors, setContributors] = useState<{ id: string; name: string; email: string }[]>([]);
   const [newEmail, setNewEmail] = useState('');
   const [submitState, setSubmitState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [statusMessage, setStatusMessage] = useState('');
   const [rawJson, setRawJson] = useState<unknown>(null);
+  const canShipWorkflow = Boolean(rawJson && title && description && creatorEmail.includes('@'));
+
+  const shipDisabledReason = !rawJson
+    ? 'Upload a JSON workflow before shipping.'
+    : !creatorEmail.includes('@')
+      ? 'Add the creator email before shipping.'
+      : !title || !description
+        ? 'Add a title and description before shipping.'
+        : '';
 
   const applyJsonWorkflow = (data: JsonRecord) => {
     setRawJson(data);
@@ -230,14 +242,13 @@ export function UploadSection() {
 
   const addContributor = () => {
     if (newEmail && newEmail.includes('@')) {
-      const name = newEmail.split('@')[0]; // Simple name extraction
+      const name = nameFromEmail(newEmail);
       setContributors([...contributors, { id: Math.random().toString(), name, email: newEmail }]);
       setNewEmail('');
     }
   };
 
   const removeContributor = (id: string) => {
-    if (id === 'me') return; // Can't remove self
     setContributors(contributors.filter(c => c.id !== id));
   };
 
@@ -275,10 +286,18 @@ export function UploadSection() {
           title,
           description,
           keys: keys.map((key) => key.name),
-          creators: contributors.map((contributor) => ({
-            name: contributor.name,
-            email: contributor.email,
-          })),
+          creators: [
+            {
+              name: nameFromEmail(creatorEmail),
+              email: creatorEmail,
+              role: 'creator',
+            },
+            ...contributors.map((contributor) => ({
+              name: contributor.name,
+              email: contributor.email,
+              role: 'contributor',
+            })),
+          ],
           steps,
           rawJson,
         }),
@@ -366,18 +385,37 @@ export function UploadSection() {
               </h2>
               
               <div className="grid gap-3">
+                <div className="flex items-center gap-3 rounded-2xl border-2 border-dotted border-[var(--border)] bg-[var(--surface-alt)]/20 px-5 py-4 focus-within:border-[var(--accent)] transition-all">
+                  <UserPlus size={18} className="text-[var(--muted)]" />
+                  <input
+                    value={creatorEmail}
+                    onChange={(e) => setCreatorEmail(e.target.value)}
+                    className="flex-1 bg-transparent text-sm font-bold opacity-80 outline-hidden placeholder:text-[var(--muted-light)] text-[var(--text)]"
+                    placeholder="Creator email (required)"
+                    type="email"
+                  />
+                </div>
+
                 <div className="flex flex-wrap gap-2 mb-4">
+                  {creatorEmail && (
+                    <div className="flex items-center gap-2 rounded-xl bg-[var(--accent-soft)] pl-3 pr-3 py-2 border border-[var(--accent)]/20">
+                      <div className="h-6 w-6 rounded-full bg-[var(--accent)] flex items-center justify-center text-[0.6rem] font-bold text-white">
+                        {nameFromEmail(creatorEmail).charAt(0).toUpperCase()}
+                      </div>
+                      <span className="text-xs font-bold text-[var(--accent)]">{nameFromEmail(creatorEmail)}</span>
+                      <span className="rounded-md bg-[var(--surface)] px-2 py-0.5 text-[0.55rem] font-black uppercase tracking-widest text-[var(--accent)]">Creator</span>
+                    </div>
+                  )}
                   {contributors.map((c) => (
                     <div key={c.id} className="flex items-center gap-2 rounded-xl bg-[var(--surface-alt)] pl-3 pr-2 py-2 border border-[var(--border)]">
                       <div className="h-6 w-6 rounded-full bg-[var(--accent-soft)] flex items-center justify-center text-[0.6rem] font-bold text-[var(--accent)]">
                         {c.name.charAt(0).toUpperCase()}
                       </div>
                       <span className="text-xs font-bold text-[var(--text-subtle)]">{c.name}</span>
-                      {c.id !== 'me' && (
-                        <button onClick={() => removeContributor(c.id)} className="text-[var(--muted)] hover:text-red-500">
-                          <X size={12} />
-                        </button>
-                      )}
+                      <span className="rounded-md bg-[var(--surface)] px-2 py-0.5 text-[0.55rem] font-black uppercase tracking-widest text-[var(--muted)]">Contributor</span>
+                      <button onClick={() => removeContributor(c.id)} className="text-[var(--muted)] hover:text-red-500">
+                        <X size={12} />
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -595,6 +633,21 @@ export function UploadSection() {
                    <span className="text-[0.65rem] font-black uppercase tracking-widest opacity-50">Flow Contributors</span>
                 </div>
                 <div className="flex -space-x-3 overflow-hidden">
+                  {creatorEmail && (
+                    <div
+                      className="inline-block h-8 w-8 rounded-xl ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-transparent bg-[var(--surface)] shadow-lg overflow-hidden border border-[var(--accent)]"
+                      style={{ zIndex: contributors.length + 1 }}
+                      title={`${nameFromEmail(creatorEmail)} (Creator)`}
+                    >
+                      <Image
+                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${nameFromEmail(creatorEmail)}`}
+                        alt={nameFromEmail(creatorEmail)}
+                        width={32}
+                        height={32}
+                        referrerPolicy="no-referrer"
+                      />
+                    </div>
+                  )}
                   {contributors.map((c, i) => (
                     <div 
                       key={c.id} 
@@ -613,7 +666,9 @@ export function UploadSection() {
                   ))}
                 </div>
                 <div className="text-[0.65rem] font-bold text-[var(--muted)]">
-                  {contributors.length} person{contributors.length !== 1 ? 's' : ''} assigned to this flow
+                  {creatorEmail
+                    ? `${contributors.length + 1} person${contributors.length === 0 ? '' : 's'} assigned to this flow`
+                    : 'Add a creator email before shipping this flow'}
                 </div>
               </div>
 
@@ -627,9 +682,15 @@ export function UploadSection() {
                 </div>
               )}
 
+              {!canShipWorkflow && (
+                <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-xs font-bold leading-relaxed text-[var(--muted-strong)]">
+                  {shipDisabledReason}
+                </div>
+              )}
+
               <button
                 onClick={submitWorkflow}
-                disabled={submitState === 'saving' || !title || !description}
+                disabled={submitState === 'saving' || !canShipWorkflow}
                 className="group relative mt-2 flex w-full items-center justify-center gap-3 overflow-hidden rounded-2xl bg-[var(--accent)] py-4.5 text-[0.8rem] font-bold uppercase tracking-[0.2em] text-white shadow-2xl shadow-[var(--accent-glow)] transition-all hover:scale-[1.02] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
               >
                 <Send size={16} className="transition-transform group-hover:translate-x-1" />
