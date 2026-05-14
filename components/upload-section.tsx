@@ -1,9 +1,10 @@
 'use client';
 
-import { Upload, Send, Plus, X, Bot, Database, Terminal, CloudUpload, Lightbulb, UserPlus } from 'lucide-react';
+import { Upload, Send, Plus, X, Bot, Database, Terminal, CloudUpload, Lightbulb, UserPlus, Tag } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
+import { useI18n } from '@/lib/i18n';
 
 interface FlowStep {
   id: string;
@@ -159,8 +160,11 @@ export function SkeletonCard() {
 }
 
 export function UploadSection() {
+  const { t } = useI18n();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
+  const [newTag, setNewTag] = useState('');
   const [steps, setSteps] = useState<FlowStep[]>([]);
   const [keys, setKeys] = useState<EnvKey[]>([]);
   const [newStep, setNewStep] = useState({ title: '', nodeName: '' });
@@ -173,12 +177,24 @@ export function UploadSection() {
   const [rawJson, setRawJson] = useState<unknown>(null);
   const canShipWorkflow = Boolean(rawJson && title && description && creatorEmail.includes('@'));
 
+  const addTag = () => {
+    const trimmed = newTag.trim();
+    if (trimmed && !tags.includes(trimmed)) {
+      setTags([...tags, trimmed]);
+      setNewTag('');
+    }
+  };
+
+  const removeTag = (tag: string) => {
+    setTags(tags.filter(t2 => t2 !== tag));
+  };
+
   const shipDisabledReason = !rawJson
-    ? 'Upload a JSON workflow before shipping.'
+    ? t('upload.upload_json_first')
     : !creatorEmail.includes('@')
-      ? 'Add the creator email before shipping.'
+      ? t('upload.add_email_first')
       : !title || !description
-        ? 'Add a title and description before shipping.'
+        ? t('upload.add_title_desc')
         : '';
 
   const applyJsonWorkflow = (data: JsonRecord) => {
@@ -225,7 +241,7 @@ export function UploadSection() {
     }
 
     setSubmitState('idle');
-    setStatusMessage('JSON imported. Review the preview, then ship it to Google Sheet via n8n.');
+    setStatusMessage(t('upload.json_imported'));
   };
 
   const handleJsonFile = async (file?: File) => {
@@ -276,7 +292,7 @@ export function UploadSection() {
 
   const submitWorkflow = async () => {
     setSubmitState('saving');
-    setStatusMessage('Sending workflow to n8n...');
+    setStatusMessage(t('upload.sending'));
 
     try {
       const response = await fetch('/api/workflows', {
@@ -285,6 +301,7 @@ export function UploadSection() {
         body: JSON.stringify({
           title,
           description,
+          tags,
           keys: keys.map((key) => key.name),
           creators: [
             {
@@ -311,7 +328,7 @@ export function UploadSection() {
       }
 
       setSubmitState('saved');
-      setStatusMessage('Saved. n8n received it and can append it to Google Sheet now.');
+      setStatusMessage(t('upload.saved'));
     } catch (error) {
       setSubmitState('error');
       setStatusMessage(error instanceof Error ? error.message : 'Workflow save failed.');
@@ -326,8 +343,8 @@ export function UploadSection() {
             <CloudUpload size={28} />
           </div>
           <div>
-            <h1 className="text-3xl font-black tracking-tight leading-none text-[var(--text)]">Ship New Flow</h1>
-            <p className="mt-2 text-[var(--muted)] font-medium">Clarity before complexity. Define your automation logic.</p>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight leading-none text-[var(--text)]">{t('upload.title')}</h1>
+            <p className="mt-2 text-[var(--muted)] font-medium text-sm sm:text-base">{t('upload.subtitle')}</p>
           </div>
         </div>
       </div>
@@ -338,7 +355,7 @@ export function UploadSection() {
           <div className="rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-8 shadow-2xl shadow-black/[0.02] shadow-[var(--panel-inset)]">
             <h2 className="text-sm font-black uppercase tracking-[0.2em] text-[var(--accent)] mb-6 flex items-center gap-2">
               <div className="h-1 w-6 bg-[var(--accent)] rounded-full" />
-              Basic Information
+              {t('upload.basic_info')}
             </h2>
             
             <div className="grid gap-6 text-left">
@@ -352,11 +369,11 @@ export function UploadSection() {
                 <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)] group-hover:scale-110 transition-transform shadow-sm">
                   <Upload size={24} />
                 </div>
-                <div className="mt-5 text-lg font-bold">
-                  Drop your JSON workflow <span className="text-[var(--accent)]">browse</span>
+                <div className="mt-5 text-base sm:text-lg font-bold">
+                  {t('upload.drop_json')} <span className="text-[var(--accent)]">{t('upload.browse')}</span>
                 </div>
                 <p className="mt-2 text-sm text-[var(--muted)] font-medium">
-                  We&apos;ll automatically extract steps and credentials.
+                  {t('upload.auto_extract')}
                 </p>
               </label>
 
@@ -365,15 +382,41 @@ export function UploadSection() {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="rounded-2xl border border-[var(--border)] bg-[var(--surface-alt)] px-5 py-4 text-lg font-bold tracking-tight outline-hidden focus:ring-4 focus:ring-[var(--accent-soft)] focus:border-[var(--accent)] transition-all text-[var(--text)]" 
-                  placeholder="Flow Title (e.g. AI Renewal Health Monitor)" 
+                  placeholder={t('upload.flow_title')} 
                 />
                 <textarea 
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3} 
                   className="rounded-2xl border border-[var(--border)] bg-[var(--surface-alt)] px-5 py-4 text-[1rem] font-medium leading-relaxed outline-hidden focus:ring-4 focus:ring-[var(--accent-soft)] focus:border-[var(--accent)] transition-all resize-none text-[var(--text)]" 
-                  placeholder="The executive summary. What problem does this solve?"
+                  placeholder={t('upload.flow_desc')}
                 />
+                {/* Tags Input */}
+                <div className="grid gap-2">
+                  <div className="flex flex-wrap gap-2">
+                    {tags.map((tag, i) => (
+                      <span key={i} className="tag-item">
+                        {tag}
+                        <button onClick={() => removeTag(tag)} type="button">
+                          <X size={12} />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-alt)] px-5 py-3 focus-within:ring-4 focus-within:ring-[var(--accent-soft)] focus-within:border-[var(--accent)] transition-all">
+                    <Tag size={18} className="text-[var(--muted-soft)]" />
+                    <input
+                      value={newTag}
+                      onChange={(e) => setNewTag(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } }}
+                      className="flex-1 bg-transparent text-sm font-bold outline-hidden placeholder:text-[var(--muted-light)] text-[var(--text)]"
+                      placeholder={t('upload.tags_placeholder')}
+                    />
+                    <button onClick={addTag} type="button" className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] transition-all hover:bg-[var(--accent)] hover:text-white hover:border-[var(--accent)]">
+                      <Plus size={16} />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -381,7 +424,7 @@ export function UploadSection() {
             <div className="rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-8 shadow-2xl shadow-black/[0.02] shadow-[var(--panel-inset)]">
               <h2 className="text-xl font-black uppercase tracking-widest text-[var(--text)] mb-6 flex items-center gap-3">
                 <div className="h-1 w-8 bg-[var(--accent)] rounded-full" />
-                Workflow Team
+                {t('upload.team')}
               </h2>
               
               <div className="grid gap-3">
@@ -391,7 +434,7 @@ export function UploadSection() {
                     value={creatorEmail}
                     onChange={(e) => setCreatorEmail(e.target.value)}
                     className="flex-1 bg-transparent text-sm font-bold opacity-80 outline-hidden placeholder:text-[var(--muted-light)] text-[var(--text)]"
-                    placeholder="Creator email (required)"
+                    placeholder={t('upload.creator_email')}
                     type="email"
                   />
                 </div>
@@ -403,7 +446,7 @@ export function UploadSection() {
                         {nameFromEmail(creatorEmail).charAt(0).toUpperCase()}
                       </div>
                       <span className="text-xs font-bold text-[var(--accent)]">{nameFromEmail(creatorEmail)}</span>
-                      <span className="rounded-md bg-[var(--surface)] px-2 py-0.5 text-[0.55rem] font-black uppercase tracking-widest text-[var(--accent)]">Creator</span>
+                      <span className="rounded-md bg-[var(--surface)] px-2 py-0.5 text-[0.55rem] font-black uppercase tracking-widest text-[var(--accent)]">{t('upload.creator')}</span>
                     </div>
                   )}
                   {contributors.map((c) => (
@@ -412,7 +455,7 @@ export function UploadSection() {
                         {c.name.charAt(0).toUpperCase()}
                       </div>
                       <span className="text-xs font-bold text-[var(--text-subtle)]">{c.name}</span>
-                      <span className="rounded-md bg-[var(--surface)] px-2 py-0.5 text-[0.55rem] font-black uppercase tracking-widest text-[var(--muted)]">Contributor</span>
+                      <span className="rounded-md bg-[var(--surface)] px-2 py-0.5 text-[0.55rem] font-black uppercase tracking-widest text-[var(--muted)]">{t('upload.contributor')}</span>
                       <button onClick={() => removeContributor(c.id)} className="text-[var(--muted)] hover:text-red-500">
                         <X size={12} />
                       </button>
@@ -426,7 +469,7 @@ export function UploadSection() {
                     value={newEmail}
                     onChange={(e) => setNewEmail(e.target.value)}
                     className="flex-1 bg-transparent text-sm font-bold opacity-60 outline-hidden placeholder:text-[var(--muted-light)] text-[var(--text)]" 
-                    placeholder="Invite by email (e.g. teammate@flow.com)" 
+                    placeholder={t('upload.invite')} 
                     onKeyDown={(e) => e.key === 'Enter' && addContributor()}
                   />
                   <button onClick={addContributor} className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] transition-all hover:bg-[var(--accent)] hover:text-white hover:border-[var(--accent)]">
@@ -441,7 +484,7 @@ export function UploadSection() {
                 <div className="h-6 w-6 rounded-full bg-[var(--accent)] flex items-center justify-center text-white">
                   <Terminal size={12} />
                 </div>
-                <span className="text-[0.65rem] font-black uppercase tracking-[0.2em] text-[var(--accent)]">Backend Bridge</span>
+                <span className="text-[0.65rem] font-black uppercase tracking-[0.2em] text-[var(--accent)]">{t('upload.backend')}</span>
               </div>
               <p className="text-sm text-[var(--text-subtle)] font-medium leading-relaxed">
                 This workflow will be automatically synced with <span className="font-bold text-[var(--text)]">Google Sheets</span> and proxied via <span className="font-bold text-[var(--text)]">n8n</span> to handle Download & Speaker requests securely.
@@ -452,7 +495,7 @@ export function UploadSection() {
               <div className="rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-8 shadow-2xl shadow-black/[0.02] shadow-[var(--panel-inset)]">
                 <h2 className="text-xl font-black uppercase tracking-widest text-[var(--text)] mb-6 flex items-center gap-3">
                   <div className="h-1 w-8 bg-[var(--accent)] rounded-full" />
-                  Pipeline Steps
+                  {t('upload.pipeline')}
                 </h2>
               
               <div className="grid gap-4">
@@ -489,7 +532,7 @@ export function UploadSection() {
                       value={newStep.title}
                       onChange={(e) => setNewStep({ ...newStep, title: e.target.value })}
                       className="w-full bg-transparent text-base font-bold outline-hidden placeholder:text-[var(--muted-light)] text-[var(--text)]" 
-                      placeholder="What should this step do?" 
+                      placeholder={t('upload.step_do')} 
                     />
                     <div className="flex items-center justify-between border-t border-[var(--border)] pt-4">
                       <div className="flex items-center gap-3 flex-1">
@@ -498,12 +541,12 @@ export function UploadSection() {
                           value={newStep.nodeName}
                           onChange={(e) => setNewStep({ ...newStep, nodeName: e.target.value })}
                           className="flex-1 bg-transparent text-[0.7rem] font-black uppercase tracking-[0.2em] text-[var(--accent)] outline-hidden placeholder:text-[var(--accent)]/30" 
-                          placeholder="ASSIGN NODE (E.G. GEMINI AI)" 
+                          placeholder={t('upload.assign_node')} 
                         />
                       </div>
                       <button onClick={addStep} className="flex items-center gap-2 rounded-xl bg-[var(--text)] px-4 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[var(--bg)] transition-all hover:scale-105 active:scale-95 shadow-lg">
                         <Plus size={16} />
-                        <span>Add Step</span>
+                        <span>{t('upload.add_step')}</span>
                       </button>
                     </div>
                   </div>
@@ -514,7 +557,7 @@ export function UploadSection() {
             <div className="rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-8 shadow-2xl shadow-black/[0.02] shadow-[var(--panel-inset)]">
               <h2 className="text-xl font-black uppercase tracking-widest text-[var(--text)] mb-6 flex items-center gap-3">
                 <div className="h-1 w-8 bg-[var(--accent)] rounded-full" />
-                Required Credentials
+                {t('upload.credentials')}
               </h2>
               
               <div className="grid gap-3">
@@ -544,7 +587,7 @@ export function UploadSection() {
                     value={newKey}
                     onChange={(e) => setNewKey(e.target.value)}
                     className="flex-1 bg-transparent text-sm font-bold outline-hidden placeholder:text-[var(--muted-light)] text-[var(--text)]" 
-                    placeholder="Missing a key? Add it here (e.g. Stripe API)" 
+                    placeholder={t('upload.add_key')} 
                     onKeyDown={(e) => e.key === 'Enter' && addKey()}
                   />
                   <button onClick={addKey} className="group flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] transition-all hover:bg-[var(--accent)] hover:text-white hover:border-[var(--accent)] shadow-sm">
@@ -564,10 +607,10 @@ export function UploadSection() {
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--surface)] border border-[var(--border)] shadow-inner text-[var(--accent)]">
                   <Lightbulb size={20} />
                 </div>
-                <span className="font-black uppercase tracking-[0.2em] text-xs text-[var(--text)]">Live Profile</span>
+                <span className="font-black uppercase tracking-[0.2em] text-xs text-[var(--text)]">{t('upload.live_profile')}</span>
               </div>
               <div className="flex items-center gap-2 text-[0.65rem] font-black uppercase text-[var(--accent)] tracking-widest bg-[var(--accent-soft)] px-3 py-1 rounded-full border border-[var(--accent)]/20 animate-pulse">
-                Draft
+                {t('upload.draft')}
               </div>
             </div>
 
@@ -590,11 +633,11 @@ export function UploadSection() {
               <div className="grid gap-4 bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-inner">
                 <div className="flex items-center gap-2">
                    <div className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
-                   <span className="text-[0.65rem] font-black uppercase tracking-widest opacity-50">Flow Pipeline Summary</span>
+                   <span className="text-[0.65rem] font-black uppercase tracking-widest opacity-50">{t('upload.pipeline_summary')}</span>
                 </div>
                 <div className="grid gap-4">
                   {steps.length === 0 ? (
-                    <div className="text-xs text-[var(--muted)] font-medium italic opacity-40">Define steps in the editor to see them here...</div>
+                    <div className="text-xs text-[var(--muted)] font-medium italic opacity-40">{t('upload.define_steps')}</div>
                   ) : (
                     steps.map((s, i) => (
                       <div key={s.id} className="flex gap-4">
@@ -609,10 +652,10 @@ export function UploadSection() {
               <div className="grid gap-3 bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-inner">
                 <div className="flex items-center gap-2">
                    <div className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
-                   <span className="text-[0.65rem] font-black uppercase tracking-widest opacity-50">Required Credentials</span>
+                   <span className="text-[0.65rem] font-black uppercase tracking-widest opacity-50">{t('upload.required_creds')}</span>
                 </div>
                 {keys.length === 0 ? (
-                  <div className="text-xs text-[var(--muted)] font-medium italic opacity-40">Upload JSON or add credentials to see them here...</div>
+                  <div className="text-xs text-[var(--muted)] font-medium italic opacity-40">{t('upload.upload_json_creds')}</div>
                 ) : (
                   <div className="flex flex-wrap gap-2">
                     {keys.map((key) => (
@@ -630,7 +673,7 @@ export function UploadSection() {
               <div className="grid gap-3 p-1">
                 <div className="flex items-center gap-2 mb-1">
                    <div className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
-                   <span className="text-[0.65rem] font-black uppercase tracking-widest opacity-50">Flow Contributors</span>
+                   <span className="text-[0.65rem] font-black uppercase tracking-widest opacity-50">{t('upload.contributors')}</span>
                 </div>
                 <div className="flex -space-x-3 overflow-hidden">
                   {creatorEmail && (
@@ -667,8 +710,8 @@ export function UploadSection() {
                 </div>
                 <div className="text-[0.65rem] font-bold text-[var(--muted)]">
                   {creatorEmail
-                    ? `${contributors.length + 1} person${contributors.length === 0 ? '' : 's'} assigned to this flow`
-                    : 'Add a creator email before shipping this flow'}
+                    ? `${contributors.length + 1} ${t('upload.persons_assigned')}`
+                    : t('upload.add_creator')}
                 </div>
               </div>
 
@@ -694,7 +737,7 @@ export function UploadSection() {
                 className="group relative mt-2 flex w-full items-center justify-center gap-3 overflow-hidden rounded-2xl bg-[var(--accent)] py-4.5 text-[0.8rem] font-bold uppercase tracking-[0.2em] text-white shadow-2xl shadow-[var(--accent-glow)] transition-all hover:scale-[1.02] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
               >
                 <Send size={16} className="transition-transform group-hover:translate-x-1" />
-                <span className="relative z-10">{submitState === 'saving' ? 'Shipping...' : 'Ship Workflow'}</span>
+                <span className="relative z-10">{submitState === 'saving' ? t('upload.shipping') : t('upload.ship_workflow')}</span>
               </button>
             </div>
           </div>

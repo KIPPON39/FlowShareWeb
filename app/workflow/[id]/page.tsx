@@ -1,18 +1,21 @@
+'use client';
+
 import { WorkflowDetail } from '@/components/workflow-detail';
 import { Navbar } from '@/components/navbar';
 import { Breadcrumb } from '@/components/breadcrumb';
-
-export const dynamic = 'force-dynamic';
+import { useI18n } from '@/lib/i18n';
 
 export default function WorkflowDetailPage() {
+  const { t } = useI18n();
+
   return (
     <main className="min-h-screen">
       <Navbar />
       <div className="mx-auto max-w-7xl px-4 pb-10">
         <Breadcrumb 
           items={[
-            { label: 'Workflows', href: '/' },
-            { label: 'Detail View' }
+            { label: t('breadcrumb.workflows'), href: '/' },
+            { label: t('breadcrumb.detail') }
           ]} 
         />
         <WorkflowDetail />

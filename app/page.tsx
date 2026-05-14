@@ -5,8 +5,9 @@ import { Hero } from '@/components/hero';
 import { WorkflowCard } from '@/components/workflow-card';
 import { useEffect, useState } from 'react';
 import { type WorkflowTemplate } from '@/lib/workflows';
+import { useI18n } from '@/lib/i18n';
 
-const CATEGORIES = [
+const CATEGORIES_EN = [
   { name: 'All Templates', active: true },
   { name: 'AI Automation', count: 12 },
   { name: 'Customer Operations', count: 8 },
@@ -16,10 +17,23 @@ const CATEGORIES = [
   { name: 'Financial Ops', count: 4 },
 ];
 
+const CATEGORIES_TH = [
+  { name: 'เทมเพลตทั้งหมด', active: true },
+  { name: 'AI อัตโนมัติ', count: 12 },
+  { name: 'ปฏิบัติการลูกค้า', count: 8 },
+  { name: 'การขายและการตลาด', count: 15 },
+  { name: 'วิศวกรรมข้อมูล', count: 5 },
+  { name: 'DevOps & Git', count: 7 },
+  { name: 'การเงิน', count: 4 },
+];
+
 export default function Home() {
   const [workflows, setWorkflows] = useState<WorkflowTemplate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [backendWarning, setBackendWarning] = useState('');
+  const { t, lang } = useI18n();
+
+  const CATEGORIES = lang === 'th' ? CATEGORIES_TH : CATEGORIES_EN;
 
   useEffect(() => {
     let isMounted = true;
@@ -54,14 +68,14 @@ export default function Home() {
       <Navbar />
       
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-24">
-        <Hero />
+        <Hero flowCount={workflows.length} />
 
-        <div className="mt-12 lg:grid lg:grid-cols-[240px_1fr] gap-16">
+        <div className="mt-8 sm:mt-12 lg:grid lg:grid-cols-[240px_1fr] gap-8 lg:gap-16">
           {/* Sidebar */}
           <aside className="hidden lg:block">
             <div className="sticky top-24 space-y-10">
               <div className="space-y-4">
-                <h3 className="text-[0.65rem] font-bold uppercase tracking-[0.25em] text-[var(--accent)] pl-4">Collections</h3>
+                <h3 className="text-[0.65rem] font-bold uppercase tracking-[0.25em] text-[var(--accent)] pl-4">{t('main.collections')}</h3>
                 <nav className="grid gap-1">
                   {CATEGORIES.map((cat, i) => (
                     <button 
@@ -82,24 +96,24 @@ export default function Home() {
               <div className="relative group">
                 <div className="absolute -inset-0.5 rounded-2xl bg-linear-to-br from-[var(--accent)] to-transparent opacity-10 blur-sm group-hover:opacity-20 transition-opacity" />
                 <div className="relative rounded-2xl border border-[var(--border)] bg-[var(--surface-alt)]/40 p-5 backdrop-blur-sm">
-                  <h4 className="text-[0.8rem] font-bold text-[var(--text)] mb-2">Build Together</h4>
-                  <p className="text-[0.7rem] text-[var(--muted-soft)] font-medium leading-relaxed mb-4">FlowShare is built on community-driven automation patterns.</p>
-                  <button className="w-full rounded-xl bg-[var(--accent)] py-2.5 text-[0.75rem] font-bold text-white shadow-lg shadow-[var(--accent-glow)] hover:brightness-110 transition-all">Submit Template</button>
+                  <h4 className="text-[0.8rem] font-bold text-[var(--text)] mb-2">{t('main.build_together')}</h4>
+                  <p className="text-[0.7rem] text-[var(--muted-soft)] font-medium leading-relaxed mb-4">{t('main.build_together_desc')}</p>
+                  <button className="w-full rounded-xl bg-[var(--accent)] py-2.5 text-[0.75rem] font-bold text-white shadow-lg shadow-[var(--accent-glow)] hover:brightness-110 transition-all">{t('main.submit_template')}</button>
                 </div>
               </div>
             </div>
           </aside>
 
-          <div className="grid gap-10">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[var(--border)] pb-8">
+          <div className="grid gap-8 sm:gap-10">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[var(--border)] pb-6 sm:pb-8">
               <div>
-                <h2 className="text-2xl font-bold tracking-tight text-[var(--text)] uppercase">Browse Templates</h2>
-                <p className="text-sm text-[var(--muted-soft)] font-medium mt-1">Ready-to-use building blocks for your stack.</p>
+                <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--text)] uppercase">{t('main.browse_templates')}</h2>
+                <p className="text-sm text-[var(--muted-soft)] font-medium mt-1">{t('main.browse_desc')}</p>
               </div>
               
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1.5 rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] px-4 py-2 text-[0.75rem] font-bold text-[var(--muted-strong)]">
-                  <span>{isLoading ? 'Syncing templates...' : `Showing ${workflows.length} templates`}</span>
+                  <span>{isLoading ? t('main.syncing') : `${t('main.showing')} ${workflows.length} ${t('main.templates')}`}</span>
                 </div>
               </div>
             </div>
@@ -111,25 +125,25 @@ export default function Home() {
             )}
 
             {workflows.length > 0 ? (
-              <div className="grid gap-8 sm:grid-cols-2">
+              <div className="grid gap-6 sm:gap-8 sm:grid-cols-2">
                 {workflows.map((wf, i) => (
                   <WorkflowCard key={i} {...wf} />
                 ))}
               </div>
             ) : (
-              <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface-alt)]/30 px-6 py-12 text-center">
-                <h3 className="text-lg font-black text-[var(--text)]">No workflows from Google Sheet yet</h3>
+              <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface-alt)]/30 px-4 sm:px-6 py-10 sm:py-12 text-center">
+                <h3 className="text-lg font-black text-[var(--text)]">{t('main.no_workflows')}</h3>
                 <p className="mx-auto mt-2 max-w-xl text-sm font-medium leading-relaxed text-[var(--muted)]">
-                  Upload a JSON workflow from the Create page, or check that your n8n list webhook returns a workflows array.
+                  {t('main.no_workflows_desc')}
                 </p>
               </div>
             )}
           </div>
         </div>
 
-        <footer className="mt-32 text-center">
+        <footer className="mt-24 sm:mt-32 text-center">
           <p className="text-sm font-medium text-[var(--muted)]">
-            Workspace-ready, developer-first templates with FlowShare.
+            {t('main.footer')}
           </p>
         </footer>
       </div>

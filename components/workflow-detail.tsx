@@ -18,6 +18,7 @@ import {
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
+import { useI18n } from '@/lib/i18n';
 
 export function TimelineStep({ index, title, nodeName }: { index: number, title: string, nodeName: string }) {
   return (
@@ -45,6 +46,7 @@ export function WorkflowDetail() {
   const [showAllPipeline, setShowAllPipeline] = useState(false);
   const [showAllCreds, setShowAllCreds] = useState(false);
   const [isBriefExpanded, setIsBriefExpanded] = useState(false);
+  const { t } = useI18n();
 
   const fullBrief = "This enterprise-grade workflow monitors high-value renewal accounts by continuously scanning Google Sheets list, enriching them with real-time product usage statistics from HubSpot, and utilizing Gemini Pro 1.5 to calculate automated sentiment scores from support ticket history. It identifies churn risks with 92% accuracy and automatically generates prioritized success playbooks in your CRM while notifying relevant account managers via Slack with executive-level summaries and recommended action items.";
   const shortBrief = "Monitors high-value renewal accounts, enriches usage data, and uses AI to predict churn risks with automated CRM playbooks.";
@@ -93,11 +95,11 @@ export function WorkflowDetail() {
           <div className="flex-1">
             <h1 className="text-3xl font-extrabold tracking-tight text-[var(--text)] leading-tight">AI Renewal Health Monitor</h1>
             <div className="mt-4 flex flex-wrap items-center gap-2.5">
-              <span className="rounded-full bg-[var(--accent-soft)] px-4 py-1.5 text-xs font-black uppercase tracking-widest text-[var(--accent)]">Featured</span>
-              <span className="rounded-full bg-[var(--tag-alt-bg)] px-4 py-1.5 text-xs font-black uppercase tracking-widest text-[var(--tag-alt-text)]">Automation</span>
+              <span className="rounded-full bg-[var(--accent-soft)] px-4 py-1.5 text-xs font-black uppercase tracking-widest text-[var(--accent)]">{t('detail.featured')}</span>
+              <span className="rounded-full bg-[var(--tag-alt-bg)] px-4 py-1.5 text-xs font-black uppercase tracking-widest text-[var(--tag-alt-text)]">{t('detail.automation')}</span>
               <div className="ml-2 flex items-center gap-2 text-sm text-[var(--muted-strong)]">
                 <Eye size={18} />
-                <span className="font-bold">12.4k Views</span>
+                <span className="font-bold">12.4k {t('detail.views')}</span>
               </div>
             </div>
           </div>
@@ -105,11 +107,11 @@ export function WorkflowDetail() {
           <div className="flex flex-wrap gap-2.5 self-center sm:self-start">
             <button className="flex items-center gap-2 rounded-xl bg-[var(--accent)] px-5 py-2.5 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-white transition-all hover:scale-105 active:scale-95 shadow-lg shadow-[color-mix(in_srgb,var(--accent)_20%,transparent)]">
               <Download size={14} /> 
-              <span>Download Flow</span>
+              <span>{t('detail.download')}</span>
             </button>
             <button className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] px-5 py-2.5 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-[var(--text)] transition-all hover:bg-[var(--accent-soft)] hover:text-[var(--accent)] hover:border-[var(--accent)] active:scale-95">
               <UserPlus size={14} /> 
-              <span>Invite Speaker</span>
+              <span>{t('detail.invite')}</span>
             </button>
           </div>
         </div>
@@ -120,14 +122,14 @@ export function WorkflowDetail() {
             onClick={() => setActiveTab('overview')}
             className={`px-8 py-4 text-[0.7rem] font-black uppercase tracking-[0.2em] transition-all relative ${activeTab === 'overview' ? 'text-[var(--accent)]' : 'text-[var(--muted-soft)] hover:text-[var(--text)]'}`}
           >
-            Overview
+            {t('detail.overview')}
             {activeTab === 'overview' && <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--accent)]" />}
           </button>
           <button 
             onClick={() => setActiveTab('technical')}
             className={`px-8 py-4 text-[0.7rem] font-black uppercase tracking-[0.2em] transition-all relative ${activeTab === 'technical' ? 'text-[var(--accent)]' : 'text-[var(--muted-soft)] hover:text-[var(--text)]'}`}
           >
-            Technical Specs
+            {t('detail.technical')}
             {activeTab === 'technical' && <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--accent)]" />}
           </button>
         </div>
@@ -148,13 +150,13 @@ export function WorkflowDetail() {
                     <div className="flex items-center justify-between mb-4">
                       <h2 className="text-base font-black uppercase tracking-widest text-[var(--text)] flex items-center gap-2.5">
                         <div className="h-1 w-5 bg-[var(--accent)] rounded-full" />
-                        Brief
+                        {t('detail.brief')}
                       </h2>
                       <button 
                         onClick={() => setIsBriefExpanded(!isBriefExpanded)}
                         className="text-[0.6rem] font-bold uppercase tracking-widest text-[var(--accent)] hover:underline"
                       >
-                        {isBriefExpanded ? 'Collapse' : 'Read More'}
+                        {isBriefExpanded ? t('detail.collapse') : t('detail.read_more')}
                       </button>
                     </div>
                     <motion.div 
@@ -169,13 +171,13 @@ export function WorkflowDetail() {
                     <div className="flex items-center justify-between">
                       <h2 className="text-base font-black uppercase tracking-widest text-[var(--text)] flex items-center gap-2.5">
                         <div className="h-1 w-5 bg-[var(--accent)] rounded-full" />
-                        Pipeline
+                        {t('detail.pipeline')}
                       </h2>
                       <button 
                         onClick={() => setShowAllPipeline(!showAllPipeline)}
                         className="text-[0.6rem] font-bold uppercase tracking-widest text-[var(--accent)] hover:underline"
                       >
-                        {showAllPipeline ? 'Show Less' : `View Full (${pipeline.length})`}
+                        {showAllPipeline ? t('detail.show_less') : `${t('detail.view_full')} (${pipeline.length})`}
                       </button>
                     </div>
                     <div className="grid gap-2.5">
@@ -188,25 +190,25 @@ export function WorkflowDetail() {
               ) : (
                 <section className="text-left">
                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-alt)] p-6">
-                     <h2 className="text-base font-black uppercase tracking-widest text-[var(--text)] mb-4">Workflow Architecture</h2>
-                     <p className="text-xs text-[var(--muted)] mb-6 font-medium leading-normal">This flow bridges edge data via n8n to Google Sheets for permanent record keeping and audit logging.</p>
+                     <h2 className="text-base font-black uppercase tracking-widest text-[var(--text)] mb-4">{t('detail.arch')}</h2>
+                     <p className="text-xs text-[var(--muted)] mb-6 font-medium leading-normal">{t('detail.arch_desc')}</p>
                      
                      <div className="grid gap-5">
                         <div className="grid gap-2">
-                           <span className="text-[0.6rem] font-black uppercase tracking-widest text-[var(--accent)]">Backend Sync</span>
+                           <span className="text-[0.6rem] font-black uppercase tracking-widest text-[var(--accent)]">{t('detail.backend_sync')}</span>
                            <div className="bg-[var(--surface)] p-3 rounded-lg border border-[var(--border)] font-mono text-[0.75rem] text-[var(--muted-strong)] flex items-center justify-between">
                              <span>n8n_integration_id: flw_882</span>
                              <span className="text-[var(--accent)]">Active</span>
                            </div>
                         </div>
                         <div className="grid gap-2">
-                           <span className="text-[0.6rem] font-black uppercase tracking-widest text-[var(--accent)]">Data Destination</span>
+                           <span className="text-[0.6rem] font-black uppercase tracking-widest text-[var(--accent)]">{t('detail.data_dest')}</span>
                            <div className="bg-[var(--surface)] p-3 rounded-lg border border-[var(--border)] font-mono text-[0.75rem] text-[var(--muted-strong)]">
                              G-Sheets: &quot;ai_renewal_health_monitor_v1&quot;
                            </div>
                         </div>
                         <div className="grid gap-2">
-                           <span className="text-[0.6rem] font-black uppercase tracking-widest text-[var(--accent)]">Error Handling</span>
+                           <span className="text-[0.6rem] font-black uppercase tracking-widest text-[var(--accent)]">{t('detail.error_handling')}</span>
                            <div className="bg-[var(--surface)] p-3 rounded-lg border border-[var(--border)] font-mono text-[0.75rem] text-[var(--muted-strong)]">
                              on_failure: retry_with_exponential_backoff(max=3)
                            </div>
@@ -221,12 +223,12 @@ export function WorkflowDetail() {
           <aside className="grid gap-6 self-start text-left">
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-alt)]/50 p-5 backdrop-blur-sm">
               <div className="flex items-center justify-between mb-5">
-                <h3 className="text-[0.7rem] font-black uppercase tracking-[0.2em] text-[var(--muted-soft)]">Credentials</h3>
+                <h3 className="text-[0.7rem] font-black uppercase tracking-[0.2em] text-[var(--muted-soft)]">{t('detail.credentials')}</h3>
                 <button 
                   onClick={() => setShowAllCreds(!showAllCreds)}
                   className="text-[0.6rem] font-black uppercase tracking-widest text-[var(--accent)]"
                 >
-                  {showAllCreds ? 'Less' : 'All'}
+                  {showAllCreds ? t('detail.less') : t('detail.all')}
                 </button>
               </div>
               <div className="grid gap-3.5 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
@@ -242,7 +244,7 @@ export function WorkflowDetail() {
             </div>
 
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-alt)]/50 p-5 backdrop-blur-sm">
-              <h3 className="text-[0.7rem] font-black uppercase tracking-[0.2em] text-[var(--muted-soft)] mb-5">Workflow Team</h3>
+              <h3 className="text-[0.7rem] font-black uppercase tracking-[0.2em] text-[var(--muted-soft)] mb-5">{t('detail.team')}</h3>
               <div className="grid gap-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                 {['Sofia Park', 'Liam Chen', 'Emma Wilson', 'Marcus Thorne', 'Aria Vane'].map((name, i) => (
                   <div key={i} className="flex items-center gap-3">
@@ -257,7 +259,7 @@ export function WorkflowDetail() {
                     </div>
                     <div className="flex flex-col">
                       <span className="text-xs font-black text-[var(--text)] tracking-tight leading-tight">{name}</span>
-                      <span className="text-[0.6rem] font-bold text-[var(--muted)] uppercase tracking-widest mt-0.5">Contributor</span>
+                      <span className="text-[0.6rem] font-bold text-[var(--muted)] uppercase tracking-widest mt-0.5">{t('upload.contributor')}</span>
                     </div>
                   </div>
                 ))}
@@ -269,7 +271,7 @@ export function WorkflowDetail() {
                 <div className="h-5 w-5 rounded-full bg-[var(--accent)] flex items-center justify-center text-white">
                   <Terminal size={10} />
                 </div>
-                <span className="text-[0.6rem] font-black uppercase tracking-[0.2em] text-[var(--accent)]">Automated Bridge</span>
+                <span className="text-[0.6rem] font-black uppercase tracking-[0.2em] text-[var(--accent)]">{t('detail.automated_bridge')}</span>
               </div>
               <p className="text-[0.65rem] text-[var(--muted-strong)] font-bold leading-relaxed">
                 Requests are handled via <span className="text-[var(--text)]">n8n</span> & recorded in <span className="text-[var(--text)]">G-Sheets</span>.
@@ -284,7 +286,7 @@ export function WorkflowDetail() {
             className="flex w-full items-center gap-3 px-8 py-5 font-black uppercase tracking-[0.15em] text-[0.8rem] transition-colors hover:text-[var(--accent)] text-[var(--muted-strong)]"
           >
             <ChevronDown size={20} className={`transition-transform duration-300 ${isJsonOpen ? '' : '-rotate-90'}`} />
-            <span>JSON / YAML Preview</span>
+            <span>{t('detail.json_preview')}</span>
           </button>
           
           <AnimatePresence>

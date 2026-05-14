@@ -4,6 +4,7 @@ import { Download, UserPlus, Eye, Share2, Globe, Database, Cpu, Mail, CreditCard
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useI18n } from '@/lib/i18n';
 
 interface WorkflowCardProps {
   id: string;
@@ -29,6 +30,7 @@ import { useRef } from 'react';
 
 export function WorkflowCard({ id, title, description, tags, keys, creators, nodes = 4 }: WorkflowCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const { t } = useI18n();
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return;
@@ -49,7 +51,7 @@ export function WorkflowCard({ id, title, description, tags, keys, creators, nod
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="flex-shrink-0 inline-flex items-center rounded-md bg-[var(--surface-alt)] px-2 py-0.5 text-[0.6rem] font-black uppercase tracking-widest text-[var(--muted-strong)] border border-[var(--border)]">
-              {nodes} Nodes
+              {nodes} {t('card.nodes')}
             </span>
             <div className="h-[1px] w-8 bg-[var(--border)]" />
           </div>
@@ -78,7 +80,7 @@ export function WorkflowCard({ id, title, description, tags, keys, creators, nod
 
             {/* Tooltip */}
             <div className="absolute top-full right-0 mt-3 w-60 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-2xl opacity-0 pointer-events-none group-hover/creator:opacity-100 group-hover/creator:translate-y-0 translate-y-[-8px] transition-all z-20 ring-1 ring-black/5 dark:ring-white/5 backdrop-blur-md">
-              <strong className="text-[0.85rem] font-black uppercase tracking-widest text-[var(--accent)] mb-3 block">Contributors</strong>
+              <strong className="text-[0.85rem] font-black uppercase tracking-widest text-[var(--accent)] mb-3 block">{t('card.contributors')}</strong>
               <div className="grid gap-3">
                 {creators.map((c, i) => (
                   <div key={i} className="flex items-center gap-3">
@@ -94,7 +96,7 @@ export function WorkflowCard({ id, title, description, tags, keys, creators, nod
                     </div>
                     <div className="flex flex-col">
                       <span className="text-[0.9rem] font-bold text-[var(--text)]">{c.name}</span>
-                      <span className="text-[0.7rem] font-medium text-[var(--muted)]">Contributor</span>
+                      <span className="text-[0.7rem] font-medium text-[var(--muted)]">{t('upload.contributor')}</span>
                     </div>
                   </div>
                 ))}
@@ -118,7 +120,7 @@ export function WorkflowCard({ id, title, description, tags, keys, creators, nod
           ))}
         </div>
         <div className="grid gap-2.5 bg-[var(--surface-alt)]/40 p-4 rounded-xl border border-[var(--border)]">
-          <span className="font-black text-[var(--text-subtle)] uppercase tracking-widest text-[0.65rem]">Required Environment</span>
+          <span className="font-black text-[var(--text-subtle)] uppercase tracking-widest text-[0.65rem]">{t('card.required_env')}</span>
           <div className="flex flex-wrap gap-4">
             {keys.map((key, i) => {
               const Icon = KEY_ICONS[key] || Terminal;
@@ -137,16 +139,16 @@ export function WorkflowCard({ id, title, description, tags, keys, creators, nod
 
       <div className="flex flex-wrap gap-2 pt-2">
         <button className="flex items-center gap-1.5 rounded-full bg-[var(--accent)] px-3.5 py-2 text-[0.82rem] font-bold text-white shadow-lg shadow-[#a73b2430] transition-all hover:translate-y-[-3px] hover:scale-[1.02]">
-          <Download size={16} /> <span>Download Flow</span>
+          <Download size={16} /> <span>{t('card.download')}</span>
         </button>
         <button className="flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2 text-[0.82rem] font-bold text-[var(--text)] transition-all hover:translate-y-[-3px] hover:border-[var(--accent)]">
-          <UserPlus size={16} className="text-[var(--muted-soft)]" /> <span>Invite Speaker</span>
+          <UserPlus size={16} className="text-[var(--muted-soft)]" /> <span>{t('card.invite_speaker')}</span>
         </button>
         <Link 
           href={`/workflow/${id}`}
           className="flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2 text-[0.82rem] font-bold text-[var(--text)] transition-all hover:translate-y-[-3px] hover:border-[var(--accent)] md:ml-auto"
         >
-          <Eye size={16} className="text-[var(--muted-soft)]" /> <span>View</span>
+          <Eye size={16} className="text-[var(--muted-soft)]" /> <span>{t('card.view')}</span>
         </Link>
       </div>
     </article>

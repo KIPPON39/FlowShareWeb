@@ -1,12 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-import { CloudUpload, Zap } from 'lucide-react';
+import { Zap, Menu, X } from 'lucide-react';
 import { ThemeToggle } from './theme-toggle';
+import { LanguageToggle } from './language-toggle';
 import { usePathname } from 'next/navigation';
+import { useI18n } from '@/lib/i18n';
+import { useState } from 'react';
 
 export function Navbar() {
   const pathname = usePathname();
+  const { t } = useI18n();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <nav className="glass sticky top-0 z-50 w-full px-4 py-4 backdrop-blur-xl">
@@ -24,38 +29,60 @@ export function Navbar() {
           </div>
         </Link>
         
-        {/* Floating Minimal Pill (Restored) */}
+        {/* Floating Minimal Pill - Desktop */}
         <div className="hidden min-[720px]:flex items-center gap-1 rounded-full border border-[var(--border)] bg-white/40 dark:bg-black/20 px-1 py-1 backdrop-blur-md shadow-sm">
           <Link 
             href="/" 
             className={`rounded-full px-5 py-1.5 text-xs font-bold uppercase tracking-widest transition-all ${pathname === '/' ? 'bg-[var(--accent)] text-white' : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/10'}`}
           >
-            Explore
+            {t('nav.explore')}
           </Link>
           <Link 
             href="/upload" 
             className={`rounded-full px-5 py-1.5 text-xs font-bold uppercase tracking-widest transition-all ${pathname === '/upload' ? 'bg-[var(--accent)] text-white' : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/10'}`}
           >
-            Create
+            {t('nav.create')}
           </Link>
           <div className="mx-2 h-4 w-px bg-[var(--border)] opacity-50" />
           <ThemeToggle />
+          <LanguageToggle />
         </div>
 
-        {/* Action Button */}
-        <div className="flex items-center gap-4">
-          <div className="min-[720px]:hidden">
-            <ThemeToggle />
-          </div>
-          <Link 
-            href="/upload" 
-            className="group relative flex items-center gap-2.5 overflow-hidden rounded-full bg-[var(--accent)] px-6 py-2.5 text-xs font-black uppercase tracking-widest text-white transition-all hover:scale-[1.05] shadow-lg shadow-[var(--accent-glow)] active:scale-95"
+        {/* Mobile Controls */}
+        <div className="flex items-center gap-2 min-[720px]:hidden">
+          <ThemeToggle />
+          <LanguageToggle />
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--muted-soft)] transition-all hover:text-[var(--text)]"
+            aria-label="Toggle menu"
           >
-            <CloudUpload size={18} className="transition-transform group-hover:-translate-y-0.5" />
-            <span className="relative z-10">Ship Flow</span>
-          </Link>
+            {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+          </button>
         </div>
       </div>
+
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="min-[720px]:hidden mt-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-xl backdrop-blur-xl">
+          <div className="grid gap-2">
+            <Link 
+              href="/" 
+              onClick={() => setMobileMenuOpen(false)}
+              className={`rounded-xl px-4 py-3 text-sm font-bold uppercase tracking-widest transition-all ${pathname === '/' ? 'bg-[var(--accent)] text-white' : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--surface-alt)]'}`}
+            >
+              {t('nav.explore')}
+            </Link>
+            <Link 
+              href="/upload" 
+              onClick={() => setMobileMenuOpen(false)}
+              className={`rounded-xl px-4 py-3 text-sm font-bold uppercase tracking-widest transition-all ${pathname === '/upload' ? 'bg-[var(--accent)] text-white' : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--surface-alt)]'}`}
+            >
+              {t('nav.create')}
+            </Link>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
