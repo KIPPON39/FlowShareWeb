@@ -7,11 +7,9 @@ const FILTERS = ['AI', 'Email', 'Finance', 'Scraping', 'Data', 'Integration', 'M
 
 interface HeroProps {
   flowCount?: number;
-  searchQuery?: string;
-  onSearchChange?: (query: string) => void;
 }
 
-export function Hero({ flowCount = 0, searchQuery = '', onSearchChange }: HeroProps) {
+export function Hero({ flowCount = 0 }: HeroProps) {
   const { t, lang } = useI18n();
 
   return (
@@ -39,21 +37,18 @@ export function Hero({ flowCount = 0, searchQuery = '', onSearchChange }: HeroPr
         </p>
       </div>
 
-      {/* Search */}
-      <div className="search-glow group relative mx-auto w-full max-w-[520px] transition-all duration-300 sm:focus-within:max-w-[600px]">
-        <div className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 transition-all duration-200 group-focus-within:border-[var(--accent)] group-focus-within:shadow-[var(--ring)]">
-          <Search size={18} className="text-[var(--muted-light)] transition-colors group-focus-within:text-[var(--accent)]" />
-          <input 
-            type="text" 
-            value={searchQuery}
-            onChange={(e) => onSearchChange?.(e.target.value)}
-            placeholder={t('hero.search')}
-            className="flex-1 bg-transparent text-sm sm:text-[0.95rem] outline-hidden placeholder:text-[var(--muted-light)] text-[var(--text)]"
-          />
-          <kbd className="hidden sm:inline-flex h-5 items-center gap-0.5 rounded border border-[var(--border)] bg-[var(--surface-alt)] px-1.5 font-mono text-[10px] text-[var(--muted-soft)]">
-            <span className="text-[10px]">⌘</span>K
-          </kbd>
-        </div>
+      {/* Action Buttons */}
+      <div className="mt-2 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a 
+          href="#browse" 
+          onClick={(e) => {
+            e.preventDefault();
+            document.getElementById('browse')?.scrollIntoView({ behavior: 'smooth' });
+          }}
+          className="futuristic-hover flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-[var(--accent)] px-8 py-3.5 text-[0.95rem] font-semibold text-white transition-all duration-200 hover:opacity-90 active:scale-[0.97] shadow-lg shadow-[var(--accent-glow)]"
+        >
+          {t('cta.browse')}
+        </a>
       </div>
 
       {/* Filter tags */}
@@ -67,13 +62,12 @@ export function Hero({ flowCount = 0, searchQuery = '', onSearchChange }: HeroPr
           
           <div className="animate-scroll flex w-max gap-2.5 px-4 sm:px-8 hover:[animation-play-state:paused]">
             {[...FILTERS, ...FILTERS].map((filter, i) => (
-              <button 
+              <span 
                 key={i} 
-                onClick={() => onSearchChange?.(filter)}
-                className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3.5 py-1.5 text-[0.75rem] font-medium text-[var(--muted-strong)] transition-all duration-200 hover:bg-[var(--accent)] hover:text-white hover:border-[var(--accent)] active:scale-95 whitespace-nowrap"
+                className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3.5 py-1.5 text-[0.75rem] font-medium text-[var(--muted-strong)] whitespace-nowrap cursor-default"
               >
                 {filter}
-              </button>
+              </span>
             ))}
           </div>
         </div>

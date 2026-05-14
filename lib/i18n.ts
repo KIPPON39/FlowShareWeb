@@ -49,6 +49,41 @@ export const translations: Record<Language, Record<string, string>> = {
     'main.no_workflows_desc': 'อัปโหลด JSON workflow จากหน้าสร้าง หรือตรวจสอบว่า n8n list webhook ส่งข้อมูล workflows array กลับมา',
     'main.footer': 'เทมเพลตพร้อมใช้งาน สำหรับนักพัฒนา โดย FlowShare',
 
+    // Features section
+    'features.title': 'ทำไมต้อง FlowShare?',
+    'features.subtitle': 'ทุกสิ่งที่คุณต้องการเพื่อแชร์และค้นพบ Workflow อัตโนมัติ',
+    'features.community.title': 'ขับเคลื่อนโดยชุมชน',
+    'features.community.desc': 'ค้นหาและแชร์เทมเพลตจากนักพัฒนาทั่วโลก สร้างร่วมกันเพื่อระบบอัตโนมัติที่ดียิ่งขึ้น',
+    'features.secure.title': 'ปลอดภัยและน่าเชื่อถือ',
+    'features.secure.desc': 'ทุก Workflow ผ่านการตรวจสอบ credentials พร้อม backend bridge ที่ซิงค์ผ่าน n8n อัตโนมัติ',
+    'features.deploy.title': 'พร้อมใช้งานทันที',
+    'features.deploy.desc': 'ดาวน์โหลดและนำไปใช้ได้เลย ไม่ต้องเริ่มจากศูนย์ ประหยัดเวลาให้ทีมของคุณ',
+    'features.open.title': 'โอเพนซอร์ส',
+    'features.open.desc': 'ซอร์สโค้ดเปิดกว้าง ปรับแต่งได้ตามต้องการ รองรับ n8n, Google Sheets และอื่นๆ',
+
+    // CTA section
+    'cta.title': 'พร้อมแชร์ Workflow ของคุณแล้วหรือยัง?',
+    'cta.desc': 'สร้างเทมเพลตและแบ่งปันให้ชุมชนได้เลย เริ่มต้นใช้งานได้ฟรี',
+    'cta.button': 'เริ่มสร้าง Flow',
+    'cta.browse': 'สำรวจเทมเพลต',
+
+    // Footer
+    'footer.brand_desc': 'แพลตฟอร์มแชร์เทมเพลต Workflow อัตโนมัติที่ขับเคลื่อนโดยชุมชน',
+    'footer.product': 'ผลิตภัณฑ์',
+    'footer.explore': 'สำรวจเทมเพลต',
+    'footer.create': 'สร้าง Flow',
+    'footer.resources': 'แหล่งข้อมูล',
+    'footer.docs': 'เอกสาร',
+    'footer.api': 'API',
+    'footer.changelog': 'บันทึกการเปลี่ยนแปลง',
+    'footer.community': 'ชุมชน',
+    'footer.github': 'GitHub',
+    'footer.discord': 'Discord',
+    'footer.twitter': 'Twitter',
+    'footer.copyright': '© 2026 FlowShare. สงวนลิขสิทธิ์.',
+    'footer.privacy': 'นโยบายความเป็นส่วนตัว',
+    'footer.terms': 'ข้อกำหนดการใช้งาน',
+
     // Upload section
     'upload.title': 'สร้าง Flow ใหม่',
     'upload.subtitle': 'ชัดเจนก่อนซับซ้อน กำหนดตรรกะอัตโนมัติของคุณ',
@@ -169,6 +204,41 @@ export const translations: Record<Language, Record<string, string>> = {
     'main.no_workflows': 'No workflows from Google Sheet yet',
     'main.no_workflows_desc': 'Upload a JSON workflow from the Create page, or check that your n8n list webhook returns a workflows array.',
     'main.footer': 'Workspace-ready, developer-first templates with FlowShare.',
+
+    // Features section
+    'features.title': 'Why FlowShare?',
+    'features.subtitle': 'Everything you need to share and discover automation workflows.',
+    'features.community.title': 'Community-Driven',
+    'features.community.desc': 'Discover and share templates from developers worldwide. Build together for better automation.',
+    'features.secure.title': 'Secure & Reliable',
+    'features.secure.desc': 'Every workflow is validated with credentials check and auto-synced backend bridge via n8n.',
+    'features.deploy.title': 'Ready to Deploy',
+    'features.deploy.desc': 'Download and use instantly. No starting from scratch. Save time for your team.',
+    'features.open.title': 'Open Source',
+    'features.open.desc': 'Fully open source and customizable. Supports n8n, Google Sheets, and more.',
+
+    // CTA section
+    'cta.title': 'Ready to share your workflow?',
+    'cta.desc': 'Create templates and share them with the community. Free to get started.',
+    'cta.button': 'Start Creating',
+    'cta.browse': 'Browse Templates',
+
+    // Footer
+    'footer.brand_desc': 'Community-driven automation workflow template sharing platform.',
+    'footer.product': 'Product',
+    'footer.explore': 'Explore Templates',
+    'footer.create': 'Create Flow',
+    'footer.resources': 'Resources',
+    'footer.docs': 'Documentation',
+    'footer.api': 'API',
+    'footer.changelog': 'Changelog',
+    'footer.community': 'Community',
+    'footer.github': 'GitHub',
+    'footer.discord': 'Discord',
+    'footer.twitter': 'Twitter',
+    'footer.copyright': '© 2026 FlowShare. All rights reserved.',
+    'footer.privacy': 'Privacy Policy',
+    'footer.terms': 'Terms of Service',
 
     // Upload section
     'upload.title': 'Ship New Flow',

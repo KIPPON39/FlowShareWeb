@@ -35,11 +35,11 @@ export function WorkflowCard({ id, title, description, tags, keys, creators, nod
   };
 
   return (
-    <div className="card-glow-wrapper">
+    <div className="card-glow-wrapper futuristic-hover rounded-xl h-full">
       <article 
         ref={cardRef}
         onMouseMove={handleMouseMove}
-        className="workflow-card h-full group rounded-xl p-5 sm:p-6 flex flex-col gap-5 border border-[var(--border)]"
+        className="workflow-card h-full group rounded-xl p-5 sm:p-6 flex flex-col gap-5 border border-[var(--border)] bg-[var(--surface)]"
       >
         {/* Header */}
         <div className="grid gap-3 text-left">
@@ -158,8 +158,8 @@ export function WorkflowCard({ id, title, description, tags, keys, creators, nod
       </div>
 
       {/* Actions */}
-      <div className="flex flex-wrap gap-2 pt-1 mt-auto">
-        <button className="flex items-center gap-1.5 rounded-lg bg-[var(--accent)] px-3 py-1.5 text-[0.78rem] font-medium text-white transition-all duration-200 hover:opacity-90 active:scale-95 shadow-sm shadow-[var(--accent-glow)]">
+      <div className="flex flex-wrap gap-2 pt-1 mt-auto z-10">
+        <button className="futuristic-hover flex items-center gap-1.5 rounded-lg bg-[var(--accent)] px-3 py-1.5 text-[0.78rem] font-medium text-white transition-all duration-200 hover:opacity-90 active:scale-95 shadow-sm shadow-[var(--accent-glow)]">
           <Download size={14} /> <span>{t('card.download')}</span>
         </button>
         <button className="flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-[0.78rem] text-[var(--muted-strong)] transition-all duration-200 hover:text-[var(--text)] hover:border-[var(--accent)]/30">
