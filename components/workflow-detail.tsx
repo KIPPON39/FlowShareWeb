@@ -133,11 +133,11 @@ export function WorkflowDetail() {
           </div>
           
           <div className="flex flex-wrap gap-2.5 self-center sm:self-start">
-            <button className="flex items-center gap-2 rounded-xl bg-[var(--accent)] px-5 py-2.5 text-[0.75rem] font-bold text-white transition-all hover:scale-[1.02] active:scale-95 shadow-sm shadow-[var(--accent-glow)]">
+            <button className="futuristic-hover flex items-center gap-2 rounded-xl bg-[var(--accent)] px-5 py-2.5 text-[0.75rem] font-bold text-white transition-all hover:scale-[1.02] active:scale-95 shadow-sm shadow-[var(--accent-glow)]">
               <Download size={14} /> 
               <span>{t('detail.download')}</span>
             </button>
-            <button className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] px-5 py-2.5 text-[0.75rem] font-bold text-[var(--text)] transition-all hover:bg-[var(--accent-soft)] hover:text-[var(--accent)] hover:border-[var(--accent)] active:scale-95">
+            <button className="futuristic-hover flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] px-5 py-2.5 text-[0.75rem] font-bold text-[var(--text)] transition-all hover:bg-[var(--accent-soft)] hover:text-[var(--accent)] hover:border-[var(--accent)] active:scale-95">
               <UserPlus size={14} /> 
               <span>{t('detail.invite')}</span>
             </button>

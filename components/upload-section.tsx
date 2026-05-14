@@ -474,7 +474,7 @@ export function UploadSection() {
                   </button>
                 </div>
               ) : (
-                <label className="upload-zone block rounded-xl border-2 border-dashed border-[var(--border-strong)] bg-[var(--surface-alt)]/20 p-8 text-center transition-all hover:border-[var(--accent)] group cursor-pointer">
+                <label className="futuristic-hover upload-zone block rounded-xl border-2 border-dashed border-[var(--border-strong)] bg-[var(--surface-alt)]/20 p-8 text-center transition-all hover:border-[var(--accent)] group cursor-pointer">
                   <input
                     type="file"
                     accept="application/json,.json"
@@ -645,7 +645,7 @@ export function UploadSection() {
                           placeholder={t('upload.assign_node')} 
                         />
                       </div>
-                      <button onClick={addStep} className="flex items-center gap-2 rounded-xl bg-[var(--text)] px-4 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[var(--bg)] transition-all hover:scale-105 active:scale-95 shadow-lg">
+                      <button onClick={addStep} className="futuristic-hover flex items-center gap-2 rounded-xl bg-[var(--text)] px-4 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[var(--bg)] transition-all hover:scale-105 active:scale-95 shadow-lg">
                         <Plus size={16} />
                         <span>{t('upload.add_step')}</span>
                       </button>
@@ -696,7 +696,7 @@ export function UploadSection() {
                     placeholder={t('upload.add_key')} 
                     onKeyDown={(e) => e.key === 'Enter' && addKey()}
                   />
-                  <button onClick={addKey} className="group flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] transition-all hover:bg-[var(--accent)] hover:text-white hover:border-[var(--accent)] shadow-sm">
+                  <button onClick={addKey} className="futuristic-hover group flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] transition-all hover:bg-[var(--accent)] hover:text-white hover:border-[var(--accent)] shadow-sm">
                     <Plus size={18} className="group-hover:rotate-90 transition-transform" />
                   </button>
                 </div>
@@ -863,7 +863,7 @@ export function UploadSection() {
             <button
               onClick={submitWorkflow}
               disabled={submitState === 'saving' || !canShipWorkflow}
-              className="group flex w-full items-center justify-center gap-2.5 rounded-xl bg-[var(--accent)] px-8 py-3.5 text-[0.85rem] font-bold text-white shadow-md shadow-[var(--accent-glow)] transition-all duration-300 hover:scale-[1.02] hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
+              className="futuristic-hover group flex w-full items-center justify-center gap-2.5 rounded-xl bg-[var(--accent)] px-8 py-3.5 text-[0.85rem] font-bold text-white shadow-md shadow-[var(--accent-glow)] transition-all duration-300 hover:scale-[1.02] hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
             >
               <Send size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
               <span className="uppercase tracking-widest">{submitState === 'saving' ? t('upload.shipping') : t('upload.ship_workflow')}</span>
