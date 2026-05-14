@@ -8,10 +8,10 @@ export function LanguageToggle() {
   return (
     <button
       onClick={() => setLang(lang === 'th' ? 'en' : 'th')}
-      className="flex h-9 items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-bold text-[var(--muted-strong)] transition-all hover:translate-y-[-2px] hover:shadow-md hover:text-[var(--text)] hover:border-[var(--accent)]"
+      className="flex h-8 items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 text-[0.7rem] font-medium text-[var(--muted)] transition-colors duration-200 hover:text-[var(--text)] hover:border-[var(--border-strong)]"
       aria-label="Toggle language"
     >
-      <span className="text-sm">{lang === 'th' ? '🇹🇭' : '🇬🇧'}</span>
+      <span className="text-xs">{lang === 'th' ? '🇹🇭' : '🇬🇧'}</span>
       <span className="uppercase tracking-wider">{lang === 'th' ? 'TH' : 'EN'}</span>
     </button>
   );

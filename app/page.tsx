@@ -7,33 +7,55 @@ import { useEffect, useState } from 'react';
 import { type WorkflowTemplate } from '@/lib/workflows';
 import { useI18n } from '@/lib/i18n';
 
-const CATEGORIES_EN = [
-  { name: 'All Templates', active: true },
-  { name: 'AI Automation', count: 12 },
-  { name: 'Customer Operations', count: 8 },
-  { name: 'Sales & Marketing', count: 15 },
-  { name: 'Data Engineering', count: 5 },
-  { name: 'DevOps & Git', count: 7 },
-  { name: 'Financial Ops', count: 4 },
-];
-
-const CATEGORIES_TH = [
-  { name: 'เทมเพลตทั้งหมด', active: true },
-  { name: 'AI อัตโนมัติ', count: 12 },
-  { name: 'ปฏิบัติการลูกค้า', count: 8 },
-  { name: 'การขายและการตลาด', count: 15 },
-  { name: 'วิศวกรรมข้อมูล', count: 5 },
-  { name: 'DevOps & Git', count: 7 },
-  { name: 'การเงิน', count: 4 },
+const CATEGORY_MAPPINGS = [
+  { en: 'All Templates', th: 'เทมเพลตทั้งหมด', tags: [] },
+  { en: 'AI Automation', th: 'AI อัตโนมัติ', tags: ['AI'] },
+  { en: 'Customer Operations', th: 'ปฏิบัติการลูกค้า', tags: ['CRM', 'Email', 'Customer'] },
+  { en: 'Sales & Marketing', th: 'การขายและการตลาด', tags: ['Marketing', 'Sales'] },
+  { en: 'Data Engineering', th: 'วิศวกรรมข้อมูล', tags: ['Data', 'Scraping', 'Analytics'] },
+  { en: 'DevOps & Git', th: 'DevOps & Git', tags: ['DevOps', 'Git', 'Integration'] },
+  { en: 'Financial Ops', th: 'การเงิน', tags: ['Finance'] },
 ];
 
 export default function Home() {
   const [workflows, setWorkflows] = useState<WorkflowTemplate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [backendWarning, setBackendWarning] = useState('');
+  const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
   const { t, lang } = useI18n();
 
-  const CATEGORIES = lang === 'th' ? CATEGORIES_TH : CATEGORIES_EN;
+  const categories = CATEGORY_MAPPINGS.map((cat, index) => {
+    let count;
+    if (index === 0) {
+      count = workflows.length;
+    } else {
+      count = workflows.filter(wf => wf.tags?.some(tag => cat.tags.map(t => t.toLowerCase()).includes(tag.toLowerCase()))).length;
+    }
+    return {
+      name: lang === 'th' ? cat.th : cat.en,
+      tags: cat.tags,
+      count
+    };
+  });
+
+  const filteredByCategory = activeCategoryIndex === 0
+    ? workflows
+    : workflows.filter(wf => 
+        wf.tags?.some(tag => 
+          CATEGORY_MAPPINGS[activeCategoryIndex].tags.map(t => t.toLowerCase()).includes(tag.toLowerCase())
+        )
+      );
+
+  const filteredWorkflows = filteredByCategory.filter(wf => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      wf.title.toLowerCase().includes(query) ||
+      wf.description.toLowerCase().includes(query) ||
+      (wf.tags && wf.tags.some(tag => tag.toLowerCase().includes(query)))
+    );
+  });
 
   useEffect(() => {
     let isMounted = true;
@@ -68,72 +90,67 @@ export default function Home() {
       <Navbar />
       
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-24">
-        <Hero flowCount={workflows.length} />
+        <Hero flowCount={workflows.length} searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
-        <div className="mt-8 sm:mt-12 lg:grid lg:grid-cols-[240px_1fr] gap-8 lg:gap-16">
+        <div className="border-t border-[var(--border)] pt-10 sm:pt-14 lg:grid lg:grid-cols-[220px_1fr] gap-12 lg:gap-16">
           {/* Sidebar */}
           <aside className="hidden lg:block">
-            <div className="sticky top-24 space-y-10">
-              <div className="space-y-4">
-                <h3 className="text-[0.65rem] font-bold uppercase tracking-[0.25em] text-[var(--accent)] pl-4">{t('main.collections')}</h3>
-                <nav className="grid gap-1">
-                  {CATEGORIES.map((cat, i) => (
+            <div className="sticky top-20 grid gap-10">
+              <div className="grid gap-2">
+                <h3 className="text-[0.65rem] font-medium uppercase tracking-[0.2em] text-[var(--muted-soft)] mb-1 pl-3">{t('main.collections')}</h3>
+                <nav className="grid gap-0.5">
+                  {categories.map((cat, i) => (
                     <button 
-                      key={i} 
-                      className={`group flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-bold transition-all border-l-2 ${cat.active ? 'bg-[var(--accent-soft)] text-[var(--accent)] border-[var(--accent)]' : 'text-[var(--muted-strong)] hover:bg-[var(--surface-alt)] hover:text-[var(--text)] border-transparent'}`}
+                      key={i}
+                      onClick={() => setActiveCategoryIndex(i)}
+                      className={`group flex w-full items-center justify-between rounded-lg px-3 py-2 text-[0.82rem] transition-colors duration-150 ${activeCategoryIndex === i ? 'bg-[var(--accent-soft)] text-[var(--accent)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--surface-alt)] hover:text-[var(--text)]'}`}
                     >
                       <span className="truncate">{cat.name}</span>
-                      {cat.count && (
-                        <span className="inline-flex items-center justify-center rounded-full bg-[var(--surface)] px-2 py-0.5 text-[0.6rem] font-black tabular-nums border border-[var(--border)] opacity-60 group-hover:opacity-100 transition-opacity">
-                          {cat.count}
-                        </span>
-                      )}
+                      <span className={`font-mono text-[0.65rem] tabular-nums ${activeCategoryIndex === i ? 'text-[var(--accent)]' : 'text-[var(--muted-soft)] group-hover:text-[var(--muted)]'}`}>
+                        {cat.count}
+                      </span>
                     </button>
                   ))}
                 </nav>
               </div>
 
-              <div className="relative group">
-                <div className="absolute -inset-0.5 rounded-2xl bg-linear-to-br from-[var(--accent)] to-transparent opacity-10 blur-sm group-hover:opacity-20 transition-opacity" />
-                <div className="relative rounded-2xl border border-[var(--border)] bg-[var(--surface-alt)]/40 p-5 backdrop-blur-sm">
-                  <h4 className="text-[0.8rem] font-bold text-[var(--text)] mb-2">{t('main.build_together')}</h4>
-                  <p className="text-[0.7rem] text-[var(--muted-soft)] font-medium leading-relaxed mb-4">{t('main.build_together_desc')}</p>
-                  <button className="w-full rounded-xl bg-[var(--accent)] py-2.5 text-[0.75rem] font-bold text-white shadow-lg shadow-[var(--accent-glow)] hover:brightness-110 transition-all">{t('main.submit_template')}</button>
-                </div>
-              </div>
+
             </div>
           </aside>
 
-          <div className="grid gap-8 sm:gap-10">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[var(--border)] pb-6 sm:pb-8">
+          <div className="grid gap-8">
+            {/* Section header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--text)] uppercase">{t('main.browse_templates')}</h2>
-                <p className="text-sm text-[var(--muted-soft)] font-medium mt-1">{t('main.browse_desc')}</p>
+                <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-[var(--text)]">
+                  {activeCategoryIndex === 0 ? t('main.browse_templates') : categories[activeCategoryIndex].name}
+                </h2>
+                <p className="text-[0.82rem] text-[var(--muted)] mt-0.5">{t('main.browse_desc')}</p>
               </div>
               
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1.5 rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] px-4 py-2 text-[0.75rem] font-bold text-[var(--muted-strong)]">
-                  <span>{isLoading ? t('main.syncing') : `${t('main.showing')} ${workflows.length} ${t('main.templates')}`}</span>
-                </div>
+              <div className="flex items-center">
+                <span className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-[0.75rem] text-[var(--muted)] font-mono tabular-nums">
+                  {isLoading ? t('main.syncing') : `${filteredWorkflows.length} ${t('main.templates')}`}
+                </span>
               </div>
             </div>
 
             {backendWarning && (
-              <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-alt)] px-5 py-4 text-sm font-bold text-[var(--muted-strong)]">
+              <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-[0.82rem] text-[var(--muted-strong)]">
                 {backendWarning}
               </div>
             )}
 
-            {workflows.length > 0 ? (
-              <div className="grid gap-6 sm:gap-8 sm:grid-cols-2">
-                {workflows.map((wf, i) => (
+            {filteredWorkflows.length > 0 ? (
+              <div className="grid gap-5 sm:grid-cols-2">
+                {filteredWorkflows.map((wf, i) => (
                   <WorkflowCard key={i} {...wf} />
                 ))}
               </div>
             ) : (
-              <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface-alt)]/30 px-4 sm:px-6 py-10 sm:py-12 text-center">
-                <h3 className="text-lg font-black text-[var(--text)]">{t('main.no_workflows')}</h3>
-                <p className="mx-auto mt-2 max-w-xl text-sm font-medium leading-relaxed text-[var(--muted)]">
+              <div className="rounded-xl border border-dashed border-[var(--border)] px-6 py-16 text-center">
+                <h3 className="text-base font-medium text-[var(--text)]">{t('main.no_workflows')}</h3>
+                <p className="mx-auto mt-2 max-w-md text-[0.82rem] leading-relaxed text-[var(--muted)]">
                   {t('main.no_workflows_desc')}
                 </p>
               </div>
@@ -141,8 +158,8 @@ export default function Home() {
           </div>
         </div>
 
-        <footer className="mt-24 sm:mt-32 text-center">
-          <p className="text-sm font-medium text-[var(--muted)]">
+        <footer className="mt-24 pt-8 border-t border-[var(--border)] text-center">
+          <p className="text-[0.78rem] text-[var(--muted-soft)]">
             {t('main.footer')}
           </p>
         </footer>

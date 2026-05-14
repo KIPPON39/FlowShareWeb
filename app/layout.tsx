@@ -33,7 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body suppressHydrationWarning className="antialiased">
-        <div className="fixed top-0 left-0 right-0 h-[2px] bg-[var(--accent)] z-[100]" />
+        <div className="fixed top-0 left-0 right-0 h-px bg-[var(--accent)] z-[100] opacity-80" />
         <div className="bg-grid-container">
           <div className="bg-grid" />
         </div>
