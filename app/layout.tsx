@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
 import { Kanit } from 'next/font/google';
 import './globals.css';
+import { I18nProvider } from '@/components/i18n-provider';
 
 const kanit = Kanit({
-  subsets: ['latin'],
+  subsets: ['latin', 'thai'],
   weight: ['300', '400', '500', '600', '700'],
   variable: '--font-kanit',
 });
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${kanit.variable}`} suppressHydrationWarning>
+    <html lang="th" className={`${kanit.variable}`} suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -32,14 +33,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body suppressHydrationWarning className="antialiased">
-        <div className="fixed top-0 left-0 right-0 h-[2px] bg-[var(--accent)] z-[100]" />
+        <div className="fixed top-0 left-0 right-0 h-px bg-[var(--accent)] z-[100] opacity-80" />
         <div className="bg-grid-container">
           <div className="bg-grid" />
         </div>
         <div className="bg-glow-static" />
-        <div className="bg-beam" />
         <div className="bg-noise" />
-        {children}
+        <I18nProvider>
+          {children}
+        </I18nProvider>
       </body>
     </html>
   );

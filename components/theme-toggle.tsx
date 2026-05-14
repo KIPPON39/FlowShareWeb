@@ -28,17 +28,17 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <div className="h-9 w-9 rounded-full border border-[var(--border)] bg-[var(--surface)]" />
+      <div className="h-8 w-8 rounded-lg border border-[var(--border)] bg-[var(--surface)]" />
     );
   }
 
   return (
     <button
       onClick={toggle}
-      className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--muted-soft)] transition-all hover:translate-y-[-2px] hover:shadow-md hover:text-[var(--text)]"
+      className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--muted-soft)] transition-colors duration-200 hover:text-[var(--text)] hover:border-[var(--border-strong)]"
       aria-label="Toggle theme"
     >
-      {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+      {theme === 'light' ? <Moon size={15} /> : <Sun size={15} />}
     </button>
   );
 }

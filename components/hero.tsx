@@ -1,61 +1,82 @@
 'use client';
 
 import { Search } from 'lucide-react';
+import { useI18n } from '@/lib/i18n';
 
 const FILTERS = ['AI', 'Email', 'Finance', 'Scraping', 'Data', 'Integration', 'Marketing', 'Analytics', 'CRM', 'DevOps'];
 
-export function Hero() {
-  return (
-    <section id="explore" className="grid gap-6 px-4 py-10 text-center sm:py-16 lg:py-20 border-b border-[var(--border)]">
-      <h1 className="mx-auto max-w-4xl text-4xl font-bold leading-[1.15] tracking-tight sm:text-5xl lg:text-[3.5rem]">
-        Automation <span className="text-[var(--accent)]">Templates</span> <br className="hidden sm:inline" /> 
-        for every team
-      </h1>
-      <p className="mx-auto max-w-2xl text-lg text-[var(--muted-strong)] leading-relaxed font-medium">
-        Jumpstart your next flow with pre-built templates from the community. 
-        Reliable, secure, and ready to deploy in any stack.
-      </p>
+interface HeroProps {
+  flowCount?: number;
+}
 
-      <div className="group relative mx-auto w-full max-w-full px-0 transition-all duration-500 sm:max-w-[560px] sm:focus-within:max-w-[680px]">
-        <div className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4 shadow-2xl shadow-black/[0.02] ring-[var(--accent-soft)] transition-all group-focus-within:border-[var(--accent)] group-focus-within:ring-8 sm:group-focus-within:scale-[1.03]">
-          <Search size={22} className="text-[var(--muted-soft)] transition-colors group-focus-within:text-[var(--accent)]" />
-          <input 
-            type="text" 
-            placeholder="Search automation flows..."
-            className="flex-1 bg-transparent text-lg font-medium outline-hidden placeholder:text-[var(--muted-light)] text-[var(--text)]"
-          />
-          <kbd className="hidden sm:inline-flex h-6 items-center gap-1 rounded border border-[var(--border)] bg-[var(--surface-alt)] px-2 font-mono text-[10px] font-bold text-[var(--muted-strong)]">
-            <span className="text-xs">⌘</span>K
-          </kbd>
-        </div>
-        {/* Glow behind search */}
-        <div className="absolute -inset-4 z-[-1] rounded-[32px] bg-[var(--accent)] opacity-0 blur-3xl transition-opacity group-focus-within:opacity-10" />
+export function Hero({ flowCount = 0 }: HeroProps) {
+  const { t, lang } = useI18n();
+
+  return (
+    <section id="explore" className="grid gap-8 px-4 sm:px-4 py-14 text-center sm:py-20 lg:py-24 overflow-hidden">
+      <div className="grid gap-5">
+        <h1 className="mx-auto max-w-3xl text-[1.6rem] sm:text-4xl md:text-5xl lg:text-[3.25rem] font-semibold leading-[1.2] sm:leading-[1.12] tracking-tight text-[var(--text)] break-words">
+          {lang === 'th' ? (
+            <>
+              <span className="text-[var(--accent)]">{t('hero.title.1')}</span>{' '}
+              {t('hero.title.2')} <br className="hidden sm:inline" />
+              {t('hero.title.3')}
+            </>
+          ) : (
+            <>
+              {t('hero.title.1')} <span className="text-[var(--accent)]">{t('hero.title.2')}</span>{' '}
+              <br className="hidden sm:inline" />
+              {t('hero.title.3')}
+            </>
+          )}
+        </h1>
+        <p className="mx-auto max-w-xl text-[0.95rem] sm:text-base text-[var(--muted)] leading-relaxed px-2">
+          {lang === 'th'
+            ? 'เริ่มต้น flow ถัดไปของคุณด้วยเทมเพลตสำเร็จรูปจากชุมชน เชื่อถือได้ ปลอดภัย พร้อมใช้งานในทุกสแต็ค'
+            : 'Jumpstart your next flow with pre-built templates from the community. Reliable, secure, and ready to deploy in any stack.'}
+        </p>
       </div>
 
-      <div className="relative mt-8 flex flex-col items-center">
-        <span className="mb-4 text-[0.7rem] font-black uppercase tracking-[0.3em] text-[var(--muted-strong)]">
-          Explore Our Ecosystem
+      {/* Action Buttons */}
+      <div className="mt-2 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a 
+          href="#browse" 
+          onClick={(e) => {
+            e.preventDefault();
+            document.getElementById('browse')?.scrollIntoView({ behavior: 'smooth' });
+          }}
+          className="futuristic-hover flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-[var(--accent)] px-8 py-3.5 text-[0.95rem] font-semibold text-white transition-all duration-200 hover:opacity-90 active:scale-[0.97] shadow-lg shadow-[var(--accent-glow)]"
+        >
+          {t('cta.browse')}
+        </a>
+      </div>
+
+      {/* Filter tags */}
+      <div className="relative mt-2 flex flex-col items-center gap-5">
+        <span className="text-[0.65rem] font-medium uppercase tracking-[0.2em] text-[var(--muted-soft)]">
+          {t('hero.ecosystem')}
         </span>
-        <div className="relative flex w-full max-w-4xl items-center overflow-hidden py-2">
-          <div className="absolute top-0 left-0 z-10 h-full w-32 bg-linear-to-r from-[var(--bg)] to-transparent pointer-events-none" />
-          <div className="absolute top-0 right-0 z-10 h-full w-32 bg-linear-to-l from-[var(--bg)] to-transparent pointer-events-none" />
+        <div className="relative flex w-full max-w-3xl items-center overflow-hidden">
+          <div className="absolute top-0 left-0 z-10 h-full w-16 sm:w-24 bg-linear-to-r from-[var(--bg)] to-transparent pointer-events-none" />
+          <div className="absolute top-0 right-0 z-10 h-full w-16 sm:w-24 bg-linear-to-l from-[var(--bg)] to-transparent pointer-events-none" />
           
-          <div className="animate-scroll flex w-max gap-4 px-10 hover:[animation-play-state:paused]">
+          <div className="animate-scroll flex w-max gap-2.5 px-4 sm:px-8 hover:[animation-play-state:paused]">
             {[...FILTERS, ...FILTERS].map((filter, i) => (
-              <button 
+              <span 
                 key={i} 
-                className="group/tag flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] px-5 py-2.5 text-xs font-bold text-[var(--muted-strong)] transition-all hover:bg-[var(--accent)] hover:text-white hover:border-[var(--accent)] hover:shadow-lg hover:shadow-[var(--accent-soft)] active:scale-95"
+                className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3.5 py-1.5 text-[0.75rem] font-medium text-[var(--muted-strong)] whitespace-nowrap cursor-default"
               >
                 {filter}
-              </button>
+              </span>
             ))}
           </div>
         </div>
         
-        {/* Live Stats */}
-        <div className="mt-8 flex items-center gap-2 text-[0.7rem] font-bold uppercase tracking-widest text-[var(--muted-soft)]">
-          <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-          <span>2,847 flows live</span>
+        {/* Live count */}
+        <div className="flex items-center gap-2 text-[0.7rem] text-[var(--muted-soft)]">
+          <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="font-mono font-medium tabular-nums">{flowCount.toLocaleString()}</span>
+          <span className="font-medium">{t('hero.flows_live')}</span>
         </div>
       </div>
     </section>
