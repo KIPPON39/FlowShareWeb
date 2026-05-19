@@ -41,29 +41,29 @@
 [data-theme="dark"] {
   --bg: #09090b;
   --surface: #111113;
-  --surface-alt: #18181b;
-  --text: #ececef;
-  --text-subtle: #d4d4d8;
-  --muted: #a1a1aa;
-  --muted-strong: #8a8a93;
-  --muted-soft: #71717a;
-  --muted-light: #52525b;
+  --surface-alt: #1a1a1e;
+  --text: #f0f0f3;
+  --text-subtle: #dcdce0;
+  --muted: #b8b8c0;
+  --muted-strong: #a8a8b3;
+  --muted-soft: #94949e;
+  --muted-light: #76767f;
   --hero-title: var(--text);
   --hero-desc: var(--muted);
-  --border: rgba(255, 255, 255, 0.07);
-  --border-strong: rgba(255, 255, 255, 0.12);
+  --border: rgba(255, 255, 255, 0.11);
+  --border-strong: rgba(255, 255, 255, 0.18);
   --accent-glow: rgba(167, 59, 36, 0.25);
-  --accent-soft: rgba(167, 59, 36, 0.10);
-  --tag-alt-bg: rgba(255, 255, 255, 0.06);
-  --tag-alt-text: #d4d4d8;
+  --accent-soft: rgba(167, 59, 36, 0.12);
+  --tag-alt-bg: rgba(255, 255, 255, 0.10);
+  --tag-alt-text: #e0e0e4;
   --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.3);
   --glass: transparent;
   --ring: 0 0 0 3px rgba(167, 59, 36, 0.15);
-  --gridline: rgba(255, 255, 255, 0.04);
+  --gridline: rgba(255, 255, 255, 0.05);
   --panel-inset: none;
-  --skeleton-base: rgba(255, 255, 255, 0.05);
-  --skeleton-highlight: rgba(255, 255, 255, 0.08);
+  --skeleton-base: rgba(255, 255, 255, 0.07);
+  --skeleton-highlight: rgba(255, 255, 255, 0.12);
 }
 
 /* ─── Base ─── */
@@ -225,6 +225,10 @@
 .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 100px; }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--muted-soft); }
 
+/* ─── Hidden Scrollbar ─── */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
 /* ─── Search Glow ─── */
 .search-glow {
   position: relative;
@@ -270,32 +274,22 @@
 .card-glow-wrapper {
   position: relative;
   height: 100%;
-  border-radius: 16px; /* Match workflow-card rounded-xl */
-}
-
-.card-glow-wrapper::before {
-  content: "";
-  position: absolute;
-  inset: 0px;
   border-radius: 16px;
-  background: linear-gradient(135deg, rgba(167, 59, 36, 0.25), transparent, rgba(167, 59, 36, 0.15), transparent);
-  background-size: 300% 300%;
-  animation: glow-rotate 6s ease infinite;
-  z-index: -1;
-  opacity: 0;
-  filter: blur(3px);
-  transition: all 0.4s ease;
-  pointer-events: none;
+  transition: box-shadow 0.4s ease, border-color 0.4s ease;
 }
 
-.card-glow-wrapper:hover::before {
-  opacity: 1;
-  filter: blur(5px);
-  inset: -2px;
+.card-glow-wrapper:hover {
+  box-shadow:
+    0 0 0 1px rgba(167, 59, 36, 0.2),
+    0 0 20px -4px rgba(167, 59, 36, 0.15),
+    0 0 40px -8px rgba(167, 59, 36, 0.08);
 }
 
-[data-theme="dark"] .card-glow-wrapper::before {
-  background: linear-gradient(135deg, rgba(167, 59, 36, 0.4), transparent, rgba(167, 59, 36, 0.3), transparent);
+[data-theme="dark"] .card-glow-wrapper:hover {
+  box-shadow:
+    0 0 0 1px rgba(167, 59, 36, 0.35),
+    0 0 24px -4px rgba(167, 59, 36, 0.25),
+    0 0 48px -8px rgba(167, 59, 36, 0.12);
 }
 
 /* ─── Tag Items ─── */

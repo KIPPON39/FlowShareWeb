@@ -7,13 +7,142 @@ import {
   ChevronDown, 
   Database, 
   Tag,
+  X,
+  Check,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { useI18n } from '@/lib/i18n';
 import type { WorkflowTemplate } from '@/lib/workflows';
+
+/* ─── Download Flow Form Modal ─── */
+function DownloadFormModal({ isOpen, onClose, flowTitle }: { isOpen: boolean; onClose: () => void; flowTitle: string }) {
+  const { t } = useI18n();
+  const [formState, setFormState] = useState<'idle' | 'submitting' | 'success'>('idle');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [reason, setReason] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormState('submitting');
+    setTimeout(() => {
+      setFormState('success');
+      setTimeout(() => { onClose(); setFormState('idle'); setName(''); setEmail(''); setReason(''); }, 1500);
+    }, 1000);
+  };
+
+  return typeof document !== 'undefined' ? createPortal(
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={onClose}>
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          <motion.div initial={{ scale: 0.95, opacity: 0, y: 10 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 10 }} transition={{ duration: 0.2 }} className="relative w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <button onClick={onClose} className="absolute top-4 right-4 p-1.5 rounded-lg text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--surface-alt)] transition-colors"><X size={18} /></button>
+            {formState === 'success' ? (
+              <div className="flex flex-col items-center justify-center py-8 gap-4">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500"><Check size={32} /></div>
+                <p className="text-lg font-semibold text-[var(--text)]">{t('form.success')}</p>
+              </div>
+            ) : (
+              <>
+                <div className="mb-6">
+                  <h3 className="text-lg font-bold text-[var(--text)] tracking-tight">{t('form.download_title')}</h3>
+                  <p className="text-[0.82rem] text-[var(--muted)] mt-1">{t('form.download_desc')}</p>
+                  <p className="text-[0.75rem] text-[var(--accent)] font-semibold mt-2 truncate">{flowTitle}</p>
+                </div>
+                <form onSubmit={handleSubmit} className="grid gap-4">
+                  <div className="grid gap-1.5">
+                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.your_name')}</label>
+                    <input type="text" required value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-light)]" placeholder="John Doe" />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.your_email')}</label>
+                    <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-light)]" placeholder="you@example.com" />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.reason')}</label>
+                    <textarea required value={reason} onChange={(e) => setReason(e.target.value)} rows={3} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all resize-none placeholder:text-[var(--muted-light)]" placeholder={t('form.reason_placeholder')} />
+                  </div>
+                  <div className="flex gap-3 mt-2">
+                    <button type="button" onClick={onClose} className="flex-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] py-2.5 text-[0.85rem] font-medium text-[var(--muted-strong)] hover:text-[var(--text)] hover:bg-[var(--surface-alt)] transition-all">{t('form.cancel')}</button>
+                    <button type="submit" disabled={formState === 'submitting'} className="flex-1 rounded-xl bg-[var(--accent)] py-2.5 text-[0.85rem] font-semibold text-white transition-all hover:opacity-90 active:scale-[0.97] disabled:opacity-60 shadow-sm shadow-[var(--accent-glow)]">{formState === 'submitting' ? t('form.submitting') : t('form.submit')}</button>
+                  </div>
+                </form>
+              </>
+            )}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  , document.body) : null;
+}
+
+/* ─── Invite Speaker Form Modal ─── */
+function SpeakerFormModal({ isOpen, onClose, flowTitle }: { isOpen: boolean; onClose: () => void; flowTitle: string }) {
+  const { t } = useI18n();
+  const [formState, setFormState] = useState<'idle' | 'submitting' | 'success'>('idle');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [organization, setOrganization] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormState('submitting');
+    setTimeout(() => {
+      setFormState('success');
+      setTimeout(() => { onClose(); setFormState('idle'); setName(''); setEmail(''); setOrganization(''); }, 1500);
+    }, 1000);
+  };
+
+  return typeof document !== 'undefined' ? createPortal(
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={onClose}>
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          <motion.div initial={{ scale: 0.95, opacity: 0, y: 10 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 10 }} transition={{ duration: 0.2 }} className="relative w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <button onClick={onClose} className="absolute top-4 right-4 p-1.5 rounded-lg text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--surface-alt)] transition-colors"><X size={18} /></button>
+            {formState === 'success' ? (
+              <div className="flex flex-col items-center justify-center py-8 gap-4">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500"><Check size={32} /></div>
+                <p className="text-lg font-semibold text-[var(--text)]">{t('form.success')}</p>
+              </div>
+            ) : (
+              <>
+                <div className="mb-6">
+                  <h3 className="text-lg font-bold text-[var(--text)] tracking-tight">{t('form.speaker_title')}</h3>
+                  <p className="text-[0.82rem] text-[var(--muted)] mt-1">{t('form.speaker_desc')}</p>
+                  <p className="text-[0.75rem] text-[var(--accent)] font-semibold mt-2 truncate">{flowTitle}</p>
+                </div>
+                <form onSubmit={handleSubmit} className="grid gap-4">
+                  <div className="grid gap-1.5">
+                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.your_name')}</label>
+                    <input type="text" required value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-light)]" placeholder="John Doe" />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.your_email')}</label>
+                    <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-light)]" placeholder="you@example.com" />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.organization')}</label>
+                    <input type="text" required value={organization} onChange={(e) => setOrganization(e.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-light)]" placeholder={t('form.org_placeholder')} />
+                  </div>
+                  <div className="flex gap-3 mt-2">
+                    <button type="button" onClick={onClose} className="flex-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] py-2.5 text-[0.85rem] font-medium text-[var(--muted-strong)] hover:text-[var(--text)] hover:bg-[var(--surface-alt)] transition-all">{t('form.cancel')}</button>
+                    <button type="submit" disabled={formState === 'submitting'} className="flex-1 rounded-xl bg-[var(--accent)] py-2.5 text-[0.85rem] font-semibold text-white transition-all hover:opacity-90 active:scale-[0.97] disabled:opacity-60 shadow-sm shadow-[var(--accent-glow)]">{formState === 'submitting' ? t('form.submitting') : t('form.submit')}</button>
+                  </div>
+                </form>
+              </>
+            )}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  , document.body) : null;
+}
 
 export function TimelineStep({ index, title, nodeName }: { index: number, title: string, nodeName: string }) {
   return (
@@ -61,6 +190,8 @@ export function WorkflowDetail() {
   const [showAllPipeline, setShowAllPipeline] = useState(false);
   const [showAllCreds, setShowAllCreds] = useState(false);
   const [isBriefExpanded, setIsBriefExpanded] = useState(false);
+  const [showDownloadForm, setShowDownloadForm] = useState(false);
+  const [showSpeakerForm, setShowSpeakerForm] = useState(false);
   const { t } = useI18n();
   const params = useParams();
 
@@ -110,6 +241,7 @@ export function WorkflowDetail() {
   const displayedCreds = showAllCreds ? keys : keys.slice(0, 6);
 
   return (
+    <>
     <section id="detail" className="grid gap-8 my-8 sm:my-14">
       <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-8 shadow-sm relative overflow-hidden">
         <div className="absolute -top-24 -right-24 h-64 w-64 bg-[var(--accent)] opacity-[0.03] blur-3xl rounded-full" />
@@ -133,11 +265,11 @@ export function WorkflowDetail() {
           </div>
           
           <div className="flex flex-wrap gap-2.5 self-center sm:self-start">
-            <button className="futuristic-hover flex items-center gap-2 rounded-xl bg-[var(--accent)] px-5 py-2.5 text-[0.75rem] font-bold text-white transition-all hover:scale-[1.02] active:scale-95 shadow-sm shadow-[var(--accent-glow)]">
+            <button onClick={() => setShowDownloadForm(true)} className="futuristic-hover flex items-center gap-2 rounded-xl bg-[var(--accent)] px-5 py-2.5 text-[0.75rem] font-bold text-white transition-all hover:scale-[1.02] active:scale-95 shadow-sm shadow-[var(--accent-glow)]">
               <Download size={14} /> 
               <span>{t('detail.download')}</span>
             </button>
-            <button className="futuristic-hover flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] px-5 py-2.5 text-[0.75rem] font-bold text-[var(--text)] transition-all hover:bg-[var(--accent-soft)] hover:text-[var(--accent)] hover:border-[var(--accent)] active:scale-95">
+            <button onClick={() => setShowSpeakerForm(true)} className="futuristic-hover flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] px-5 py-2.5 text-[0.75rem] font-bold text-[var(--text)] transition-all hover:bg-[var(--accent-soft)] hover:text-[var(--accent)] hover:border-[var(--accent)] active:scale-95">
               <UserPlus size={14} /> 
               <span>{t('detail.invite')}</span>
             </button>
@@ -319,5 +451,10 @@ export function WorkflowDetail() {
         )}
       </div>
     </section>
+
+      {/* Form Modals */}
+      <DownloadFormModal isOpen={showDownloadForm} onClose={() => setShowDownloadForm(false)} flowTitle={workflow.title} />
+      <SpeakerFormModal isOpen={showSpeakerForm} onClose={() => setShowSpeakerForm(false)} flowTitle={workflow.title} />
+    </>
   );
 }

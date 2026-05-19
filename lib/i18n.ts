@@ -24,6 +24,7 @@ export const translations: Record<Language, Record<string, string>> = {
   th: {
     // Navbar
     'nav.explore': 'สำรวจ',
+    'nav.flows': 'Flows',
     'nav.create': 'สร้าง',
 
     // Hero
@@ -135,15 +136,31 @@ export const translations: Record<Language, Record<string, string>> = {
     'card.contributors': 'ผู้ร่วมสร้าง',
     'card.required_env': 'สภาพแวดล้อมที่ต้องการ',
     'card.download': 'ดาวน์โหลด Flow',
-    'card.invite_speaker': 'เชิญ Speaker',
+    'card.invite_speaker': 'เชิญไปเป็นวิทยากร',
     'card.view': 'ดู',
+
+    // Form Modals
+    'form.download_title': 'ขอดาวน์โหลด Flow',
+    'form.download_desc': 'กรุณากรอกข้อมูลเพื่อดาวน์โหลด Flow นี้',
+    'form.your_name': 'ชื่อของคุณ',
+    'form.your_email': 'อีเมลของคุณ',
+    'form.reason': 'เหตุผลที่ขอ',
+    'form.reason_placeholder': 'ระบุเหตุผลที่ต้องการดาวน์โหลด Flow นี้...',
+    'form.submit': 'ส่งคำขอ',
+    'form.cancel': 'ยกเลิก',
+    'form.submitting': 'กำลังส่ง...',
+    'form.success': 'ส่งคำขอเรียบร้อยแล้ว!',
+    'form.speaker_title': 'เชิญไปเป็นวิทยากร',
+    'form.speaker_desc': 'กรุณากรอกข้อมูลเพื่อเชิญไปเป็นวิทยากร',
+    'form.organization': 'หน่วยงาน',
+    'form.org_placeholder': 'ชื่อหน่วยงานของคุณ',
 
     // Workflow detail
     'detail.featured': 'แนะนำ',
     'detail.automation': 'อัตโนมัติ',
     'detail.views': 'ผู้เข้าชม',
     'detail.download': 'ดาวน์โหลด Flow',
-    'detail.invite': 'เชิญ Speaker',
+    'detail.invite': 'เชิญไปเป็นวิทยากร',
     'detail.overview': 'ภาพรวม',
     'detail.technical': 'สเปคเทคนิค',
     'detail.brief': 'คำอธิบาย',
@@ -181,6 +198,7 @@ export const translations: Record<Language, Record<string, string>> = {
   en: {
     // Navbar
     'nav.explore': 'Explore',
+    'nav.flows': 'Flows',
     'nav.create': 'Create',
 
     // Hero
@@ -292,15 +310,31 @@ export const translations: Record<Language, Record<string, string>> = {
     'card.contributors': 'Contributors',
     'card.required_env': 'Required Environment',
     'card.download': 'Download Flow',
-    'card.invite_speaker': 'Invite Speaker',
+    'card.invite_speaker': 'Invite as Speaker',
     'card.view': 'View',
+
+    // Form Modals
+    'form.download_title': 'Request Flow Download',
+    'form.download_desc': 'Please fill in your details to download this flow.',
+    'form.your_name': 'Your Name',
+    'form.your_email': 'Your Email',
+    'form.reason': 'Reason for Request',
+    'form.reason_placeholder': 'Describe why you need this flow...',
+    'form.submit': 'Submit Request',
+    'form.cancel': 'Cancel',
+    'form.submitting': 'Submitting...',
+    'form.success': 'Request submitted successfully!',
+    'form.speaker_title': 'Invite as Speaker',
+    'form.speaker_desc': 'Fill in your details to invite as a speaker.',
+    'form.organization': 'Organization',
+    'form.org_placeholder': 'Your organization name',
 
     // Workflow detail
     'detail.featured': 'Featured',
     'detail.automation': 'Automation',
     'detail.views': 'Views',
     'detail.download': 'Download Flow',
-    'detail.invite': 'Invite Speaker',
+    'detail.invite': 'Invite as Speaker',
     'detail.overview': 'Overview',
     'detail.technical': 'Technical Specs',
     'detail.brief': 'Brief',
