@@ -2,6 +2,7 @@
 
 import { Navbar } from '@/components/navbar';
 import { Hero } from '@/components/hero';
+import { HeroBackground } from '@/components/hero-background';
 import { WorkflowCard } from '@/components/workflow-card';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { type WorkflowTemplate } from '@/lib/workflows';
@@ -175,13 +176,14 @@ export default function Home() {
 
   return (
     <main className="min-h-screen">
+      <HeroBackground />
       <Navbar />
       
+      <Hero workflows={workflows} isLoading={isLoading} />
+      
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-0">
-        <Hero flowCount={workflows.length} />
-
         {/* ═══════════════ Templates Grid ═══════════════ */}
-        <div id="browse" className="border-t border-[var(--border)] mt-4 sm:mt-8 pt-8 sm:pt-12 lg:grid lg:grid-cols-[220px_1fr] gap-12 lg:gap-16 scroll-mt-20">
+        <div id="browse" className="pt-12 sm:pt-16 lg:grid lg:grid-cols-[220px_1fr] gap-12 lg:gap-16 scroll-mt-20">
           {/* Sidebar */}
           <aside className="hidden lg:block">
             <div className="sticky top-20 grid gap-10">

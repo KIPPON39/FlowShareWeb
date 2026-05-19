@@ -33,6 +33,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'hero.search': 'ค้นหา automation flows...',
     'hero.ecosystem': 'สำรวจระบบนิเวศของเรา',
     'hero.flows_live': 'flows ที่ใช้งานอยู่',
+    'hero.scroll_down': 'เลื่อนลงด้านล่าง',
 
     // Main page
     'main.collections': 'คอลเลกชัน',
@@ -189,6 +190,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'hero.search': 'Search automation flows...',
     'hero.ecosystem': 'Explore Our Ecosystem',
     'hero.flows_live': 'flows live',
+    'hero.scroll_down': 'Scroll Down',
 
     // Main page
     'main.collections': 'Collections',

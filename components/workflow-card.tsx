@@ -135,7 +135,7 @@ export function WorkflowCard({ id, title, description, tags, keys, creators, nod
           {tags.map((tag, i) => {
             const cleanTag = tag.replace(/^["'\[]+|["'\]]+$/g, '').trim();
             return (
-              <span key={i} className="rounded-md bg-[var(--tag-alt-bg)] px-2 py-0.5 text-[0.7rem] font-medium text-[var(--tag-alt-text)] border border-[var(--border)]">
+              <span key={i} className="inline-flex items-center whitespace-nowrap shrink-0 px-3 py-0.5 rounded-full text-[0.7rem] font-semibold tracking-wide bg-[var(--tag-alt-bg)] text-[var(--tag-alt-text)] border border-[var(--border)] uppercase">
                 {cleanTag}
               </span>
             );

@@ -242,6 +242,7 @@ export function UploadSection() {
   const [statusMessage, setStatusMessage] = useState('');
   const [rawJson, setRawJson] = useState<unknown>(null);
   const [uploadedFilename, setUploadedFilename] = useState('');
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
   const canShipWorkflow = Boolean(rawJson && title && description && creatorEmail.includes('@') && tags.length > 0);
 
   const toggleTag = (tag: string) => {
@@ -436,8 +437,47 @@ export function UploadSection() {
     }
   };
 
+  const isJsonMissing = hasAttemptedSubmit && !rawJson;
+  const isTitleMissing = hasAttemptedSubmit && (!title || !description);
+  const isTagsMissing = hasAttemptedSubmit && tags.length === 0;
+  const isEmailMissing = hasAttemptedSubmit && !creatorEmail.includes('@');
+
+  const requirements = [
+    { id: 'upload-json', label: t('upload.upload_json_first'), isMet: Boolean(rawJson) },
+    { id: 'upload-title', label: t('upload.add_title_desc'), isMet: Boolean(title && description) },
+    { id: 'upload-tags', label: t('upload.select_tags_first'), isMet: tags.length > 0 },
+    { id: 'upload-email', label: t('upload.add_email_first'), isMet: creatorEmail.includes('@') },
+  ];
+  
+  const completedStepsCount = requirements.filter(r => r.isMet).length;
+  const progressPercent = (completedStepsCount / requirements.length) * 100;
+
+  const scrollToField = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.focus();
+    }
+  };
+
   return (
     <section id="upload" className="grid gap-8 my-8 sm:my-12 pb-20">
+      {/* Progress Bar */}
+      <div className="grid gap-2">
+        <div className="flex items-center justify-between text-xs font-bold text-[var(--muted-strong)]">
+          <span>{t('upload.completion_progress') || 'Completion Progress'}</span>
+          <span className={completedStepsCount === requirements.length ? 'text-emerald-500' : ''}>
+            {Math.round(progressPercent)}%
+          </span>
+        </div>
+        <div className="w-full bg-[var(--surface-alt)] rounded-full h-1.5 border border-[var(--border)] overflow-hidden">
+          <div 
+            className="h-full transition-all duration-500 ease-out" 
+            style={{ width: `${progressPercent}%`, backgroundColor: completedStepsCount === requirements.length ? '#10b981' : 'var(--accent)' }}
+          />
+        </div>
+      </div>
+
       <div className="flex items-center gap-4 text-left">
         <div className="h-10 w-10 flex flex-shrink-0 items-center justify-center rounded-lg bg-[var(--accent)] text-white">
           <CloudUpload size={20} />
@@ -474,7 +514,10 @@ export function UploadSection() {
                   </button>
                 </div>
               ) : (
-                <label className="futuristic-hover upload-zone block rounded-xl border-2 border-dashed border-[var(--border-strong)] bg-[var(--surface-alt)]/20 p-8 text-center transition-all hover:border-[var(--accent)] group cursor-pointer">
+                <label 
+                  id="upload-json"
+                  className={`futuristic-hover upload-zone block rounded-xl border-2 border-dashed ${isJsonMissing ? 'border-red-500/50 bg-red-500/5 hover:border-red-500' : 'border-[var(--border-strong)] bg-[var(--surface-alt)]/20 hover:border-[var(--accent)]'} p-8 text-center transition-all group cursor-pointer`}
+                >
                   <input
                     type="file"
                     accept="application/json,.json"
@@ -495,20 +538,22 @@ export function UploadSection() {
 
               <div className="grid gap-4">
                 <input 
+                  id="upload-title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="rounded-lg border border-[var(--border)] bg-[var(--surface-alt)] px-4 py-3 text-base font-medium tracking-tight outline-hidden focus:ring-[3px] focus:ring-[var(--accent-soft)] focus:border-[var(--accent)] transition-all text-[var(--text)]" 
+                  className={`rounded-lg border ${!title ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : 'border-[var(--border)]'} bg-[var(--surface-alt)] px-4 py-3 text-base font-medium tracking-tight outline-hidden focus:ring-[3px] focus:ring-[var(--accent-soft)] focus:border-[var(--accent)] transition-all text-[var(--text)]`} 
                   placeholder={t('upload.flow_title')} 
                 />
                 <textarea 
+                  id="upload-desc"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3} 
-                  className="rounded-lg border border-[var(--border)] bg-[var(--surface-alt)] px-4 py-3 text-[0.9rem] leading-relaxed outline-hidden focus:ring-[3px] focus:ring-[var(--accent-soft)] focus:border-[var(--accent)] transition-all resize-none text-[var(--text)]" 
+                  className={`rounded-lg border ${!description ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : 'border-[var(--border)]'} bg-[var(--surface-alt)] px-4 py-3 text-[0.9rem] leading-relaxed outline-hidden focus:ring-[3px] focus:ring-[var(--accent-soft)] focus:border-[var(--accent)] transition-all resize-none text-[var(--text)]`} 
                   placeholder={t('upload.flow_desc')}
                 />
                 {/* Tags Input */}
-                <div className="grid gap-3">
+                <div id="upload-tags" className={`grid gap-3 p-3 -m-3 rounded-xl transition-colors ${isTagsMissing ? 'bg-red-500/5 border border-red-500/20' : ''}`}>
                   <span className="text-[0.75rem] font-medium text-[var(--muted-strong)]">{t('upload.tags_placeholder')}</span>
                   <div className="flex flex-wrap gap-2">
                     {PREDEFINED_TAGS.map((tag) => {
@@ -546,8 +591,11 @@ export function UploadSection() {
               </summary>
               
               <div className="grid gap-3">
-                <div className="flex items-center gap-3 rounded-2xl border-2 border-dotted border-[var(--border)] bg-[var(--surface-alt)]/20 px-5 py-4 focus-within:border-[var(--accent)] transition-all">
-                  <UserPlus size={18} className="text-[var(--muted)]" />
+                <div 
+                  id="upload-email"
+                  className={`flex items-center gap-3 rounded-2xl border-2 border-dotted ${isEmailMissing ? 'border-red-500/50 bg-red-500/5 focus-within:border-red-500' : 'border-[var(--border)] bg-[var(--surface-alt)]/20 focus-within:border-[var(--accent)]'} px-5 py-4 transition-all`}
+                >
+                  <UserPlus size={18} className={isEmailMissing ? 'text-red-500' : 'text-[var(--muted)]'} />
                   <input
                     value={creatorEmail}
                     onChange={(e) => setCreatorEmail(e.target.value)}
@@ -841,29 +889,35 @@ export function UploadSection() {
             )}
             
             <div className="grid gap-2 mb-2">
-              {[
-                { id: 'json', label: t('upload.upload_json_first'), isMet: Boolean(rawJson) },
-                { id: 'email', label: t('upload.add_email_first'), isMet: Boolean(creatorEmail.includes('@')) },
-                { id: 'desc', label: t('upload.add_title_desc'), isMet: Boolean(title && description) },
-                { id: 'tags', label: t('upload.select_tags_first'), isMet: tags.length > 0 },
-              ].map(req => (
-                <div key={req.id} className="flex items-center gap-2">
+              {requirements.map(req => (
+                <button 
+                  key={req.id} 
+                  onClick={() => !req.isMet && scrollToField(req.id)}
+                  className={`flex items-center gap-2 text-left w-full p-2 -mx-2 rounded-lg transition-colors ${!req.isMet ? 'hover:bg-[var(--surface-alt)] cursor-pointer' : 'cursor-default'}`}
+                >
                   {req.isMet ? (
-                    <CheckCircle2 size={16} className="text-emerald-500" />
+                    <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />
                   ) : (
-                    <XCircle size={16} className="text-red-500" />
+                    <XCircle size={16} className="text-red-500 shrink-0" />
                   )}
-                  <span className={`text-[0.75rem] font-bold ${req.isMet ? 'text-[var(--text)]' : 'text-[var(--muted)]'}`}>
+                  <span className={`text-[0.75rem] font-bold ${req.isMet ? 'text-[var(--text)]' : 'text-red-500'}`}>
                     {req.label}
                   </span>
-                </div>
+                </button>
               ))}
             </div>
           
             <button
-              onClick={submitWorkflow}
-              disabled={submitState === 'saving' || !canShipWorkflow}
-              className="futuristic-hover group flex w-full items-center justify-center gap-2.5 rounded-xl bg-[var(--accent)] px-8 py-3.5 text-[0.85rem] font-bold text-white shadow-md shadow-[var(--accent-glow)] transition-all duration-300 hover:scale-[1.02] hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
+              onClick={(e) => {
+                if (!canShipWorkflow) {
+                  e.preventDefault();
+                  setHasAttemptedSubmit(true);
+                  return;
+                }
+                submitWorkflow();
+              }}
+              disabled={submitState === 'saving'}
+              className={`futuristic-hover group flex w-full items-center justify-center gap-2.5 rounded-xl bg-[var(--accent)] px-8 py-3.5 text-[0.85rem] font-bold text-white shadow-md shadow-[var(--accent-glow)] transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100 ${!canShipWorkflow ? 'opacity-40 cursor-not-allowed hover:scale-100' : 'hover:scale-[1.02] hover:opacity-90 active:scale-[0.98]'}`}
             >
               <Send size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
               <span className="uppercase tracking-widest">{submitState === 'saving' ? t('upload.shipping') : t('upload.ship_workflow')}</span>

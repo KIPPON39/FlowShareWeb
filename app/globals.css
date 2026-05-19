@@ -18,6 +18,8 @@
   --muted-strong: #555555;
   --muted-soft: #999999;
   --muted-light: #bbbbbb;
+  --hero-title: #1a0d08;
+  --hero-desc: #3d1f15;
   --border: rgba(0, 0, 0, 0.06);
   --border-strong: rgba(0, 0, 0, 0.10);
   --accent: #a73b24;
@@ -27,7 +29,7 @@
   --tag-alt-text: #555555;
   --shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
   --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.04);
-  --glass: rgba(255, 255, 255, 0.72);
+  --glass: transparent;
   --ring: 0 0 0 3px rgba(167, 59, 36, 0.08);
   --gridline: rgba(0, 0, 0, 0.04);
   --panel-inset: none;
@@ -46,6 +48,8 @@
   --muted-strong: #8a8a93;
   --muted-soft: #71717a;
   --muted-light: #52525b;
+  --hero-title: var(--text);
+  --hero-desc: var(--muted);
   --border: rgba(255, 255, 255, 0.07);
   --border-strong: rgba(255, 255, 255, 0.12);
   --accent-glow: rgba(167, 59, 36, 0.25);
@@ -54,7 +58,7 @@
   --tag-alt-text: #d4d4d8;
   --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.3);
-  --glass: rgba(9, 9, 11, 0.72);
+  --glass: transparent;
   --ring: 0 0 0 3px rgba(167, 59, 36, 0.15);
   --gridline: rgba(255, 255, 255, 0.04);
   --panel-inset: none;
@@ -72,6 +76,35 @@
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: background-color 300ms ease, color 300ms ease;
+  }
+
+  @keyframes page-transition {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .animate-page-transition {
+    animation: page-transition 200ms ease forwards;
+  }
+
+  @keyframes slide-up-fade {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .animate-slide-up-fade {
+    animation: slide-up-fade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 
   /* Perspective grid */
@@ -135,8 +168,7 @@
 
 /* ─── Glass Navbar ─── */
 .glass {
-  @apply backdrop-blur-2xl bg-[var(--glass)] border-b border-[var(--border)];
-  box-shadow: 0 1px 0 var(--border);
+  background: transparent;
 }
 
 /* ─── Workflow Card ─── */
