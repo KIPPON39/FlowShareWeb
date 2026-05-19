@@ -2,12 +2,13 @@
 
 import { Navbar } from '@/components/navbar';
 import { Hero } from '@/components/hero';
+import { HeroBackground } from '@/components/hero-background';
 import { WorkflowCard } from '@/components/workflow-card';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { type WorkflowTemplate } from '@/lib/workflows';
 import { useI18n } from '@/lib/i18n';
 import Link from 'next/link';
-import { Zap, Users, Shield, Rocket, Code2, ArrowRight, ArrowUpRight, FileJson, Cpu, Database, Globe } from 'lucide-react';
+import { Zap, Users, Shield, Rocket, Code2, ArrowRight, ArrowUpRight, FileJson, Cpu, Database, Globe, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const CATEGORY_MAPPINGS = [
   { en: 'All Templates', th: 'เทมเพลตทั้งหมด', tags: [] },
@@ -96,7 +97,7 @@ export default function Home() {
   const [workflows, setWorkflows] = useState<WorkflowTemplate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [backendWarning, setBackendWarning] = useState('');
-  const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
+  const [selectedTags, setSelectedTags] = useState<number[]>([0]);
   const [searchQuery, setSearchQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(4);
   const { t, lang } = useI18n();
@@ -119,13 +120,13 @@ export default function Home() {
     };
   });
 
-  const filteredByCategory = activeCategoryIndex === 0
+  // Multi-select tag filtering: if [0] (All) is selected, show everything
+  const filteredByCategory = selectedTags.includes(0)
     ? workflows
-    : workflows.filter(wf => 
-        wf.tags?.some(tag => 
-          CATEGORY_MAPPINGS[activeCategoryIndex].tags.map(t => t.toLowerCase()).includes(tag.toLowerCase())
-        )
-      );
+    : workflows.filter(wf => {
+        const allSelectedCatTags = selectedTags.flatMap(idx => CATEGORY_MAPPINGS[idx]?.tags || []).map(t => t.toLowerCase());
+        return wf.tags?.some(tag => allSelectedCatTags.includes(tag.toLowerCase()));
+      });
 
   const filteredWorkflows = filteredByCategory.filter(wf => {
     if (!searchQuery.trim()) return true;
@@ -143,7 +144,7 @@ export default function Home() {
 
   useEffect(() => {
     setVisibleCount(4);
-  }, [searchQuery, activeCategoryIndex]);
+  }, [searchQuery, selectedTags]);
 
   useEffect(() => {
     let isMounted = true;
@@ -175,118 +176,140 @@ export default function Home() {
 
   return (
     <main className="min-h-screen">
+      <HeroBackground />
       <Navbar />
       
+      <Hero workflows={workflows} isLoading={isLoading} />
+      
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-0">
-        <Hero flowCount={workflows.length} />
-
-        {/* ═══════════════ Templates Grid ═══════════════ */}
-        <div id="browse" className="border-t border-[var(--border)] mt-4 sm:mt-8 pt-8 sm:pt-12 lg:grid lg:grid-cols-[220px_1fr] gap-12 lg:gap-16 scroll-mt-20">
-          {/* Sidebar */}
-          <aside className="hidden lg:block">
-            <div className="sticky top-20 grid gap-10">
-              <div className="grid gap-2">
-                <h3 className="text-[0.65rem] font-medium uppercase tracking-[0.2em] text-[var(--muted-soft)] mb-1 pl-3">{t('main.collections')}</h3>
-                <nav className="grid gap-0.5">
-                  {categories.map((cat, i) => (
-                    <button 
-                      key={i}
-                      onClick={() => setActiveCategoryIndex(i)}
-                      className={`${activeCategoryIndex !== i ? 'futuristic-hover' : ''} group flex w-full items-center justify-between rounded-lg px-3 py-2 text-[0.82rem] transition-colors duration-150 ${activeCategoryIndex === i ? 'bg-[var(--accent-soft)] text-[var(--accent)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--surface-alt)] hover:text-[var(--text)]'}`}
-                    >
-                      <span className="truncate">{cat.name}</span>
-                      <span className={`inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full font-mono text-[0.65rem] tabular-nums transition-colors duration-200 ${activeCategoryIndex === i ? 'bg-[var(--accent)] text-white shadow-xs' : 'bg-[var(--surface)] border border-[var(--border)] text-[var(--muted-soft)] group-hover:text-[var(--muted)] group-hover:border-[var(--border-strong)]'}`}>
-                        {cat.count}
-                      </span>
-                    </button>
-                  ))}
-                </nav>
-              </div>
+        {/* ═══════════════ Flows Landing Section ═══════════════ */}
+        <div id="browse" className="pt-12 sm:pt-16 scroll-mt-20">
+          {/* Section Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--text)]">
+                Flows
+              </h2>
+              <p className="text-[0.85rem] text-[var(--muted)] mt-1">{t('main.browse_desc')}</p>
             </div>
-          </aside>
+            <Link
+              href="/flows"
+              className="futuristic-hover hidden sm:inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-2.5 text-[0.82rem] font-medium text-[var(--text)] hover:bg-[var(--surface-alt)] hover:border-[var(--border-strong)] transition-all active:scale-95 shadow-xs"
+            >
+              {lang === 'th' ? 'ดู Flows ทั้งหมด' : 'View All Flows'}
+              <ArrowRight size={14} />
+            </Link>
+          </div>
 
-          <div className="grid gap-8">
-            {/* Section header */}
-            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-2">
-              <div>
-                <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-[var(--text)]">
-                  {activeCategoryIndex === 0 ? t('main.browse_templates') : categories[activeCategoryIndex].name}
-                </h2>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mt-1.5">
-                  <p className="text-[0.82rem] text-[var(--muted)]">{t('main.browse_desc')}</p>
-                  <span className="hidden sm:inline-block text-[var(--border)]">|</span>
-                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
-                    <span className="text-[0.7rem] text-[var(--muted)] whitespace-nowrap">Try:</span>
-                    {['Gmail', 'Notion', 'AI', 'Slack'].map(tag => (
-                      <button 
-                        key={tag} 
-                        onClick={() => setSearchQuery(tag)} 
-                        className="text-[0.65rem] bg-[var(--surface-alt)] hover:bg-[var(--accent)] hover:border-[var(--accent)] hover:text-white border border-[var(--border)] rounded-md px-2 py-0.5 text-[var(--muted-strong)] transition-colors whitespace-nowrap"
-                      >
-                        {tag}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full xl:w-auto">
-                <div className="futuristic-hover focus-glow relative group flex-1 sm:flex-none rounded-xl">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted-light)] transition-colors group-focus-within:text-[var(--accent)]">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                  </div>
-                  <input 
-                    type="text" 
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder={lang === 'th' ? "ลองค้นหา 'Gmail' หรือ 'AI'..." : "Try 'Gmail automation' or 'AI'..."}
-                    className="w-full sm:w-64 rounded-xl border border-[var(--border)] bg-[var(--surface)] py-2 pl-9 pr-4 text-[0.85rem] outline-hidden transition-all duration-200 placeholder:text-[var(--muted-light)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] text-[var(--text)]"
-                  />
-                </div>
-                <span className="hidden sm:inline-flex items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] px-3 py-2 text-[0.75rem] text-[var(--muted-strong)] font-mono tabular-nums whitespace-nowrap">
-                  {isLoading ? t('main.syncing') : `${filteredWorkflows.length} ${t('main.templates')}`}
-                </span>
-              </div>
+          {/* Tag Filter Row */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-4 scrollbar-hide -mx-1 px-1">
+            {categories.map((cat, i) => {
+              const isSelected = selectedTags.includes(i);
+              return (
+                <button
+                  key={i}
+                  onClick={() => {
+                    if (i === 0) {
+                      setSelectedTags([0]);
+                    } else {
+                      setSelectedTags(prev => {
+                        const withoutAll = prev.filter(t => t !== 0);
+                        if (prev.includes(i)) {
+                          const next = withoutAll.filter(t => t !== i);
+                          return next.length === 0 ? [0] : next;
+                        } else {
+                          return [...withoutAll, i];
+                        }
+                      });
+                    }
+                  }}
+                  className={`inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-full px-4 py-2 text-[0.78rem] font-semibold tracking-wide border transition-all duration-200 ${
+                    isSelected
+                      ? 'bg-[var(--accent)] text-white border-[var(--accent)] shadow-sm shadow-[var(--accent-glow)]'
+                      : 'bg-[var(--surface)] text-[var(--muted-strong)] border-[var(--border)] hover:bg-[var(--surface-alt)] hover:text-[var(--text)] hover:border-[var(--border-strong)]'
+                  }`}
+                >
+                  {cat.name}
+                  <span className={`text-[0.65rem] font-mono tabular-nums ${isSelected ? 'text-white/80' : 'text-[var(--muted-soft)]'}`}>
+                    {cat.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {backendWarning && (
+            <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-[0.82rem] text-[var(--muted-strong)] mb-4">
+              {backendWarning}
             </div>
+          )}
 
-            {backendWarning && (
-              <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-[0.82rem] text-[var(--muted-strong)]">
-                {backendWarning}
-              </div>
-            )}
+          {/* Horizontal Scroll Cards */}
+          {isLoading ? (
+            <div className="flex gap-5 overflow-hidden">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="min-w-[320px] sm:min-w-[380px] flex-shrink-0">
+                  <WorkflowCardSkeleton />
+                </div>
+              ))}
+            </div>
+          ) : filteredWorkflows.length > 0 ? (
+            <div className="relative group/scroll">
+              {/* Left Arrow */}
+              <button
+                onClick={() => {
+                  const container = document.getElementById('flow-scroll-container');
+                  if (container) container.scrollBy({ left: -400, behavior: 'smooth' });
+                }}
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 z-20 hidden sm:flex h-11 w-11 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] shadow-lg text-[var(--muted)] hover:text-[var(--text)] hover:border-[var(--accent)]/40 transition-all duration-200 opacity-0 group-hover/scroll:opacity-100 active:scale-90 backdrop-blur-md"
+                aria-label="Scroll left"
+              >
+                <ChevronLeft size={20} />
+              </button>
 
-            {isLoading ? (
-              <div className="grid gap-5 sm:grid-cols-2">
-                {[...Array(4)].map((_, i) => (
-                  <WorkflowCardSkeleton key={i} />
+              {/* Scrollable Container */}
+              <div
+                id="flow-scroll-container"
+                className="flex gap-5 overflow-x-auto py-2 pb-4 scroll-smooth snap-x snap-mandatory scrollbar-hide -mx-2 px-2"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
+                {filteredWorkflows.map((wf, i) => (
+                  <div key={i} className="min-w-[320px] sm:min-w-[400px] max-w-[420px] flex-shrink-0 snap-start">
+                    <WorkflowCard {...wf} />
+                  </div>
                 ))}
               </div>
-            ) : filteredWorkflows.length > 0 ? (
-              <>
-                <div className="grid gap-5 sm:grid-cols-2">
-                  {filteredWorkflows.slice(0, visibleCount).map((wf, i) => (
-                    <WorkflowCard key={i} {...wf} />
-                  ))}
-                </div>
-                {filteredWorkflows.length > visibleCount && (
-                  <div className="mt-8 text-center">
-                    <button 
-                      onClick={() => setVisibleCount(prev => prev + 4)}
-                      className="futuristic-hover inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-6 py-2.5 text-[0.85rem] font-medium text-[var(--text)] transition-all hover:bg-[var(--surface-alt)] hover:border-[var(--border-strong)] active:scale-95 shadow-xs"
-                    >
-                      {lang === 'th' ? 'โหลดเพิ่มเติม' : 'Load More'}
-                    </button>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="rounded-xl border border-dashed border-[var(--border)] px-6 py-16 text-center">
-                <h3 className="text-base font-medium text-[var(--text)]">{t('main.no_workflows')}</h3>
-                <p className="mx-auto mt-2 max-w-md text-[0.82rem] leading-relaxed text-[var(--muted)]">
-                  {t('main.no_workflows_desc')}
-                </p>
-              </div>
-            )}
+
+              {/* Right Arrow */}
+              <button
+                onClick={() => {
+                  const container = document.getElementById('flow-scroll-container');
+                  if (container) container.scrollBy({ left: 400, behavior: 'smooth' });
+                }}
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 z-20 hidden sm:flex h-11 w-11 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] shadow-lg text-[var(--muted)] hover:text-[var(--text)] hover:border-[var(--accent)]/40 transition-all duration-200 opacity-0 group-hover/scroll:opacity-100 active:scale-90 backdrop-blur-md"
+                aria-label="Scroll right"
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-dashed border-[var(--border)] px-6 py-16 text-center">
+              <h3 className="text-base font-medium text-[var(--text)]">{t('main.no_workflows')}</h3>
+              <p className="mx-auto mt-2 max-w-md text-[0.82rem] leading-relaxed text-[var(--muted)]">
+                {t('main.no_workflows_desc')}
+              </p>
+            </div>
+          )}
+
+          {/* Mobile: View All Button */}
+          <div className="mt-6 text-center sm:hidden">
+            <Link
+              href="/flows"
+              className="futuristic-hover inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-6 py-2.5 text-[0.85rem] font-medium text-[var(--text)] hover:bg-[var(--surface-alt)] transition-all active:scale-95 shadow-xs"
+            >
+              {lang === 'th' ? 'ดู Flows ทั้งหมด' : 'View All Flows'}
+              <ArrowRight size={14} />
+            </Link>
           </div>
         </div>
 
@@ -456,6 +479,7 @@ export default function Home() {
               <h4 className="text-[0.85rem] font-semibold text-[var(--text)] mb-4">{t('footer.product')}</h4>
               <nav className="grid gap-2.5">
                 <Link href="/" className="text-[0.82rem] text-[var(--muted)] hover:text-[var(--text)] transition-colors">{t('footer.explore')}</Link>
+                <Link href="/flows" className="text-[0.82rem] text-[var(--muted)] hover:text-[var(--text)] transition-colors">Flows</Link>
                 <Link href="/upload" className="text-[0.82rem] text-[var(--muted)] hover:text-[var(--text)] transition-colors">{t('footer.create')}</Link>
               </nav>
             </div>
