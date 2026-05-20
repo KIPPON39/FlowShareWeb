@@ -616,7 +616,7 @@ export function UploadSection() {
                 <input
                   value={creatorEmail}
                   onChange={(e) => setCreatorEmail(e.target.value)}
-                  className="flex-1 bg-transparent text-sm font-bold opacity-80 outline-hidden placeholder:text-[var(--muted-light)] text-[var(--text)]"
+                  className="flex-1 bg-transparent text-sm font-bold opacity-80 outline-hidden placeholder:text-[var(--muted-soft)] text-[var(--text)]"
                   placeholder={t('upload.creator_email')}
                   type="email"
                 />
@@ -654,7 +654,7 @@ export function UploadSection() {
                 <input
                   value={newEmail}
                   onChange={(e) => setNewEmail(e.target.value)}
-                  className="flex-1 bg-transparent text-sm font-bold opacity-60 outline-hidden placeholder:text-[var(--muted-light)] text-[var(--text)]"
+                  className="flex-1 bg-transparent text-sm font-bold opacity-60 outline-hidden placeholder:text-[var(--muted-soft)] text-[var(--text)]"
                   placeholder={t('upload.invite')}
                   onKeyDown={(e) => e.key === 'Enter' && addContributor()}
                 />
@@ -700,7 +700,7 @@ export function UploadSection() {
                     <input
                       value={newStep.title}
                       onChange={(e) => setNewStep({ ...newStep, title: e.target.value })}
-                      className="w-full bg-transparent text-base font-bold outline-hidden placeholder:text-[var(--muted-light)] text-[var(--text)]"
+                      className="w-full bg-transparent text-base font-bold outline-hidden placeholder:text-[var(--muted-soft)] text-[var(--text)]"
                       placeholder={t('upload.step_do')}
                     />
                     <div className="flex items-center justify-between border-t border-[var(--border)] pt-4">
@@ -760,7 +760,7 @@ export function UploadSection() {
                   <input
                     value={newKey}
                     onChange={(e) => setNewKey(e.target.value)}
-                    className="flex-1 bg-transparent text-sm font-bold outline-hidden placeholder:text-[var(--muted-light)] text-[var(--text)]"
+                    className="flex-1 bg-transparent text-sm font-bold outline-hidden placeholder:text-[var(--muted-soft)] text-[var(--text)]"
                     placeholder={t('upload.add_key')}
                     onKeyDown={(e) => e.key === 'Enter' && addKey()}
                   />

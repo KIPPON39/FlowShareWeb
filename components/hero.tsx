@@ -241,7 +241,7 @@ export function Hero({ workflows = [], isLoading = false }: HeroProps) {
                             className={`
                               inline-flex items-center whitespace-nowrap shrink-0 rounded-full px-2.5 h-[20px] text-[0.6rem] font-semibold uppercase tracking-wide
                               ${isCenter 
-                                ? 'bg-[var(--accent)]/12 text-[var(--accent)] border border-[var(--accent)]/20' 
+                                ? 'bg-[var(--accent-soft)] text-[var(--accent)] border border-[var(--accent)]/15' 
                                 : 'bg-[var(--tag-alt-bg)] text-[var(--muted-strong)] border border-[var(--border)]'
                               }
                             `}

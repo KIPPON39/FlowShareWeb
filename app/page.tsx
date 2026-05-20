@@ -365,7 +365,7 @@ export default function Home() {
 
               {/* Node 1 */}
               <div className="relative z-10 flex flex-col items-center gap-3 w-32 group cursor-default">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm text-blue-500 transition-transform group-hover:-translate-y-1">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm text-blue-600 dark:text-blue-400 transition-transform group-hover:-translate-y-1">
                   <FileJson size={24} />
                 </div>
                 <div className="text-center bg-[var(--surface)] px-1">
@@ -378,7 +378,7 @@ export default function Home() {
 
               {/* Node 2 */}
               <div className="relative z-10 flex flex-col items-center gap-3 w-32 group cursor-default">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm text-amber-500 transition-transform group-hover:-translate-y-1">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm text-amber-600 dark:text-amber-400 transition-transform group-hover:-translate-y-1">
                   <Cpu size={24} />
                 </div>
                 <div className="text-center bg-[var(--surface)] px-1">
@@ -391,7 +391,7 @@ export default function Home() {
 
               {/* Node 3 */}
               <div className="relative z-10 flex flex-col items-center gap-3 w-32 group cursor-default">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm text-purple-500 transition-transform group-hover:-translate-y-1">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm text-purple-600 dark:text-purple-400 transition-transform group-hover:-translate-y-1">
                   <Database size={24} />
                 </div>
                 <div className="text-center bg-[var(--surface)] px-1">
@@ -404,7 +404,7 @@ export default function Home() {
 
               {/* Node 4 */}
               <div className="relative z-10 flex flex-col items-center gap-3 w-32 group cursor-default">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm text-emerald-500 transition-transform group-hover:-translate-y-1">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm text-emerald-600 dark:text-emerald-400 transition-transform group-hover:-translate-y-1">
                   <Globe size={24} />
                 </div>
                 <div className="text-center bg-[var(--surface)] px-1">

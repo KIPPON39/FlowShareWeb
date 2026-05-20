@@ -136,7 +136,7 @@ export default function FlowsPage() {
         {/* ═══════════ Search Bar ═══════════ */}
         <div className="mb-6">
           <div className="search-glow relative group rounded-2xl">
-            <div className="absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 text-[var(--muted-light)] transition-colors group-focus-within:text-[var(--accent)]">
+            <div className="absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 text-[var(--muted)] transition-colors group-focus-within:text-[var(--accent)]">
               <Search size={20} />
             </div>
             <input
@@ -145,7 +145,7 @@ export default function FlowsPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={lang === 'th' ? "ค้นหา flow, tag, credentials เช่น 'Gmail', 'AI', 'Notion'..." : "Search flows, tags, credentials e.g. 'Gmail', 'AI', 'Notion'..."}
-              className="w-full rounded-2xl border border-[var(--border)] bg-[var(--surface)] py-4 pl-12 sm:pl-14 pr-12 text-base outline-none transition-all duration-200 placeholder:text-[var(--muted-light)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 text-[var(--text)]"
+              className="w-full rounded-2xl border border-[var(--border)] bg-[var(--surface)] py-4 pl-12 sm:pl-14 pr-12 text-base outline-none transition-all duration-200 placeholder:text-[var(--muted-soft)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 text-[var(--text)]"
             />
             {searchQuery && (
               <button

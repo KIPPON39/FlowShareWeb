@@ -16,8 +16,8 @@
   --text-subtle: #333333;
   --muted: #666666;
   --muted-strong: #555555;
-  --muted-soft: #999999;
-  --muted-light: #bbbbbb;
+  --muted-soft: #707075;
+  --muted-light: #8e8e93;
   --hero-title: #1a0d08;
   --hero-desc: #3d1f15;
   --border: rgba(0, 0, 0, 0.06);
@@ -52,14 +52,15 @@
   --hero-desc: var(--muted);
   --border: rgba(255, 255, 255, 0.11);
   --border-strong: rgba(255, 255, 255, 0.18);
-  --accent-glow: rgba(167, 59, 36, 0.25);
-  --accent-soft: rgba(167, 59, 36, 0.12);
+  --accent: #f97316;
+  --accent-glow: rgba(249, 115, 22, 0.25);
+  --accent-soft: rgba(249, 115, 22, 0.12);
   --tag-alt-bg: rgba(255, 255, 255, 0.10);
   --tag-alt-text: #e0e0e4;
   --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.3);
   --glass: transparent;
-  --ring: 0 0 0 3px rgba(167, 59, 36, 0.15);
+  --ring: 0 0 0 3px rgba(249, 115, 22, 0.15);
   --gridline: rgba(255, 255, 255, 0.05);
   --panel-inset: none;
   --skeleton-base: rgba(255, 255, 255, 0.07);
@@ -77,6 +78,11 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     transition: background-color 300ms ease, color 300ms ease;
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--muted-soft) !important;
+    opacity: 0.8 !important;
   }
 
   @keyframes page-transition {
