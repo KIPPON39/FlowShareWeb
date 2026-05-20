@@ -5,20 +5,12 @@ import { Hero } from '@/components/hero';
 import { HeroBackground } from '@/components/hero-background';
 import { WorkflowCard } from '@/components/workflow-card';
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { type WorkflowTemplate } from '@/lib/workflows';
+import { type WorkflowTemplate, CATEGORY_MAPPINGS } from '@/lib/workflows';
 import { useI18n } from '@/lib/i18n';
 import Link from 'next/link';
 import { Zap, Users, Shield, Rocket, Code2, ArrowRight, ArrowUpRight, FileJson, Cpu, Database, Globe, ChevronLeft, ChevronRight } from 'lucide-react';
 
-const CATEGORY_MAPPINGS = [
-  { en: 'All Templates', th: 'เทมเพลตทั้งหมด', tags: [] },
-  { en: 'AI Automation', th: 'AI อัตโนมัติ', tags: ['AI'] },
-  { en: 'Customer Operations', th: 'ปฏิบัติการลูกค้า', tags: ['CRM', 'Email', 'Customer'] },
-  { en: 'Sales & Marketing', th: 'การขายและการตลาด', tags: ['Marketing', 'Sales'] },
-  { en: 'Data Engineering', th: 'วิศวกรรมข้อมูล', tags: ['Data', 'Scraping', 'Analytics'] },
-  { en: 'DevOps & Git', th: 'DevOps & Git', tags: ['DevOps', 'Git', 'Integration'] },
-  { en: 'Financial Ops', th: 'การเงิน', tags: ['Finance'] },
-];
+
 
 /* ─── Scroll reveal hook ─── */
 function useReveal() {
@@ -54,7 +46,7 @@ function FeatureCard({ icon: Icon, title, desc, delay }: { icon: React.ElementTy
   return (
     <div ref={ref} className={`reveal reveal-delay-${delay}`}>
       <div ref={cardRef} onMouseMove={handleMouseMove} className="feature-card h-full">
-        <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-[#FAECE7] dark:bg-[var(--accent-soft)] text-[var(--accent)] transition-colors duration-200">
+        <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--accent-soft)] text-[var(--accent)] transition-colors duration-200">
           <Icon size={20} />
         </div>
         <h3 className="text-[0.95rem] font-semibold text-[var(--text)] mb-1.5">{title}</h3>
@@ -124,9 +116,9 @@ export default function Home() {
   const filteredByCategory = selectedTags.includes(0)
     ? workflows
     : workflows.filter(wf => {
-        const allSelectedCatTags = selectedTags.flatMap(idx => CATEGORY_MAPPINGS[idx]?.tags || []).map(t => t.toLowerCase());
-        return wf.tags?.some(tag => allSelectedCatTags.includes(tag.toLowerCase()));
-      });
+      const allSelectedCatTags = selectedTags.flatMap(idx => CATEGORY_MAPPINGS[idx]?.tags || []).map(t => t.toLowerCase());
+      return wf.tags?.some(tag => allSelectedCatTags.includes(tag.toLowerCase()));
+    });
 
   const filteredWorkflows = filteredByCategory.filter(wf => {
     if (!searchQuery.trim()) return true;
@@ -178,9 +170,9 @@ export default function Home() {
     <main className="min-h-screen">
       <HeroBackground />
       <Navbar />
-      
+
       <Hero workflows={workflows} isLoading={isLoading} />
-      
+
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-0">
         {/* ═══════════════ Flows Landing Section ═══════════════ */}
         <div id="browse" className="pt-12 sm:pt-16 scroll-mt-20">
@@ -223,11 +215,10 @@ export default function Home() {
                       });
                     }
                   }}
-                  className={`inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-full px-4 py-2 text-[0.78rem] font-semibold tracking-wide border transition-all duration-200 ${
-                    isSelected
+                  className={`inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-full px-4 py-2 text-[0.78rem] font-semibold tracking-wide border transition-all duration-200 ${isSelected
                       ? 'bg-[var(--accent)] text-white border-[var(--accent)] shadow-sm shadow-[var(--accent-glow)]'
                       : 'bg-[var(--surface)] text-[var(--muted-strong)] border-[var(--border)] hover:bg-[var(--surface-alt)] hover:text-[var(--text)] hover:border-[var(--border-strong)]'
-                  }`}
+                    }`}
                 >
                   {cat.name}
                   <span className={`text-[0.65rem] font-mono tabular-nums ${isSelected ? 'text-white/80' : 'text-[var(--muted-soft)]'}`}>
@@ -248,7 +239,7 @@ export default function Home() {
           {isLoading ? (
             <div className="flex gap-5 overflow-hidden">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="min-w-[320px] sm:min-w-[380px] flex-shrink-0">
+                <div key={i} className="min-w-[82vw] sm:min-w-[380px] md:min-w-[400px] flex-shrink-0">
                   <WorkflowCardSkeleton />
                 </div>
               ))}
@@ -274,7 +265,7 @@ export default function Home() {
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 {filteredWorkflows.map((wf, i) => (
-                  <div key={i} className="min-w-[320px] sm:min-w-[400px] max-w-[420px] flex-shrink-0 snap-start">
+                  <div key={i} className="min-w-[82vw] sm:min-w-[380px] md:min-w-[400px] flex-shrink-0 snap-start">
                     <WorkflowCard {...wf} />
                   </div>
                 ))}
@@ -353,10 +344,10 @@ export default function Home() {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <FeatureCard icon={Users}   title={t('features.community.title')} desc={t('features.community.desc')} delay={1} />
-            <FeatureCard icon={Shield}  title={t('features.secure.title')}    desc={t('features.secure.desc')}    delay={2} />
-            <FeatureCard icon={Rocket}  title={t('features.deploy.title')}    desc={t('features.deploy.desc')}    delay={3} />
-            <FeatureCard icon={Code2}   title={t('features.open.title')}      desc={t('features.open.desc')}      delay={4} />
+            <FeatureCard icon={Users} title={t('features.community.title')} desc={t('features.community.desc')} delay={1} />
+            <FeatureCard icon={Shield} title={t('features.secure.title')} desc={t('features.secure.desc')} delay={2} />
+            <FeatureCard icon={Rocket} title={t('features.deploy.title')} desc={t('features.deploy.desc')} delay={3} />
+            <FeatureCard icon={Code2} title={t('features.open.title')} desc={t('features.open.desc')} delay={4} />
           </div>
 
           {/* ════ Flow Diagram Preview ════ */}
@@ -364,14 +355,14 @@ export default function Home() {
             <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 bg-[var(--surface)] px-4 text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-[var(--muted-soft)] whitespace-nowrap">
               {lang === 'th' ? 'สถาปัตยกรรมระบบ' : 'System Architecture'}
             </div>
-            
+
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 relative">
               {/* Horizontal connecting line (hidden on mobile) */}
               <div className="hidden sm:block absolute left-[10%] right-[10%] top-[28px] h-px bg-gradient-to-r from-transparent via-[var(--border-strong)] to-transparent" />
-              
+
               {/* Vertical connecting line (mobile only) */}
               <div className="sm:hidden absolute top-[10%] bottom-[10%] left-1/2 -translate-x-1/2 w-px bg-gradient-to-b from-transparent via-[var(--border-strong)] to-transparent" />
-              
+
               {/* Node 1 */}
               <div className="relative z-10 flex flex-col items-center gap-3 w-32 group cursor-default">
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm text-blue-500 transition-transform group-hover:-translate-y-1">
@@ -382,9 +373,9 @@ export default function Home() {
                   <div className="text-[0.65rem] text-[var(--muted)]">From n8n local</div>
                 </div>
               </div>
-              
+
               <ArrowRight size={16} className="text-[var(--muted-light)] rotate-90 sm:rotate-0 bg-[var(--surface)] relative z-10" />
-              
+
               {/* Node 2 */}
               <div className="relative z-10 flex flex-col items-center gap-3 w-32 group cursor-default">
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm text-amber-500 transition-transform group-hover:-translate-y-1">
@@ -395,7 +386,7 @@ export default function Home() {
                   <div className="text-[0.65rem] text-[var(--muted)]">Parse Nodes & Creds</div>
                 </div>
               </div>
-              
+
               <ArrowRight size={16} className="text-[var(--muted-light)] rotate-90 sm:rotate-0 bg-[var(--surface)] relative z-10" />
 
               {/* Node 3 */}
@@ -408,7 +399,7 @@ export default function Home() {
                   <div className="text-[0.65rem] text-[var(--muted)]">Google Sheets DB</div>
                 </div>
               </div>
-              
+
               <ArrowRight size={16} className="text-[var(--muted-light)] rotate-90 sm:rotate-0 bg-[var(--surface)] relative z-10" />
 
               {/* Node 4 */}
@@ -429,9 +420,9 @@ export default function Home() {
         <section className="mt-20 sm:mt-28 relative">
           <div ref={ctaRef} className="reveal relative">
             {/* Decorative Blobs */}
-            <div className="absolute -left-12 -top-12 h-64 w-64 rounded-full bg-[#FAECE7] blur-[80px] opacity-70 dark:bg-[var(--accent-glow)] pointer-events-none mix-blend-multiply dark:mix-blend-screen" />
-            <div className="absolute -right-12 bottom-0 h-64 w-64 rounded-full bg-[#FAECE7] blur-[80px] opacity-70 dark:bg-[var(--accent-glow)] pointer-events-none mix-blend-multiply dark:mix-blend-screen" />
-            
+            <div className="absolute -left-12 -top-12 h-64 w-64 rounded-full bg-[var(--accent-soft)] blur-[80px] opacity-70 dark:bg-[var(--accent-glow)] pointer-events-none mix-blend-multiply dark:mix-blend-screen" />
+            <div className="absolute -right-12 bottom-0 h-64 w-64 rounded-full bg-[var(--accent-soft)] blur-[80px] opacity-70 dark:bg-[var(--accent-glow)] pointer-events-none mix-blend-multiply dark:mix-blend-screen" />
+
             <div className="cta-glow rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-6 sm:px-12 py-12 sm:py-16 text-center relative z-10">
               <div className="relative mx-auto mb-8 flex h-20 w-20 items-center justify-center">
                 <div className="absolute inset-0 rounded-full border border-[var(--accent)]/20 animate-ping [animation-duration:3s]" />
@@ -444,15 +435,15 @@ export default function Home() {
               <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--text)]">{t('cta.title')}</h2>
               <p className="mt-3 mx-auto max-w-md text-[0.9rem] text-[var(--muted)] leading-relaxed">{t('cta.desc')}</p>
               <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-                <Link 
-                  href="/upload" 
+                <Link
+                  href="/upload"
                   className="futuristic-hover flex items-center gap-2 rounded-xl bg-[var(--accent)] px-6 py-3 text-[0.95rem] font-semibold text-white transition-all duration-200 hover:opacity-90 active:scale-[0.97] shadow-md shadow-[var(--accent-glow)]"
                 >
                   {t('cta.button')} <ArrowRight size={16} />
                 </Link>
               </div>
-              </div>
             </div>
+          </div>
         </section>
       </div>
 

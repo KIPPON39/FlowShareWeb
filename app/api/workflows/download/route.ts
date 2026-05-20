@@ -2,19 +2,19 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
   const n8nUrl = process.env.N8N_DOWNLOAD_REQUEST_URL;
-  
-  // ตรวจสอบว่ามีการตั้งค่า URL ใน .env หรือยัง
+
+  // Verify that the webhook URL is configured in the environment
   if (!n8nUrl) {
     return NextResponse.json(
-      { error: 'Missing N8N_DOWNLOAD_REQUEST_URL in .env' },
+      { error: 'Missing N8N_DOWNLOAD_REQUEST_URL configuration' },
       { status: 503 }
     );
   }
 
   try {
     const body = await request.json();
-    
-    // ตรวจสอบข้อมูลเบื้องต้นที่ส่งมาจากหน้าเว็บ
+
+    // Validate required fields
     if (!body.workflowId || !body.requesterEmail) {
       return NextResponse.json(
         { error: 'Workflow ID and Requester Email are required.' },
@@ -29,20 +29,22 @@ export async function POST(request: Request) {
         requestId: crypto.randomUUID(),
         workflowId: body.workflowId,
         requesterEmail: body.requesterEmail,
-        ownerEmail: body.ownerEmail,
+        requesterName: body.requesterName || '',
+        reason: body.reason || '',
+        ownerEmail: body.ownerEmail || '',
         timestamp: new Date().toISOString()
       }),
     });
 
     if (!response.ok) {
-      throw new Error(`n8n responded with status ${response.status}`);
+      throw new Error(`n8n webhook responded with status ${response.status}`);
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Download request error:', error);
+    console.error('Download request forwarding error:', error);
     return NextResponse.json(
-      { error: 'Failed to send download request to n8n' },
+      { error: 'Failed to send download request to webhook receiver' },
       { status: 500 }
     );
   }

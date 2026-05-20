@@ -87,6 +87,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'footer.terms': 'ข้อกำหนดการใช้งาน',
 
     // Upload section
+    'upload.completion_progress': 'ความสมบูรณ์ของข้อมูล',
     'upload.title': 'สร้าง Flow ใหม่',
     'upload.subtitle': 'ชัดเจนก่อนซับซ้อน กำหนดตรรกะอัตโนมัติของคุณ',
     'upload.basic_info': 'ข้อมูลพื้นฐาน',
@@ -261,6 +262,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'footer.terms': 'Terms of Service',
 
     // Upload section
+    'upload.completion_progress': 'Completion Progress',
     'upload.title': 'Ship New Flow',
     'upload.subtitle': 'Clarity before complexity. Define your automation logic.',
     'upload.basic_info': 'Basic Information',

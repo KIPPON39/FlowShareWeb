@@ -1,7 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ShaderGradient, ShaderGradientCanvas } from '@shadergradient/react';
+import { ShaderGradient as _ShaderGradient, ShaderGradientCanvas as _ShaderGradientCanvas } from '@shadergradient/react';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ShaderGradient = _ShaderGradient as any;
+const ShaderGradientCanvas = _ShaderGradientCanvas as any;
 
 export function HeroBackground() {
   const [theme, setTheme] = useState<'light' | 'dark' | null>(null);
@@ -30,7 +33,7 @@ export function HeroBackground() {
   if (!mounted || !theme) return null;
 
   return (
-    <div 
+    <div
       className="absolute top-0 left-0 right-0 h-[100vh] z-[-1] pointer-events-none overflow-hidden"
       style={{ maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)' }}
     >
@@ -131,7 +134,7 @@ export function HeroBackground() {
               wireframe={false}
             />
           </ShaderGradientCanvas>
-          <div 
+          <div
             className="absolute inset-0 pointer-events-none"
             style={{
               background: 'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(250, 246, 244, 0.55) 0%, transparent 100%)'

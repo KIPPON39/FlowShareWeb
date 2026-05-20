@@ -4,19 +4,11 @@ import { Navbar } from '@/components/navbar';
 import { HeroBackground } from '@/components/hero-background';
 import { WorkflowCard } from '@/components/workflow-card';
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { type WorkflowTemplate } from '@/lib/workflows';
+import { type WorkflowTemplate, CATEGORY_MAPPINGS } from '@/lib/workflows';
 import { useI18n } from '@/lib/i18n';
 import { Search, SlidersHorizontal, X, LayoutGrid, LayoutList } from 'lucide-react';
 
-const CATEGORY_MAPPINGS = [
-  { en: 'All', th: 'ทั้งหมด', tags: [] },
-  { en: 'AI Automation', th: 'AI อัตโนมัติ', tags: ['AI'] },
-  { en: 'Customer Operations', th: 'ปฏิบัติการลูกค้า', tags: ['CRM', 'Email', 'Customer'] },
-  { en: 'Sales & Marketing', th: 'การขายและการตลาด', tags: ['Marketing', 'Sales'] },
-  { en: 'Data Engineering', th: 'วิศวกรรมข้อมูล', tags: ['Data', 'Scraping', 'Analytics'] },
-  { en: 'DevOps & Git', th: 'DevOps & Git', tags: ['DevOps', 'Git', 'Integration'] },
-  { en: 'Financial Ops', th: 'การเงิน', tags: ['Finance'] },
-];
+
 
 /* ─── Skeleton Card ─── */
 function WorkflowCardSkeleton() {
@@ -50,6 +42,8 @@ export default function FlowsPage() {
   const [selectedTags, setSelectedTags] = useState<number[]>([0]);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'views' | 'downloads'>('newest');
+  const [showFilters, setShowFilters] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(6);
   const { t, lang } = useI18n();
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -61,7 +55,7 @@ export default function FlowsPage() {
       count = workflows.filter(wf => wf.tags?.some(tag => cat.tags.map(t => t.toLowerCase()).includes(tag.toLowerCase()))).length;
     }
     return {
-      name: lang === 'th' ? cat.th : cat.en,
+      name: index === 0 ? (lang === 'th' ? 'ทั้งหมด' : 'All') : (lang === 'th' ? cat.th : cat.en),
       tags: cat.tags,
       count
     };
@@ -71,9 +65,9 @@ export default function FlowsPage() {
   const filteredByCategory = selectedTags.includes(0)
     ? workflows
     : workflows.filter(wf => {
-        const allSelectedCatTags = selectedTags.flatMap(idx => CATEGORY_MAPPINGS[idx]?.tags || []).map(t => t.toLowerCase());
-        return wf.tags?.some(tag => allSelectedCatTags.includes(tag.toLowerCase()));
-      });
+      const allSelectedCatTags = selectedTags.flatMap(idx => CATEGORY_MAPPINGS[idx]?.tags || []).map(t => t.toLowerCase());
+      return wf.tags?.some(tag => allSelectedCatTags.includes(tag.toLowerCase()));
+    });
 
   const filteredWorkflows = filteredByCategory.filter(wf => {
     if (!searchQuery.trim()) return true;
@@ -118,10 +112,10 @@ export default function FlowsPage() {
     return () => { isMounted = false; };
   }, []);
 
-  // Focus search on mount
+  // Reset pagination on filter change
   useEffect(() => {
-    setTimeout(() => searchInputRef.current?.focus(), 300);
-  }, []);
+    setVisibleCount(6);
+  }, [searchQuery, selectedTags, sortBy]);
 
   return (
     <main className="min-h-screen">
@@ -164,10 +158,25 @@ export default function FlowsPage() {
           </div>
         </div>
 
+        {/* Mobile Accordion Toggle */}
+        <div className="flex sm:hidden items-center justify-between gap-3 mb-4 w-full">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`flex-1 flex items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-[0.82rem] font-semibold text-[var(--text)] active:scale-95 transition-all ${showFilters ? 'border-[var(--accent)] text-[var(--accent)] ring-1 ring-[var(--accent)]/10' : ''
+              }`}
+          >
+            <SlidersHorizontal size={16} />
+            <span>{showFilters ? (lang === 'th' ? 'ซ่อนตัวกรอง' : 'Hide Filters') : (lang === 'th' ? 'แสดงตัวกรอง' : 'Show Filters')}</span>
+          </button>
+          <span className="inline-flex items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] px-3 py-2.5 text-[0.75rem] text-[var(--muted-strong)] font-mono tabular-nums whitespace-nowrap">
+            {isLoading ? (lang === 'th' ? 'กำลังโหลด...' : 'Loading...') : `${sortedWorkflows.length} flows`}
+          </span>
+        </div>
+
         {/* ═══════════ Controls Row ═══════════ */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div className={`flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 transition-all duration-200 ${showFilters ? 'flex' : 'hidden sm:flex'}`}>
           {/* Category Tags */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1 w-full sm:w-auto">
             {categories.map((cat, i) => {
               const isSelected = selectedTags.includes(i);
               return (
@@ -188,11 +197,10 @@ export default function FlowsPage() {
                       });
                     }
                   }}
-                  className={`inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-full px-4 py-2 text-[0.78rem] font-semibold tracking-wide border transition-all duration-200 ${
-                    isSelected
+                  className={`inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-full px-4 py-2 text-[0.78rem] font-semibold tracking-wide border transition-all duration-200 ${isSelected
                       ? 'bg-[var(--accent)] text-white border-[var(--accent)] shadow-sm shadow-[var(--accent-glow)]'
                       : 'bg-[var(--surface)] text-[var(--muted-strong)] border-[var(--border)] hover:bg-[var(--surface-alt)] hover:text-[var(--text)] hover:border-[var(--border-strong)]'
-                  }`}
+                    }`}
                 >
                   {cat.name}
                   <span className={`text-[0.65rem] font-mono tabular-nums ${isSelected ? 'text-white/80' : 'text-[var(--muted-soft)]'}`}>
@@ -204,14 +212,14 @@ export default function FlowsPage() {
           </div>
 
           {/* Sort + Count */}
-          <div className="flex items-center gap-3 shrink-0">
-            <span className="inline-flex items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] px-3 py-2 text-[0.75rem] text-[var(--muted-strong)] font-mono tabular-nums whitespace-nowrap">
+          <div className="flex items-center gap-3 shrink-0 self-end sm:self-auto">
+            <span className="hidden sm:inline-flex items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] px-3 py-2 text-[0.75rem] text-[var(--muted-strong)] font-mono tabular-nums whitespace-nowrap">
               {isLoading ? (lang === 'th' ? 'กำลังโหลด...' : 'Loading...') : `${sortedWorkflows.length} flows`}
             </span>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[0.78rem] text-[var(--text)] outline-none focus:border-[var(--accent)] cursor-pointer"
+              className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[0.78rem] text-[var(--text)] outline-none focus:border-[var(--accent)] cursor-pointer w-full sm:w-auto"
             >
               <option value="newest">{lang === 'th' ? 'ใหม่ล่าสุด' : 'Newest'}</option>
               <option value="views">{lang === 'th' ? 'ยอดดูสูงสุด' : 'Most Viewed'}</option>
@@ -234,11 +242,23 @@ export default function FlowsPage() {
             ))}
           </div>
         ) : sortedWorkflows.length > 0 ? (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {sortedWorkflows.map((wf, i) => (
-              <WorkflowCard key={i} {...wf} />
-            ))}
-          </div>
+          <>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {sortedWorkflows.slice(0, visibleCount).map((wf, i) => (
+                <WorkflowCard key={i} {...wf} />
+              ))}
+            </div>
+            {visibleCount < sortedWorkflows.length && (
+              <div className="flex justify-center mt-10">
+                <button
+                  onClick={() => setVisibleCount((prev) => prev + 6)}
+                  className="futuristic-hover flex items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-6 py-3 text-[0.85rem] font-semibold text-[var(--text)] hover:bg-[var(--surface-alt)] hover:border-[var(--border-strong)] transition-all active:scale-[0.97] shadow-sm"
+                >
+                  {lang === 'th' ? 'โหลดเพิ่มเติม' : 'Load More'}
+                </button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="rounded-xl border border-dashed border-[var(--border)] px-6 py-20 text-center">
             <Search size={40} className="mx-auto text-[var(--muted-light)] mb-4" />

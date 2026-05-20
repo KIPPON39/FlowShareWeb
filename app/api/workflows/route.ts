@@ -3,6 +3,7 @@ import {
   SAMPLE_WORKFLOWS,
   normalizeList,
   slugifyWorkflowTitle,
+  enrichWorkflowTags,
   type WorkflowTemplate,
 } from '@/lib/workflows';
 
@@ -89,11 +90,14 @@ function workflowsFromCsv(csv: string): WorkflowTemplate[] {
     const parsedSteps = parseJsonCell(get('steps'), []);
     const steps = Array.isArray(parsedSteps) ? parsedSteps : [];
 
+    const rawTags = tags.length ? tags : ['Community'];
+    const enrichedTags = enrichWorkflowTags(title, get('description') || '', keys, rawTags);
+
     workflows.push({
       id: get('id') || slugifyWorkflowTitle(title),
       title,
       description: get('description') || 'No description provided yet.',
-      tags: tags.length ? tags : ['Community'],
+      tags: enrichedTags,
       keys,
       creators: creators.length ? creators : [{ name: get('creator') || 'FlowShare Creator' }],
       nodes: Number(get('nodes')) || steps.length || keys.length || 1,
@@ -101,7 +105,7 @@ function workflowsFromCsv(csv: string): WorkflowTemplate[] {
       downloads: Number(get('downloads')) || Math.floor(Math.random() * 200),
       updatedAt: get('updated_at') || new Date().toISOString(),
       steps,
-      rawJson: parseJsonCell(get('raw_json'), null),
+      rawJson: parseJsonCell(get('raw_json'), null) ?? undefined,
       jsonFileUrl: get('json_file_url') || '',
       createdAt: get('created_at') || undefined,
     });
@@ -157,17 +161,27 @@ async function loadFromGoogleSheetCsv() {
 
 export async function GET() {
   try {
-    const workflows = (await loadFromN8n())
+    const rawWorkflows = (await loadFromN8n())
       ?? (await loadFromGoogleSheetCsv())
       ?? (shouldUseMockWorkflows() ? SAMPLE_WORKFLOWS : []);
+
+    const workflows = rawWorkflows.map(wf => ({
+      ...wf,
+      tags: enrichWorkflowTags(wf.title || '', wf.description || '', wf.keys || [], wf.tags || []),
+    }));
 
     return NextResponse.json({ workflows });
   } catch (error) {
     console.error('Failed to load workflows', error);
 
+    const fallbackWorkflows = (shouldUseMockWorkflows() ? SAMPLE_WORKFLOWS : []).map(wf => ({
+      ...wf,
+      tags: enrichWorkflowTags(wf.title || '', wf.description || '', wf.keys || [], wf.tags || []),
+    }));
+
     return NextResponse.json(
       {
-        workflows: shouldUseMockWorkflows() ? SAMPLE_WORKFLOWS : [],
+        workflows: fallbackWorkflows,
         warning: shouldUseMockWorkflows()
           ? 'Backend source failed, showing mock workflows because ENABLE_MOCK_WORKFLOWS=true.'
           : 'Backend source failed. Check your n8n list webhook or Google Sheet CSV URL.',
@@ -194,16 +208,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Title and description are required.' }, { status: 400 });
   }
 
+  const rawTags = normalizeList(body.tags).length ? normalizeList(body.tags) : ['Community'];
+  const enrichedTags = enrichWorkflowTags(title, description, normalizeList(body.keys), rawTags);
+
   const workflow: WorkflowTemplate = {
     id: body.id || slugifyWorkflowTitle(title),
     title,
     description,
-    tags: normalizeList(body.tags).length ? normalizeList(body.tags) : ['Community'],
+    tags: enrichedTags,
     keys: normalizeList(body.keys),
     creators: Array.isArray(body.creators) && body.creators.length ? body.creators : [{ name: 'FlowShare Creator' }],
     nodes: Array.isArray(body.steps) ? body.steps.length : Number(body.nodes) || 1,
     steps: Array.isArray(body.steps) ? body.steps : [],
-    rawJson: body.rawJson || null,
+    rawJson: body.rawJson || undefined,
     jsonFileUrl: body.jsonFileUrl || '',
     createdAt: new Date().toISOString(),
   };

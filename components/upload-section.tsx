@@ -1,15 +1,17 @@
 'use client';
 
 import { Upload, Send, Plus, X, Bot, Database, Terminal, CloudUpload, Lightbulb, UserPlus, Tag, ChevronDown, GripVertical, CheckCircle2, XCircle } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { useI18n } from '@/lib/i18n';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   DndContext,
   closestCenter,
   KeyboardSensor,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragEndEvent,
@@ -190,8 +192,8 @@ function SortableStep({ step, index, removeStep }: { step: FlowStep; index: numb
       style={style}
       className={`group flex items-center gap-3 rounded-2xl bg-[var(--surface-alt)] p-3.5 border transition-all ${isDragging ? 'border-[var(--accent)] shadow-lg scale-[1.02] bg-[var(--surface)]' : 'border-[var(--border)] hover:border-[var(--accent-soft)]'}`}
     >
-      <div 
-        {...attributes} 
+      <div
+        {...attributes}
         {...listeners}
         className="flex h-8 w-6 cursor-grab items-center justify-center text-[var(--muted-soft)] hover:text-[var(--text)] active:cursor-grabbing touch-none"
       >
@@ -226,7 +228,8 @@ export function SkeletonCard() {
 }
 
 export function UploadSection() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const isMobile = useIsMobile();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [tags, setTags] = useState<string[]>([]);
@@ -252,16 +255,6 @@ export function UploadSection() {
       setTags([...tags, tag]);
     }
   };
-
-  const shipDisabledReason = !rawJson
-    ? t('upload.upload_json_first')
-    : !creatorEmail.includes('@')
-      ? t('upload.add_email_first')
-      : !title || !description
-        ? t('upload.add_title_desc')
-        : tags.length === 0
-          ? t('upload.select_tags_first')
-          : '';
 
   const applyJsonWorkflow = (data: JsonRecord) => {
     setRawJson(data);
@@ -311,9 +304,15 @@ export function UploadSection() {
   };
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
+    useSensor(MouseSensor, {
       activationConstraint: {
         distance: 5,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -323,7 +322,7 @@ export function UploadSection() {
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    
+
     if (over && active.id !== over.id) {
       setSteps((items) => {
         const oldIndex = items.findIndex((item) => item.id === active.id);
@@ -396,6 +395,16 @@ export function UploadSection() {
     setSubmitState('saving');
     setStatusMessage(t('upload.sending'));
 
+    const finalContributors = [...contributors];
+    if (newEmail.trim() && newEmail.includes('@')) {
+      finalContributors.push({
+        id: Math.random().toString(),
+        name: nameFromEmail(newEmail),
+        email: newEmail,
+      });
+      setNewEmail('');
+    }
+
     try {
       const response = await fetch('/api/workflows', {
         method: 'POST',
@@ -411,7 +420,7 @@ export function UploadSection() {
               email: creatorEmail,
               role: 'creator',
             },
-            ...contributors.map((contributor) => ({
+            ...finalContributors.map((contributor) => ({
               name: contributor.name,
               email: contributor.email,
               role: 'contributor',
@@ -448,7 +457,7 @@ export function UploadSection() {
     { id: 'upload-tags', label: t('upload.select_tags_first'), isMet: tags.length > 0 },
     { id: 'upload-email', label: t('upload.add_email_first'), isMet: creatorEmail.includes('@') },
   ];
-  
+
   const completedStepsCount = requirements.filter(r => r.isMet).length;
   const progressPercent = (completedStepsCount / requirements.length) * 100;
 
@@ -461,7 +470,7 @@ export function UploadSection() {
   };
 
   return (
-    <section id="upload" className="grid gap-8 my-8 sm:my-12 pb-20">
+    <section id="upload" className="grid gap-8 my-8 sm:my-12 pb-28 lg:pb-12">
       {/* Progress Bar */}
       <div className="grid gap-2">
         <div className="flex items-center justify-between text-xs font-bold text-[var(--muted-strong)]">
@@ -471,8 +480,8 @@ export function UploadSection() {
           </span>
         </div>
         <div className="w-full bg-[var(--surface-alt)] rounded-full h-1.5 border border-[var(--border)] overflow-hidden">
-          <div 
-            className="h-full transition-all duration-500 ease-out" 
+          <div
+            className="h-full transition-all duration-500 ease-out"
             style={{ width: `${progressPercent}%`, backgroundColor: completedStepsCount === requirements.length ? '#10b981' : 'var(--accent)' }}
           />
         </div>
@@ -496,7 +505,7 @@ export function UploadSection() {
               <div className="h-px w-4 bg-[var(--accent)]" />
               {t('upload.basic_info')}
             </h2>
-            
+
             <div className="grid gap-6 text-left">
               {uploadedFilename ? (
                 <div className="flex items-center justify-between rounded-xl border border-[var(--accent)]/30 bg-[var(--accent)]/5 px-5 py-4">
@@ -514,7 +523,7 @@ export function UploadSection() {
                   </button>
                 </div>
               ) : (
-                <label 
+                <label
                   id="upload-json"
                   className={`futuristic-hover upload-zone block rounded-xl border-2 border-dashed ${isJsonMissing ? 'border-red-500/50 bg-red-500/5 hover:border-red-500' : 'border-[var(--border-strong)] bg-[var(--surface-alt)]/20 hover:border-[var(--accent)]'} p-8 text-center transition-all group cursor-pointer`}
                 >
@@ -537,24 +546,33 @@ export function UploadSection() {
               )}
 
               <div className="grid gap-4">
-                <input 
+                <input
                   id="upload-title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className={`rounded-lg border ${!title ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : 'border-[var(--border)]'} bg-[var(--surface-alt)] px-4 py-3 text-base font-medium tracking-tight outline-hidden focus:ring-[3px] focus:ring-[var(--accent-soft)] focus:border-[var(--accent)] transition-all text-[var(--text)]`} 
-                  placeholder={t('upload.flow_title')} 
+                  className={`rounded-lg border ${hasAttemptedSubmit && !title ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : 'border-[var(--border)]'} bg-[var(--surface-alt)] px-4 py-3 text-base font-medium tracking-tight outline-hidden focus:ring-[3px] focus:ring-[var(--accent-soft)] focus:border-[var(--accent)] transition-all text-[var(--text)]`}
+                  placeholder={t('upload.flow_title')}
                 />
-                <textarea 
+                {hasAttemptedSubmit && !title && (
+                  <span className="text-red-500 text-[0.72rem] font-semibold mt-[-10px] pl-1">* {lang === 'th' ? 'กรุณากรอกชื่อเรื่อง' : 'Title is required'}</span>
+                )}
+                <textarea
                   id="upload-desc"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  rows={3} 
-                  className={`rounded-lg border ${!description ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : 'border-[var(--border)]'} bg-[var(--surface-alt)] px-4 py-3 text-[0.9rem] leading-relaxed outline-hidden focus:ring-[3px] focus:ring-[var(--accent-soft)] focus:border-[var(--accent)] transition-all resize-none text-[var(--text)]`} 
+                  rows={3}
+                  className={`rounded-lg border ${hasAttemptedSubmit && !description ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : 'border-[var(--border)]'} bg-[var(--surface-alt)] px-4 py-3 text-[0.9rem] leading-relaxed outline-hidden focus:ring-[3px] focus:ring-[var(--accent-soft)] focus:border-[var(--accent)] transition-all resize-none text-[var(--text)]`}
                   placeholder={t('upload.flow_desc')}
                 />
+                {hasAttemptedSubmit && !description && (
+                  <span className="text-red-500 text-[0.72rem] font-semibold mt-[-10px] pl-1">* {lang === 'th' ? 'กรุณากรอกรายละเอียด' : 'Description is required'}</span>
+                )}
                 {/* Tags Input */}
                 <div id="upload-tags" className={`grid gap-3 p-3 -m-3 rounded-xl transition-colors ${isTagsMissing ? 'bg-red-500/5 border border-red-500/20' : ''}`}>
                   <span className="text-[0.75rem] font-medium text-[var(--muted-strong)]">{t('upload.tags_placeholder')}</span>
+                  {isTagsMissing && (
+                    <span className="text-red-500 text-[0.72rem] font-semibold mt-[-8px] pl-1">* {lang === 'th' ? 'กรุณาเลือกอย่างน้อย 1 แท็ก' : 'Select at least 1 tag'}</span>
+                  )}
                   <div className="flex flex-wrap gap-2">
                     {PREDEFINED_TAGS.map((tag) => {
                       const isSelected = tags.includes(tag);
@@ -563,11 +581,10 @@ export function UploadSection() {
                           key={tag}
                           type="button"
                           onClick={() => toggleTag(tag)}
-                          className={`px-3 py-1.5 rounded-lg text-[0.75rem] font-medium transition-all duration-200 border ${
-                            isSelected 
-                              ? 'bg-[var(--accent)] text-white border-[var(--accent)] shadow-sm shadow-[var(--accent-glow)]' 
+                          className={`px-3 py-1.5 rounded-lg text-[0.75rem] font-medium transition-all duration-200 border ${isSelected
+                              ? 'bg-[var(--accent)] text-white border-[var(--accent)] shadow-sm shadow-[var(--accent-glow)]'
                               : 'bg-[var(--surface-alt)] text-[var(--muted)] border-[var(--border)] hover:border-[var(--accent-soft)] hover:text-[var(--text)]'
-                          }`}
+                            }`}
                         >
                           {tag}
                         </button>
@@ -579,92 +596,95 @@ export function UploadSection() {
             </div>
           </div>
 
+          <details className="group rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-8 shadow-sm" open={isEmailMissing ? true : undefined}>
+            <summary className="list-none cursor-pointer flex items-center justify-between mb-2 group-open:mb-5 outline-hidden">
+              <h2 className="text-[0.7rem] font-medium uppercase tracking-[0.15em] text-[var(--accent)] flex items-center gap-2">
+                <div className="h-px w-4 bg-[var(--accent)]" />
+                {t('upload.team')}
+              </h2>
+              <div className="text-[var(--accent)] transition-transform duration-300 group-open:-rotate-180">
+                <ChevronDown size={16} />
+              </div>
+            </summary>
+
+            <div className="grid gap-3">
+              <div
+                id="upload-email"
+                className={`flex items-center gap-3 rounded-2xl border-2 border-dotted ${isEmailMissing ? 'border-red-500/50 bg-red-500/5 focus-within:border-red-500' : 'border-[var(--border)] bg-[var(--surface-alt)]/20 focus-within:border-[var(--accent)]'} px-5 py-4 transition-all`}
+              >
+                <UserPlus size={18} className={isEmailMissing ? 'text-red-500' : 'text-[var(--muted)]'} />
+                <input
+                  value={creatorEmail}
+                  onChange={(e) => setCreatorEmail(e.target.value)}
+                  className="flex-1 bg-transparent text-sm font-bold opacity-80 outline-hidden placeholder:text-[var(--muted-light)] text-[var(--text)]"
+                  placeholder={t('upload.creator_email')}
+                  type="email"
+                />
+              </div>
+              {isEmailMissing && (
+                <span className="text-red-500 text-[0.72rem] font-semibold mt-[-4px] pl-1">* {lang === 'th' ? 'กรุณากรอกอีเมลผู้สร้างให้ถูกต้อง' : 'Valid creator email is required'}</span>
+              )}
+
+              <div className="flex flex-wrap gap-2 mb-4">
+                {creatorEmail && (
+                  <div className="flex items-center gap-2 rounded-xl bg-[var(--accent-soft)] pl-3 pr-3 py-2 border border-[var(--accent)]/20">
+                    <div className="h-6 w-6 rounded-full bg-[var(--accent)] flex items-center justify-center text-[0.6rem] font-bold text-white">
+                      {nameFromEmail(creatorEmail).charAt(0).toUpperCase()}
+                    </div>
+                    <span className="text-xs font-bold text-[var(--accent)]">{nameFromEmail(creatorEmail)}</span>
+                    <span className="rounded-md bg-[var(--surface)] px-2 py-0.5 text-[0.55rem] font-black uppercase tracking-widest text-[var(--accent)]">{t('upload.creator')}</span>
+                  </div>
+                )}
+                {contributors.map((c) => (
+                  <div key={c.id} className="flex items-center gap-2 rounded-xl bg-[var(--surface-alt)] pl-3 pr-2 py-2 border border-[var(--border)]">
+                    <div className="h-6 w-6 rounded-full bg-[var(--accent-soft)] flex items-center justify-center text-[0.6rem] font-bold text-[var(--accent)]">
+                      {c.name.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="text-xs font-bold text-[var(--text-subtle)]">{c.name}</span>
+                    <span className="rounded-md bg-[var(--surface)] px-2 py-0.5 text-[0.55rem] font-black uppercase tracking-widest text-[var(--muted)]">{t('upload.contributor')}</span>
+                    <button onClick={() => removeContributor(c.id)} className="text-[var(--muted)] hover:text-red-500">
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-3 rounded-2xl border-2 border-dotted border-[var(--border)] bg-[var(--surface-alt)]/20 px-5 py-4 focus-within:border-[var(--accent)] transition-all">
+                <UserPlus size={18} className="text-[var(--muted)]" />
+                <input
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  className="flex-1 bg-transparent text-sm font-bold opacity-60 outline-hidden placeholder:text-[var(--muted-light)] text-[var(--text)]"
+                  placeholder={t('upload.invite')}
+                  onKeyDown={(e) => e.key === 'Enter' && addContributor()}
+                />
+                <button onClick={addContributor} className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] transition-all hover:bg-[var(--accent)] hover:text-white hover:border-[var(--accent)]">
+                  <Plus size={18} />
+                </button>
+              </div>
+            </div>
+          </details>
+
+          <div className="grid gap-8 text-left">
             <details className="group rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-8 shadow-sm">
               <summary className="list-none cursor-pointer flex items-center justify-between mb-2 group-open:mb-5 outline-hidden">
                 <h2 className="text-[0.7rem] font-medium uppercase tracking-[0.15em] text-[var(--accent)] flex items-center gap-2">
                   <div className="h-px w-4 bg-[var(--accent)]" />
-                  {t('upload.team')}
+                  {t('upload.pipeline')}
                 </h2>
                 <div className="text-[var(--accent)] transition-transform duration-300 group-open:-rotate-180">
                   <ChevronDown size={16} />
                 </div>
               </summary>
-              
-              <div className="grid gap-3">
-                <div 
-                  id="upload-email"
-                  className={`flex items-center gap-3 rounded-2xl border-2 border-dotted ${isEmailMissing ? 'border-red-500/50 bg-red-500/5 focus-within:border-red-500' : 'border-[var(--border)] bg-[var(--surface-alt)]/20 focus-within:border-[var(--accent)]'} px-5 py-4 transition-all`}
-                >
-                  <UserPlus size={18} className={isEmailMissing ? 'text-red-500' : 'text-[var(--muted)]'} />
-                  <input
-                    value={creatorEmail}
-                    onChange={(e) => setCreatorEmail(e.target.value)}
-                    className="flex-1 bg-transparent text-sm font-bold opacity-80 outline-hidden placeholder:text-[var(--muted-light)] text-[var(--text)]"
-                    placeholder={t('upload.creator_email')}
-                    type="email"
-                  />
-                </div>
 
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {creatorEmail && (
-                    <div className="flex items-center gap-2 rounded-xl bg-[var(--accent-soft)] pl-3 pr-3 py-2 border border-[var(--accent)]/20">
-                      <div className="h-6 w-6 rounded-full bg-[var(--accent)] flex items-center justify-center text-[0.6rem] font-bold text-white">
-                        {nameFromEmail(creatorEmail).charAt(0).toUpperCase()}
-                      </div>
-                      <span className="text-xs font-bold text-[var(--accent)]">{nameFromEmail(creatorEmail)}</span>
-                      <span className="rounded-md bg-[var(--surface)] px-2 py-0.5 text-[0.55rem] font-black uppercase tracking-widest text-[var(--accent)]">{t('upload.creator')}</span>
-                    </div>
-                  )}
-                  {contributors.map((c) => (
-                    <div key={c.id} className="flex items-center gap-2 rounded-xl bg-[var(--surface-alt)] pl-3 pr-2 py-2 border border-[var(--border)]">
-                      <div className="h-6 w-6 rounded-full bg-[var(--accent-soft)] flex items-center justify-center text-[0.6rem] font-bold text-[var(--accent)]">
-                        {c.name.charAt(0).toUpperCase()}
-                      </div>
-                      <span className="text-xs font-bold text-[var(--text-subtle)]">{c.name}</span>
-                      <span className="rounded-md bg-[var(--surface)] px-2 py-0.5 text-[0.55rem] font-black uppercase tracking-widest text-[var(--muted)]">{t('upload.contributor')}</span>
-                      <button onClick={() => removeContributor(c.id)} className="text-[var(--muted)] hover:text-red-500">
-                        <X size={12} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="flex items-center gap-3 rounded-2xl border-2 border-dotted border-[var(--border)] bg-[var(--surface-alt)]/20 px-5 py-4 focus-within:border-[var(--accent)] transition-all">
-                  <UserPlus size={18} className="text-[var(--muted)]" />
-                  <input 
-                    value={newEmail}
-                    onChange={(e) => setNewEmail(e.target.value)}
-                    className="flex-1 bg-transparent text-sm font-bold opacity-60 outline-hidden placeholder:text-[var(--muted-light)] text-[var(--text)]" 
-                    placeholder={t('upload.invite')} 
-                    onKeyDown={(e) => e.key === 'Enter' && addContributor()}
-                  />
-                  <button onClick={addContributor} className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] transition-all hover:bg-[var(--accent)] hover:text-white hover:border-[var(--accent)]">
-                    <Plus size={18} />
-                  </button>
-                </div>
-              </div>
-            </details>
-
-            <div className="grid gap-8 text-left">
-              <details className="group rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-8 shadow-sm">
-                <summary className="list-none cursor-pointer flex items-center justify-between mb-2 group-open:mb-5 outline-hidden">
-                  <h2 className="text-[0.7rem] font-medium uppercase tracking-[0.15em] text-[var(--accent)] flex items-center gap-2">
-                    <div className="h-px w-4 bg-[var(--accent)]" />
-                    {t('upload.pipeline')}
-                  </h2>
-                  <div className="text-[var(--accent)] transition-transform duration-300 group-open:-rotate-180">
-                    <ChevronDown size={16} />
-                  </div>
-                </summary>
-              
               <div className="grid gap-4">
                 <div className="max-h-[300px] sm:max-h-[400px] overflow-y-auto pr-2 grid gap-4 custom-scrollbar">
-                  <DndContext 
+                  <DndContext
                     sensors={sensors}
                     collisionDetection={closestCenter}
                     onDragEnd={handleDragEnd}
                   >
-                    <SortableContext 
+                    <SortableContext
                       items={steps.map(s => s.id)}
                       strategy={verticalListSortingStrategy}
                     >
@@ -674,23 +694,23 @@ export function UploadSection() {
                     </SortableContext>
                   </DndContext>
                 </div>
-                
+
                 <div className="mt-2 p-6 rounded-2xl border-2 border-dotted border-[var(--border)] bg-[var(--surface-alt)]/20 relative group-within:border-[var(--accent)] transition-all">
                   <div className="grid gap-4">
-                    <input 
+                    <input
                       value={newStep.title}
                       onChange={(e) => setNewStep({ ...newStep, title: e.target.value })}
-                      className="w-full bg-transparent text-base font-bold outline-hidden placeholder:text-[var(--muted-light)] text-[var(--text)]" 
-                      placeholder={t('upload.step_do')} 
+                      className="w-full bg-transparent text-base font-bold outline-hidden placeholder:text-[var(--muted-light)] text-[var(--text)]"
+                      placeholder={t('upload.step_do')}
                     />
                     <div className="flex items-center justify-between border-t border-[var(--border)] pt-4">
                       <div className="flex items-center gap-3 flex-1">
                         <Terminal size={16} className="text-[var(--muted)]" />
-                        <input 
+                        <input
                           value={newStep.nodeName}
                           onChange={(e) => setNewStep({ ...newStep, nodeName: e.target.value })}
-                          className="flex-1 bg-transparent text-[0.7rem] font-black uppercase tracking-[0.2em] text-[var(--accent)] outline-hidden placeholder:text-[var(--accent)]/30" 
-                          placeholder={t('upload.assign_node')} 
+                          className="flex-1 bg-transparent text-[0.7rem] font-black uppercase tracking-[0.2em] text-[var(--accent)] outline-hidden placeholder:text-[var(--accent)]/30"
+                          placeholder={t('upload.assign_node')}
                         />
                       </div>
                       <button onClick={addStep} className="futuristic-hover flex items-center gap-2 rounded-xl bg-[var(--text)] px-4 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[var(--bg)] transition-all hover:scale-105 active:scale-95 shadow-lg">
@@ -701,7 +721,7 @@ export function UploadSection() {
                   </div>
                 </div>
               </div>
-              </details>
+            </details>
 
             <details className="group rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-8 shadow-sm">
               <summary className="list-none cursor-pointer flex items-center justify-between mb-2 group-open:mb-5 outline-hidden">
@@ -713,17 +733,17 @@ export function UploadSection() {
                   <ChevronDown size={16} />
                 </div>
               </summary>
-              
+
               <div className="grid gap-3">
                 <div className="flex flex-wrap gap-3 mb-4">
                   <AnimatePresence mode="popLayout">
                     {keys.map((key) => (
-                      <motion.div 
+                      <motion.div
                         layout
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.9 }}
-                        key={key.id} 
+                        key={key.id}
                         className="group flex items-center gap-3 rounded-xl bg-[var(--surface-alt)] pl-4 pr-2 py-2.5 border border-[var(--border)] shadow-sm hover:border-[var(--accent-soft)] transition-all"
                       >
                         <span className="text-xs font-black uppercase tracking-widest text-[var(--text-subtle)]">{key.name}</span>
@@ -734,24 +754,24 @@ export function UploadSection() {
                     ))}
                   </AnimatePresence>
                 </div>
-                
+
                 <div className="flex items-center gap-4 rounded-2xl border-2 border-dotted border-[var(--border)] bg-[var(--surface-alt)]/20 px-5 py-4 focus-within:border-[var(--accent)] transition-all">
                   <Database size={18} className="text-[var(--muted)]" />
-                  <input 
+                  <input
                     value={newKey}
                     onChange={(e) => setNewKey(e.target.value)}
-                    className="flex-1 bg-transparent text-sm font-bold outline-hidden placeholder:text-[var(--muted-light)] text-[var(--text)]" 
-                    placeholder={t('upload.add_key')} 
+                    className="flex-1 bg-transparent text-sm font-bold outline-hidden placeholder:text-[var(--muted-light)] text-[var(--text)]"
+                    placeholder={t('upload.add_key')}
                     onKeyDown={(e) => e.key === 'Enter' && addKey()}
                   />
                   <button onClick={addKey} className="futuristic-hover group flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] transition-all hover:bg-[var(--accent)] hover:text-white hover:border-[var(--accent)] shadow-sm">
                     <Plus size={18} className="group-hover:rotate-90 transition-transform" />
                   </button>
                 </div>
-                </div>
-              </details>
-            </div>
+              </div>
+            </details>
           </div>
+        </div>
 
         {/* Preview Side */}
         <div className="relative text-left order-2 lg:order-2 self-start lg:sticky lg:top-24 h-fit w-full grid gap-4">
@@ -794,8 +814,8 @@ export function UploadSection() {
 
               <div className="grid gap-4 bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-inner">
                 <div className="flex items-center gap-2">
-                   <div className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
-                   <span className="text-[0.65rem] font-medium uppercase tracking-wider text-[var(--muted-soft)]">{t('upload.pipeline_summary')}</span>
+                  <div className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
+                  <span className="text-[0.65rem] font-medium uppercase tracking-wider text-[var(--muted-soft)]">{t('upload.pipeline_summary')}</span>
                 </div>
                 <div className="grid gap-4">
                   {steps.length === 0 ? (
@@ -803,8 +823,8 @@ export function UploadSection() {
                   ) : (
                     steps.map((s, i) => (
                       <div key={s.id} className="flex gap-4">
-                         <span className="text-[0.65rem] font-black text-[var(--accent)] opacity-40 leading-none mt-1">{(i+1).toString().padStart(2, '0')}</span>
-                         <span className="text-xs font-bold leading-tight line-clamp-2 text-[var(--text)]">{s.title}</span>
+                        <span className="text-[0.65rem] font-black text-[var(--accent)] opacity-40 leading-none mt-1">{(i + 1).toString().padStart(2, '0')}</span>
+                        <span className="text-xs font-bold leading-tight line-clamp-2 text-[var(--text)]">{s.title}</span>
                       </div>
                     ))
                   )}
@@ -813,8 +833,8 @@ export function UploadSection() {
 
               <div className="grid gap-3 bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-inner">
                 <div className="flex items-center gap-2">
-                   <div className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
-                   <span className="text-[0.65rem] font-medium uppercase tracking-wider text-[var(--muted-soft)]">{t('upload.required_creds')}</span>
+                  <div className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
+                  <span className="text-[0.65rem] font-medium uppercase tracking-wider text-[var(--muted-soft)]">{t('upload.required_creds')}</span>
                 </div>
                 {keys.length === 0 ? (
                   <div className="text-xs text-[var(--muted)] font-medium italic opacity-40">{t('upload.upload_json_creds')}</div>
@@ -834,8 +854,8 @@ export function UploadSection() {
 
               <div className="grid gap-3 p-1">
                 <div className="flex items-center gap-2 mb-1">
-                   <div className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
-                   <span className="text-[0.65rem] font-medium uppercase tracking-wider text-[var(--muted-soft)]">{t('upload.contributors')}</span>
+                  <div className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
+                  <span className="text-[0.65rem] font-medium uppercase tracking-wider text-[var(--muted-soft)]">{t('upload.contributors')}</span>
                 </div>
                 <div className="flex -space-x-3 overflow-hidden">
                   {creatorEmail && (
@@ -854,14 +874,14 @@ export function UploadSection() {
                     </div>
                   )}
                   {contributors.map((c, i) => (
-                    <div 
-                      key={c.id} 
+                    <div
+                      key={c.id}
                       className="inline-block h-8 w-8 rounded-xl ring-2 ring-[var(--surface-alt)] ring-offset-2 ring-offset-transparent bg-[var(--surface)] shadow-lg overflow-hidden border border-[var(--border)]"
                       style={{ zIndex: contributors.length - i }}
                       title={c.name}
                     >
-                      <Image 
-                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${c.name}`} 
+                      <Image
+                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${c.name}`}
                         alt={c.name}
                         width={32}
                         height={32}
@@ -876,22 +896,21 @@ export function UploadSection() {
                     : t('upload.add_creator')}
                 </div>
               </div>
-
             </div>
           </div>
 
           {/* Action Box */}
-          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-6 shadow-sm flex flex-col gap-4">
+          <div className="hidden lg:flex rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-6 shadow-sm flex-col gap-4">
             {statusMessage && (
               <div className={`text-xs font-bold leading-relaxed ${submitState === 'error' ? 'text-red-500' : 'text-[var(--accent)]'}`}>
                 {statusMessage}
               </div>
             )}
-            
+
             <div className="grid gap-2 mb-2">
               {requirements.map(req => (
-                <button 
-                  key={req.id} 
+                <button
+                  key={req.id}
                   onClick={() => !req.isMet && scrollToField(req.id)}
                   className={`flex items-center gap-2 text-left w-full p-2 -mx-2 rounded-lg transition-colors ${!req.isMet ? 'hover:bg-[var(--surface-alt)] cursor-pointer' : 'cursor-default'}`}
                 >
@@ -906,7 +925,7 @@ export function UploadSection() {
                 </button>
               ))}
             </div>
-          
+
             <button
               onClick={(e) => {
                 if (!canShipWorkflow) {
@@ -923,7 +942,52 @@ export function UploadSection() {
               <span className="uppercase tracking-widest">{submitState === 'saving' ? t('upload.shipping') : t('upload.ship_workflow')}</span>
             </button>
           </div>
+        </div>
+      </div>
 
+      {/* Mobile Sticky Action Bar */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[var(--surface)]/90 backdrop-blur-md border-t border-[var(--border)] p-4 px-6 shadow-2xl flex flex-col gap-3">
+        {statusMessage && (
+          <div className={`text-[0.7rem] font-bold text-center leading-relaxed ${submitState === 'error' ? 'text-red-500' : 'text-[var(--accent)]'}`}>
+            {statusMessage}
+          </div>
+        )}
+        <div className="flex items-center justify-between text-[0.7rem] font-bold text-[var(--muted-strong)]">
+          <span>{t('upload.completion_progress') || 'Completion Progress'}</span>
+          <span className={completedStepsCount === requirements.length ? 'text-emerald-500' : ''}>
+            {Math.round(progressPercent)}%
+          </span>
+        </div>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => {
+              const firstUnmet = requirements.find(r => !r.isMet);
+              if (firstUnmet) {
+                scrollToField(firstUnmet.id);
+                setHasAttemptedSubmit(true);
+              }
+            }}
+            className="flex-1 rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-3 text-[0.75rem] font-bold text-[var(--text-subtle)] text-center transition-all"
+          >
+            {completedStepsCount}/{requirements.length} {lang === 'th' ? 'เสร็จสิ้น' : 'Steps'}
+          </button>
+          <button
+            onClick={(e) => {
+              if (!canShipWorkflow) {
+                e.preventDefault();
+                setHasAttemptedSubmit(true);
+                const firstUnmet = requirements.find(r => !r.isMet);
+                if (firstUnmet) scrollToField(firstUnmet.id);
+                return;
+              }
+              submitWorkflow();
+            }}
+            disabled={submitState === 'saving'}
+            className={`flex-[2] futuristic-hover group flex items-center justify-center gap-2 rounded-xl bg-[var(--accent)] py-3 text-[0.8rem] font-bold text-white shadow-md shadow-[var(--accent-glow)] transition-all ${!canShipWorkflow ? 'opacity-50' : 'active:scale-95'}`}
+          >
+            <Send size={14} />
+            <span className="uppercase tracking-wider">{submitState === 'saving' ? t('upload.shipping') : t('upload.ship_workflow')}</span>
+          </button>
         </div>
       </div>
     </section>
