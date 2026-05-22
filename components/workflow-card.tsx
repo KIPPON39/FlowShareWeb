@@ -15,7 +15,7 @@ interface WorkflowCardProps {
   description: string;
   tags: string[];
   keys: string[];
-  creators: { name: string; avatar?: string }[];
+  creators: { name: string; email?: string; avatar?: string }[];
   nodes?: number;
   views?: number;
   downloads?: number;
@@ -23,28 +23,57 @@ interface WorkflowCardProps {
 }
 
 /* ─── Download Flow Form Modal ─── */
-function DownloadFormModal({ onClose, flowTitle }: { onClose: () => void; flowTitle: string }) {
+function DownloadFormModal({
+  isOpen,
+  onClose,
+  flowTitle,
+  ownerEmail,
+  workflowId,  // เพิ่ม
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  flowTitle: string;
+  ownerEmail?: string;
+  workflowId: string;  // เพิ่ม
+}) {
   const { t } = useI18n();
   const [formState, setFormState] = useState<'idle' | 'submitting' | 'success'>('idle');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [reason, setReason] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormState('submitting');
-    // Simulate submission
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setFormState('submitting');
+
+  try {
+    const response = await fetch('/api/workflows/download', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        workflowId: workflowId,        // ต้องส่ง id เข้ามาใน props ด้วย
+        requesterName: name,
+        requesterEmail: email,
+        ownerEmail,
+        reason,
+      }),
+    });
+
+    if (!response.ok) throw new Error('Failed');
+
+    setFormState('success');
     setTimeout(() => {
-      setFormState('success');
-      setTimeout(() => {
-        onClose();
-        setFormState('idle');
-        setName('');
-        setEmail('');
-        setReason('');
-      }, 1500);
-    }, 1000);
-  };
+      onClose();
+      setFormState('idle');
+      setName('');
+      setEmail('');
+      setReason('');
+    }, 1500);
+  } catch {
+    setFormState('idle');
+    alert('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
+  }
+};
 
   return typeof document !== 'undefined' ? createPortal(
     <motion.div
@@ -68,20 +97,29 @@ function DownloadFormModal({ onClose, flowTitle }: { onClose: () => void; flowTi
           <X size={18} />
         </button>
 
-        {formState === 'success' ? (
-          <div className="flex flex-col items-center justify-center py-8 gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
-              <Check size={32} />
-            </div>
-            <p className="text-lg font-semibold text-[var(--text)]">{t('form.success')}</p>
-          </div>
-        ) : (
-          <>
-            <div className="mb-6">
-              <h3 className="text-lg font-bold text-[var(--text)] tracking-tight">{t('form.download_title')}</h3>
-              <p className="text-[0.82rem] text-[var(--muted)] mt-1">{t('form.download_desc')}</p>
-              <p className="text-[0.75rem] text-[var(--accent)] font-semibold mt-2 truncate">{flowTitle}</p>
-            </div>
+            {formState === 'success' ? (
+              <div className="flex flex-col items-center justify-center py-8 gap-4">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
+                  <Check size={32} />
+                </div>
+                <p className="text-lg font-semibold text-[var(--text)]">{t('form.success')}</p>
+              </div>
+            ) : (
+              <>
+                <div className="mb-6">
+                  <h3 className="text-lg font-bold text-[var(--text)] tracking-tight">{t('form.download_title')}</h3>
+                  <p className="text-[0.82rem] text-[var(--muted)] mt-1">{t('form.download_desc')}</p>
+                  <div className="mt-4 grid gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-alt)]/60 p-3">
+                    <div className="grid gap-1">
+                      <span className="text-[0.62rem] font-bold uppercase tracking-wider text-[var(--muted-soft)]">Flow name</span>
+                      <span className="text-[0.82rem] font-semibold leading-snug text-[var(--text)]">{flowTitle}</span>
+                    </div>
+                    <div className="grid gap-1">
+                      <span className="text-[0.62rem] font-bold uppercase tracking-wider text-[var(--muted-soft)]">Owner email</span>
+                      <span className="break-all font-mono text-[0.76rem] font-semibold text-[var(--accent)]">{ownerEmail || '-'}</span>
+                    </div>
+                  </div>
+                </div>
 
             <form onSubmit={handleSubmit} className="grid gap-4">
               <div className="grid gap-1.5">
@@ -266,6 +304,7 @@ export function WorkflowCard({ id, title, description, tags, keys, creators, nod
   const router = useRouter();
   const [showDownloadForm, setShowDownloadForm] = useState(false);
   const [showSpeakerForm, setShowSpeakerForm] = useState(false);
+  const ownerEmail = creators[0]?.email || '';
   const [showTooltip, setShowTooltip] = useState(false);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -463,16 +502,8 @@ export function WorkflowCard({ id, title, description, tags, keys, creators, nod
       </div>
 
       {/* Form Modals */}
-      <AnimatePresence>
-        {showDownloadForm && (
-          <DownloadFormModal onClose={() => setShowDownloadForm(false)} flowTitle={title} />
-        )}
-      </AnimatePresence>
-      <AnimatePresence>
-        {showSpeakerForm && (
-          <SpeakerFormModal onClose={() => setShowSpeakerForm(false)} flowTitle={title} />
-        )}
-      </AnimatePresence>
+      <DownloadFormModal isOpen={showDownloadForm} onClose={() => setShowDownloadForm(false)} flowTitle={title} ownerEmail={ownerEmail} workflowId={id}/>
+      <SpeakerFormModal isOpen={showSpeakerForm} onClose={() => setShowSpeakerForm(false)} flowTitle={title} />
     </>
   );
 }

@@ -19,7 +19,17 @@ import { useI18n } from '@/lib/i18n';
 import type { WorkflowTemplate } from '@/lib/workflows';
 
 /* ─── Download Flow Form Modal ─── */
-function DownloadFormModal({ onClose, flowTitle }: { onClose: () => void; flowTitle: string }) {
+function DownloadFormModal({
+  isOpen,
+  onClose,
+  flowTitle,
+  ownerEmail,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  flowTitle: string;
+  ownerEmail?: string;
+}) {
   const { t } = useI18n();
   const [formState, setFormState] = useState<'idle' | 'submitting' | 'success'>('idle');
   const [name, setName] = useState('');
@@ -63,25 +73,47 @@ function DownloadFormModal({ onClose, flowTitle }: { onClose: () => void; flowTi
                 <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.your_name')}</label>
                 <input type="text" required value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-soft)]" placeholder="John Doe" />
               </div>
-              <div className="grid gap-1.5">
-                <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.your_email')}</label>
-                <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-soft)]" placeholder="you@example.com" />
-              </div>
-              <div className="grid gap-1.5">
-                <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.reason')}</label>
-                <textarea required value={reason} onChange={(e) => setReason(e.target.value)} rows={3} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all resize-none placeholder:text-[var(--muted-soft)]" placeholder={t('form.reason_placeholder')} />
-              </div>
-              <div className="flex gap-3 mt-2">
-                <button type="button" onClick={onClose} className="flex-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] py-2.5 text-[0.85rem] font-medium text-[var(--muted-strong)] hover:text-[var(--text)] hover:bg-[var(--surface-alt)] transition-all">{t('form.cancel')}</button>
-                <button type="submit" disabled={formState === 'submitting'} className="flex-1 rounded-xl bg-[var(--accent)] py-2.5 text-[0.85rem] font-semibold text-white transition-all hover:opacity-90 active:scale-[0.97] disabled:opacity-60 shadow-sm shadow-[var(--accent-glow)]">{formState === 'submitting' ? t('form.submitting') : t('form.submit')}</button>
-              </div>
-            </form>
-          </>
-        )}
-      </motion.div>
-    </motion.div>,
-    document.body
-  ) : null;
+            ) : (
+              <>
+                <div className="mb-6">
+                  <h3 className="text-lg font-bold text-[var(--text)] tracking-tight">{t('form.download_title')}</h3>
+                  <p className="text-[0.82rem] text-[var(--muted)] mt-1">{t('form.download_desc')}</p>
+                  <div className="mt-4 grid gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-alt)]/60 p-3">
+                    <div className="grid gap-1">
+                      <span className="text-[0.62rem] font-bold uppercase tracking-wider text-[var(--muted-soft)]">Flow name</span>
+                      <span className="text-[0.82rem] font-semibold leading-snug text-[var(--text)]">{flowTitle}</span>
+                    </div>
+                    <div className="grid gap-1">
+                      <span className="text-[0.62rem] font-bold uppercase tracking-wider text-[var(--muted-soft)]">Owner email</span>
+                      <span className="break-all font-mono text-[0.76rem] font-semibold text-[var(--accent)]">{ownerEmail || '-'}</span>
+                    </div>
+                  </div>
+                </div>
+                <form onSubmit={handleSubmit} className="grid gap-4">
+                  <div className="grid gap-1.5">
+                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.your_name')}</label>
+                    <input type="text" required value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-light)]" placeholder="John Doe" />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.your_email')}</label>
+                    <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-light)]" placeholder="you@example.com" />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.reason')}</label>
+                    <textarea required value={reason} onChange={(e) => setReason(e.target.value)} rows={3} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all resize-none placeholder:text-[var(--muted-light)]" placeholder={t('form.reason_placeholder')} />
+                  </div>
+                  <div className="flex gap-3 mt-2">
+                    <button type="button" onClick={onClose} className="flex-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] py-2.5 text-[0.85rem] font-medium text-[var(--muted-strong)] hover:text-[var(--text)] hover:bg-[var(--surface-alt)] transition-all">{t('form.cancel')}</button>
+                    <button type="submit" disabled={formState === 'submitting'} className="flex-1 rounded-xl bg-[var(--accent)] py-2.5 text-[0.85rem] font-semibold text-white transition-all hover:opacity-90 active:scale-[0.97] disabled:opacity-60 shadow-sm shadow-[var(--accent-glow)]">{formState === 'submitting' ? t('form.submitting') : t('form.submit')}</button>
+                  </div>
+                </form>
+              </>
+            )}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  , document.body) : null;
 }
 
 /* ─── Invite Speaker Form Modal ─── */
@@ -245,6 +277,7 @@ export function WorkflowDetail() {
 
   const displayedPipeline = showAllPipeline ? steps : steps.slice(0, 5);
   const displayedCreds = showAllCreds ? keys : keys.slice(0, 6);
+  const ownerEmail = creators[0]?.email || '';
 
   return (
     <>
@@ -459,16 +492,8 @@ export function WorkflowDetail() {
       </section>
 
       {/* Form Modals */}
-      <AnimatePresence>
-        {showDownloadForm && (
-          <DownloadFormModal onClose={() => setShowDownloadForm(false)} flowTitle={workflow.title} />
-        )}
-      </AnimatePresence>
-      <AnimatePresence>
-        {showSpeakerForm && (
-          <SpeakerFormModal onClose={() => setShowSpeakerForm(false)} flowTitle={workflow.title} />
-        )}
-      </AnimatePresence>
+      <DownloadFormModal isOpen={showDownloadForm} onClose={() => setShowDownloadForm(false)} flowTitle={workflow.title} ownerEmail={ownerEmail} />
+      <SpeakerFormModal isOpen={showSpeakerForm} onClose={() => setShowSpeakerForm(false)} flowTitle={workflow.title} />
     </>
   );
 }
