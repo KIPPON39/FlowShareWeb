@@ -1,0 +1,464 @@
+{
+  "name": "Auto Generate Description & How To Use (Gemini)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "check-file",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "24637b9f-ca31-4468-8dc6-8c4e21976454",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -1952,
+        560
+      ],
+      "webhookId": "check-file"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ตรวจสอบ API Key / Token จาก Header\nconst headers = $input.first().json.headers || {};\nconst apiKey = headers['x-api-key'] || headers['authorization'] || '';\n\nconst VALID_API_KEYS = [\n  'your-secret-api-key-1',\n  'your-secret-api-key-2'\n];\n\nconst cleanKey = apiKey.replace('Bearer ', '').trim();\n\nif (!cleanKey || !VALID_API_KEYS.includes(cleanKey)) {\n  return [{ json: { passed: false, step: 'credential', reason: 'API Key ไม่ถูกต้องหรือไม่มีสิทธิ์เข้าถึง' } }];\n}\n\nreturn [{ json: { passed: true, apiKey: cleanKey } }];"
+      },
+      "id": "fa8aa0cb-f557-49f0-b432-f18cd4ab36a3",
+      "name": "ตรวจสอบ Credential",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1760,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.passed }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "99440637-900d-4df3-8fde-d5cb3b9a6061",
+      "name": "Credential ผ่าน?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -1552,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ approved: false, step: 'credential', message: $json.reason }) }}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "id": "8178ade6-c636-4b5d-80f3-f3cfa506bc39",
+      "name": "ตอบ 401 Unauthorized",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -1360,
+        736
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const fileData = $input.first().binary?.file;\n\nif (!fileData) {\n  return [{ json: { passed: false, step: 'file_meta', reason: 'ไม่พบไฟล์ในคำขอ' } }];\n}\n\nconst fileName  = fileData.fileName  || '';\nconst mimeType  = fileData.mimeType  || '';\nconst fileSize  = fileData.fileSize  || 0;\nconst ext       = fileName.toLowerCase().slice(fileName.lastIndexOf('.'));\n\n// สำหรับเว็ปของเรา: อนุญาตเฉพาะไฟล์ .json เท่านั้น\nconst allowedExt  = ['.json'];\nconst allowedMime = ['application/json', 'text/plain'];\n\nif (!allowedExt.includes(ext)) {\n  return [{ json: { passed: false, step: 'file_meta', reason: `นามสกุล ${ext} ไม่อนุญาต ต้องเป็นไฟล์ .json เท่านั้น` } }];\n}\n\nif (!allowedMime.includes(mimeType)) {\n  return [{ json: { passed: false, step: 'file_meta', reason: `MIME type ${mimeType} ไม่ใช่ JSON ที่ถูกต้อง` } }];\n}\n\n// ตรวจชื่อไฟล์ (Path traversal)\nif (fileName.includes('..') || fileName.includes('/') || fileName.includes('\\\\')) {\n  return [{ json: { passed: false, step: 'file_meta', reason: 'ชื่อไฟล์มีอักขระอันตราย (path traversal)' } }];\n}\n\n// พยายามตรวจโครงสร้างของ n8n Workflow\ntry {\n  let fileContent = '';\n  if (fileData.data) {\n    const buffer = Buffer.from(fileData.data, 'base64');\n    fileContent = buffer.toString('utf8');\n  }\n\n  if (fileContent) {\n    const parsed = JSON.parse(fileContent);\n    // โครงสร้างมาตรฐานของ n8n workflow ต้องมี nodes หรือ connections\n    if (!parsed.nodes && !parsed.connections) {\n      return [{ json: { passed: false, step: 'file_meta', reason: 'ไฟล์ JSON ไม่ใช่รูปแบบ n8n workflow (ไม่พบข้อมูล nodes หรือ connections)' } }];\n    }\n  }\n} catch (e) {\n  return [{ json: { passed: false, step: 'file_meta', reason: 'ไฟล์ไม่ใช่ JSON หรือเนื้อหาเสียหาย: ' + e.message } }];\n}\n\nreturn [{\n  json: {\n    passed: true,\n    fileName,\n    fileSize,\n    mimeType,\n    ext\n  }\n}];"
+      },
+      "id": "2f9c5ba2-c88f-44ed-9944-077798e06436",
+      "name": "ตรวจสอบข้อมูลไฟล์",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1360,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.passed }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "ed555ab8-2bf0-4b0b-afc7-3a9ea2abc168",
+      "name": "ข้อมูลไฟล์ผ่าน?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -1152,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ approved: false, step: $json.step, message: $json.reason }) }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "67f5a93b-44a9-4033-923d-4424a777a785",
+      "name": "ตอบ 400 File Invalid",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -960,
+        736
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({\n  approved: true,\n  message: 'ไฟล์ผ่านการตรวจสอบทั้งหมด',\n  fileName: $('ตรวจสอบข้อมูลไฟล์').first().json.fileName,\n  fileSize: $('ตรวจสอบข้อมูลไฟล์').first().json.fileSize,\n  mimeType: $('ตรวจสอบข้อมูลไฟล์').first().json.mimeType,\n  virusScan: 'clean',\n  checkedAt: new Date().toISOString()\n}) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "cc098a28-0535-4d69-94a5-782c0b108b18",
+      "name": "ตอบ 200 Approved",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -944,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {}
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -560,
+        704
+      ],
+      "id": "dbedaf25-b466-4704-a7d7-212d75e7aaaf",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "ROwcrvovbRp5FO8H",
+          "name": "Google Gemini(PaLM) Api account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ========================================\n// ตรวจสอบ Session + โควต้า 5 ครั้ง/เซสชั่น\n// ========================================\nconst body = $input.first().json.body || {};\nconst sessionId = body.sessionId || '';\n\nif (!sessionId) {\n  return [{ json: { passed: false, reason: 'ไม่พบ sessionId', code: 400 } }];\n}\n\nconst staticData = $getWorkflowStaticData('global');\n\nif (!staticData.sessions) {\n  staticData.sessions = {};\n}\n\nconst now = Date.now();\nconst SESSION_TTL = 60 * 60 * 1000;\nconst QUOTA_LIMIT = 5;\n\nObject.keys(staticData.sessions).forEach(sid => {\n  if (now - staticData.sessions[sid].createdAt > SESSION_TTL) {\n    delete staticData.sessions[sid];\n  }\n});\n\nif (!staticData.sessions[sessionId]) {\n  staticData.sessions[sessionId] = {\n    count: 0,\n    createdAt: now\n  };\n}\n\nconst session = staticData.sessions[sessionId];\n\nif (session.count >= QUOTA_LIMIT) {\n  return [{\n    json: {\n      passed: false,\n      reason: `ใช้ครบโควต้าแล้ว (${QUOTA_LIMIT} ครั้ง/เซสชั่น)`,\n      code: 429,\n      used: session.count,\n      limit: QUOTA_LIMIT,\n      remaining: 0\n    }\n  }];\n}\n\nsession.count++;\nstaticData.sessions[sessionId] = session;\n\nreturn [{\n  json: {\n    passed: true,\n    sessionId,\n    used: session.count,\n    limit: QUOTA_LIMIT,\n    remaining: QUOTA_LIMIT - session.count,\n    topic: body.topic || '',\n    context: body.context || '',\n    language: body.language || 'th'\n  }\n}];"
+      },
+      "id": "a439778f-5067-4347-979d-a386603f164d",
+      "name": "ตรวจสอบโควต้า",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1568,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.passed }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "44c8ef12-bdb8-437c-b774-8335ce2896bc",
+      "name": "โควต้าผ่าน?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -1376,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: false, message: $json.reason, used: $json.used, limit: $json.limit, remaining: $json.remaining }) }}",
+        "options": {
+          "responseCode": 429
+        }
+      },
+      "id": "778c62f4-db4b-417e-a081-d20536ef2199",
+      "name": "ตอบ 429 Quota Exceeded",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -1168,
+        1296
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ========================================\n// สร้าง Prompt สำหรับ Gemini\n// Gemini ใช้ contents[] แทน messages[]\n// ========================================\nconst json = $input.first().json;\nconst topic = json.topic || 'ไม่ระบุหัวข้อ';\nconst context = json.context || '';\nconst language = json.language || 'th';\n\nconst langLabel = language === 'th' ? 'ภาษาไทย' : 'English';\n\n// Gemini ไม่มี system role แยก → รวมใน user prompt\nconst fullPrompt = `You are a professional technical writer.\nGenerate concise and clear content.\nAlways respond in ${langLabel}.\nKeep description under 100 words.\nKeep how-to-use under 150 words with numbered steps.\nReturn ONLY valid JSON, no markdown, no extra text.\n\nGenerate description and how-to-use for:\nTopic: ${topic}\n${context ? `Context: ${context}` : ''}\n\nReturn JSON format:\n{\n  \"description\": \"...\",\n  \"howToUse\": [\"step 1...\", \"step 2...\", \"step 3...\"]\n}`;\n\nreturn [{\n  json: {\n    ...json,\n    fullPrompt\n  }\n}];"
+      },
+      "id": "71d90316-5845-43d8-9e41-298fce0dda9a",
+      "name": "สร้าง Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1168,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyBLXxcP2vfi_pzWgXRpADtcwxYS2n7tax4",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"role\": \"user\",\n      \"parts\": [{ \"text\": {{ JSON.stringify($json.fullPrompt) }} }]\n    }\n  ],\n  \"generationConfig\": {\n    \"maxOutputTokens\": 400,\n    \"temperature\": 0.4,\n    \"responseMimeType\": \"application/json\"\n  }\n}",
+        "options": {}
+      },
+      "id": "7b58eb3e-3eba-4c91-874d-721c0638ba73",
+      "name": "เรียก Gemini API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -976,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ========================================\n// Parse ผลลัพธ์จาก Gemini\n// Gemini: candidates[0].content.parts[0].text\n// ========================================\nconst response = $input.first().json;\nconst rawText = response?.candidates?.[0]?.content?.parts?.[0]?.text || '';\nconst usage = response?.usageMetadata || {};\n\nlet parsed = {};\ntry {\n  const cleaned = rawText.replace(/```json|```/g, '').trim();\n  parsed = JSON.parse(cleaned);\n} catch (e) {\n  parsed = {\n    description: rawText.slice(0, 300),\n    howToUse: ['ไม่สามารถ parse ผลลัพธ์ได้ กรุณาลองใหม่']\n  };\n}\n\nconst prevJson = $('ตรวจสอบโควต้า').first().json;\n\nreturn [{\n  json: {\n    success: true,\n    description: parsed.description || '',\n    howToUse: parsed.howToUse || [],\n    quota: {\n      used: prevJson.used,\n      limit: prevJson.limit,\n      remaining: prevJson.remaining\n    },\n    tokenUsage: {\n      inputTokens: usage.promptTokenCount || 0,\n      outputTokens: usage.candidatesTokenCount || 0,\n      totalTokens: usage.totalTokenCount || 0,\n      maxTokensAllowed: 400\n    }\n  }\n}];"
+      },
+      "id": "35d82b8b-2b7e-4e6e-93af-836d6b1daf97",
+      "name": "Parse ผลลัพธ์",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -768,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "d9539364-12e1-45ec-85ae-77069051419b",
+      "name": "ตอบ 200 Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -576,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "generate-description",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "ddbe4ff7-282a-48a2-b33e-c3b134424ac3",
+      "name": "Webhook1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -1776,
+        1104
+      ],
+      "webhookId": "generate-description"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "ตรวจสอบ Credential",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ตรวจสอบ Credential": {
+      "main": [
+        [
+          {
+            "node": "Credential ผ่าน?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Credential ผ่าน?": {
+      "main": [
+        [
+          {
+            "node": "ตรวจสอบข้อมูลไฟล์",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ตอบ 401 Unauthorized",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ตรวจสอบข้อมูลไฟล์": {
+      "main": [
+        [
+          {
+            "node": "ข้อมูลไฟล์ผ่าน?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ข้อมูลไฟล์ผ่าน?": {
+      "main": [
+        [
+          {
+            "node": "ตอบ 200 Approved",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ตอบ 400 File Invalid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ตรวจสอบโควต้า": {
+      "main": [
+        [
+          {
+            "node": "โควต้าผ่าน?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "โควต้าผ่าน?": {
+      "main": [
+        [
+          {
+            "node": "สร้าง Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ตอบ 429 Quota Exceeded",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "สร้าง Prompt": {
+      "main": [
+        [
+          {
+            "node": "เรียก Gemini API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "เรียก Gemini API": {
+      "main": [
+        [
+          {
+            "node": "Parse ผลลัพธ์",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse ผลลัพธ์": {
+      "main": [
+        [
+          {
+            "node": "ตอบ 200 Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "ตรวจสอบโควต้า",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "becd9317-a136-4a87-80e8-7301ce8a5568",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "29855c8122e4e81f1a541b573a69bc629a8086780c366f661025df0cdba333ab"
+  },
+  "id": "5N7KXMSxaGxJw5Sk",
+  "tags": []
+}

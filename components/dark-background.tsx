@@ -1,7 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ShaderGradient, ShaderGradientCanvas } from '@shadergradient/react';
+import { ShaderGradient as _ShaderGradient, ShaderGradientCanvas as _ShaderGradientCanvas } from '@shadergradient/react';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ShaderGradient = _ShaderGradient as any;
+const ShaderGradientCanvas = _ShaderGradientCanvas as any;
 
 export function DarkBackground() {
   const [isDark, setIsDark] = useState(false);
@@ -30,7 +33,7 @@ export function DarkBackground() {
   if (!mounted) return null;
 
   return (
-    <div 
+    <div
       className={`fixed inset-0 z-[-15] pointer-events-none transition-opacity duration-700 ${isDark ? 'opacity-100' : 'opacity-0'}`}
     >
       {isDark && (
