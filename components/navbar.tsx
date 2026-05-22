@@ -32,11 +32,11 @@ export function Navbar() {
           <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--accent)] text-white transition-transform duration-200 group-hover:scale-105">
             <Zap size={16} fill="currentColor" />
           </div>
-          <span className="text-[0.95rem] font-semibold tracking-tight text-[var(--text)]">
+          <span className="text-[0.95rem] font-semibold tracking-tight navbar-brand-text">
             FlowShare
           </span>
         </Link>
-        
+
         {/* Desktop Nav */}
         <div className="hidden min-[720px]:flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--surface)]/60 px-1 py-1 backdrop-blur-md">
           {navLinks.map((link) => (

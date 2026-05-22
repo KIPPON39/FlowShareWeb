@@ -1,7 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ShaderGradient, ShaderGradientCanvas } from '@shadergradient/react';
+import { ShaderGradient as _ShaderGradient, ShaderGradientCanvas as _ShaderGradientCanvas } from '@shadergradient/react';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ShaderGradient = _ShaderGradient as any;
+const ShaderGradientCanvas = _ShaderGradientCanvas as any;
 
 export function LightHeroBackground() {
   const [isLight, setIsLight] = useState(false);
@@ -30,7 +33,7 @@ export function LightHeroBackground() {
   if (!mounted) return null;
 
   return (
-    <div 
+    <div
       className={`absolute inset-0 z-0 pointer-events-none transition-opacity duration-700 overflow-hidden ${isLight ? 'opacity-100' : 'opacity-0'}`}
       style={{ maskImage: 'linear-gradient(to bottom, black 70%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to bottom, black 70%, transparent 100%)' }}
     >

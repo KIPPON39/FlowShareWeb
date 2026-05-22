@@ -1,0 +1,433 @@
+{
+  "name": "File Upload - Validator (No VirusTotal) v2",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "generate-description",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "4d5288c7-c352-4e3c-9f8d-8c15b60aed07",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -1840,
+        960
+      ],
+      "webhookId": "generate-description"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ========================================\n// ตรวจสอบ Session + โควต้า 5 ครั้ง/เซสชั่น\n// ========================================\nconst body = $input.first().json.body || {};\nconst sessionId = body.sessionId || '';\n\nif (!sessionId) {\n  return [{ json: { passed: false, reason: 'ไม่พบ sessionId', code: 400 } }];\n}\n\nconst staticData = $getWorkflowStaticData('global');\n\nif (!staticData.sessions) {\n  staticData.sessions = {};\n}\n\nconst now = Date.now();\nconst SESSION_TTL = 60 * 60 * 1000;\nconst QUOTA_LIMIT = 5;\n\nObject.keys(staticData.sessions).forEach(sid => {\n  if (now - staticData.sessions[sid].createdAt > SESSION_TTL) {\n    delete staticData.sessions[sid];\n  }\n});\n\nif (!staticData.sessions[sessionId]) {\n  staticData.sessions[sessionId] = {\n    count: 0,\n    createdAt: now\n  };\n}\n\nconst session = staticData.sessions[sessionId];\n\nif (session.count >= QUOTA_LIMIT) {\n  return [{\n    json: {\n      passed: false,\n      reason: `ใช้ครบโควต้าแล้ว (${QUOTA_LIMIT} ครั้ง/เซสชั่น)`,\n      code: 429,\n      used: session.count,\n      limit: QUOTA_LIMIT,\n      remaining: 0\n    }\n  }];\n}\n\nsession.count++;\nstaticData.sessions[sessionId] = session;\n\nreturn [{\n  json: {\n    passed: true,\n    sessionId,\n    used: session.count,\n    limit: QUOTA_LIMIT,\n    remaining: QUOTA_LIMIT - session.count,\n    topic: body.topic || '',\n    context: body.context || '',\n    language: body.language || 'th'\n  }\n}];"
+      },
+      "id": "8bd26d0a-1652-4dd3-92be-43eb2a82f8b1",
+      "name": "ตรวจสอบโควต้า",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1632,
+        960
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.passed }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "8e66aa7c-a3bd-45e9-a3f6-dc964c69ea10",
+      "name": "โควต้าผ่าน?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -1440,
+        960
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: false, message: $json.reason, used: $json.used, limit: $json.limit, remaining: $json.remaining }) }}",
+        "options": {
+          "responseCode": 429
+        }
+      },
+      "id": "86044b8b-9217-4f65-ad69-4962c7b064e1",
+      "name": "ตอบ 429 Quota Exceeded",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -1232,
+        1152
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ========================================\n// สร้าง Prompt สำหรับ Gemini\n// Gemini ใช้ contents[] แทน messages[]\n// ========================================\nconst json = $input.first().json;\nconst topic = json.topic || 'ไม่ระบุหัวข้อ';\nconst context = json.context || '';\nconst language = json.language || 'th';\n\nconst isThaiLang = language === 'th';\n\nconst fullPrompt = isThaiLang\n  ? 'คุณคือผู้เชี่ยวชาญด้านระบบอัตโนมัติและนักเขียนเทคนิคระดับมืออาชีพ ภาษาไทย\\n' +\n    'ฉันมี n8n automation workflow ชื่อ \\\"' + topic + '\\\" ต้องการให้คุณเขียนคำอธิบายและขั้นตอนอย่างมืออาชีพ\\n\\n' +\n    'ข้อมูลโหนดและ Credentials ของ workflow:\\n' + (context || 'ไม่ได้ระบุ') + '\\n\\n' +\n    'กรุณาสร้างเนื้อหาทั้งหมดเป็น **ภาษาไทย** โดยมีข้อกำหนดดังนี้อย่างเคร่งครัด:\\n' +\n    '1. **คีย์ \\\"description\\\" ต้องมีความยาว 200-500 คำ** (อธิบายกระบวนการทำงานแบบละเอียด ประโยชน์ ผู้ใช้ที่เหมาะสม ปัญหาที่แก้ไขได้ ตัวอย่างสถานการณ์การใช้งาน และคุณค่าที่ได้รับ — ห้ามย่อกระชับเกินไป ต้องให้ข้อมูลเชิงลึก)\\n' +\n    '2. **ห้ามแปลชื่อคีย์ใน JSON เด็ดขาด!** ต้องใช้คีย์ภาษาอังกฤษ \\\"description\\\" และ \\\"howToUse\\\" ตามโครงสร้าง JSON ด้านล่างเท่านั้น\\n' +\n    '3. ผลลัพธ์ต้องตอบกลับเฉพาะ JSON ที่ถูกต้องสมบูรณ์แบบเท่านั้น ห้ามใส่ markdown block (เช่น ```json) และไม่มีข้อความเกริ่นนำหรือท้ายเรื่องใดๆ ทั้งสิ้น\\n\\n' +\n    '## โครงสร้าง JSON ที่คุณต้องตอบกลับ:\\n' +\n    '{\\n' +\n    '  \\\"description\\\": \\\"คำอธิบายความยาว 200-500 คำในภาษาไทย อธิบายอย่างละเอียดว่า workflow ทำอะไร แก้ปัญหาอะไร เหมาะกับใคร และมีขั้นตอนการทำงานอย่างไร...\\\",\\n' +\n    '  \\\"howToUse\\\": [\\\"ขั้นตอนที่ 1...\\\", \\\"ขั้นตอนที่ 2...\\\"]\\n' +\n    '}'\n  : 'You are a professional technical writer and automation expert.\\n' +\n    'I have an n8n automation workflow titled \\\"' + topic + '\\\". Write a professional description and setup steps.\\n\\n' +\n    'Workflow node data & credentials:\\n' + (context || 'Not specified') + '\\n\\n' +\n    'Generate ALL content in **English** following this structure strictly:\\n' +\n    '1. **The \\\"description\\\" key MUST be 200-500 words long** (detailed, comprehensive, explaining the workflow process, who it\\'s for, the problems it solves, use-case scenarios, and the value it brings — do NOT be too brief).\\n' +\n    '2. The response MUST be valid JSON using the English keys: \\\"description\\\" and \\\"howToUse\\\".\\n' +\n    '3. Return ONLY valid JSON. No conversational text, no markdown wrappers (like ```json), just raw JSON.\\n\\n' +\n    '## JSON structure to return:\\n' +\n    '{\\n' +\n    '  \\\"description\\\": \\\"Detailed description of 200-500 words in English explaining what the workflow does, problems it solves, who it\\'s for, and how it works...\\\",\\n' +\n    '  \\\"howToUse\\\": [\\\"Step 1...\\\", \\\"Step 2...\\\"]\\n' +\n    '}';\n\nreturn [{\n  json: {\n    ...json,\n    fullPrompt\n  }\n}];"
+      },
+      "id": "8ddd08f7-c7bc-4545-af5d-534aea146b8f",
+      "name": "สร้าง Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1232,
+        960
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyBLXxcP2vfi_pzWgXRpADtcwxYS2n7tax4",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"role\": \"user\",\n      \"parts\": [{ \"text\": {{ JSON.stringify($json.fullPrompt) }} }]\n    }\n  ],\n  \"generationConfig\": {\n    \"maxOutputTokens\": 2500,\n    \"temperature\": 0.4,\n    \"responseMimeType\": \"application/json\"\n  }\n}",
+        "options": {}
+      },
+      "id": "b20d2ccf-de6a-4733-8c82-286823283a98",
+      "name": "เรียก Gemini API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -1040,
+        960
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ========================================\n// Parse ผลลัพธ์จาก Gemini\n// Gemini: candidates[0].content.parts[0].text\n// ========================================\nconst response = $input.first().json;\nconst rawText = response?.candidates?.[0]?.content?.parts?.[0]?.text || '';\nconst usage = response?.usageMetadata || {};\n\nfunction unescapeUnicode(str) {\n  return str.replace(/\\\\u([0-9a-fA-F]{4})/g, (match, grp) => {\n    return String.fromCharCode(parseInt(grp, 16));\n  });\n}\n\nfunction cleanAndParseGeminiResponse(rawText) {\n  const cleaned = rawText.replace(/```json|```/g, '').trim();\n  \n  // 1. ลอง parse แบบปกติ\n  try {\n    const parsed = JSON.parse(cleaned);\n    if (parsed && typeof parsed === 'object') {\n      const keysList = Object.keys(parsed);\n      \n      // ค้นหาคีย์สำหรับ description (รองรับภาษาไทยกรณี AI แปลคีย์)\n      let descKey = keysList.find(k => k.toLowerCase() === 'description');\n      if (!descKey && keysList.length > 0) {\n        descKey = keysList.find(k => \n          k.toLowerCase().includes('desc') || \n          k.includes('อธิบาย') || \n          k.includes('รายละเอียด') || \n          k.includes('สรุป')\n        );\n        if (!descKey) descKey = keysList[0];\n      }\n      \n      let desc = '';\n      if (descKey) {\n        const val = parsed[descKey];\n        if (typeof val === 'string') {\n          desc = val;\n        } else if (typeof val === 'object' && val !== null) {\n          desc = val.description || val.text || JSON.stringify(val);\n        }\n      }\n      \n      // ค้นหาคีย์สำหรับ howToUse\n      let howToUseKey = keysList.find(k => k.toLowerCase() === 'howtouse');\n      if (!howToUseKey && keysList.length > 1) {\n        howToUseKey = keysList.find(k => \n          k.toLowerCase().includes('use') || \n          k.toLowerCase().includes('how') || \n          k.includes('ขั้นตอน') || \n          k.includes('วิธี')\n        );\n        if (!howToUseKey) {\n          howToUseKey = keysList.find(k => k !== descKey) || keysList[1];\n        }\n      }\n      \n      let steps = [];\n      if (howToUseKey) {\n        const val = parsed[howToUseKey];\n        if (Array.isArray(val)) {\n          steps = val.map(s => String(s));\n        } else if (typeof val === 'string') {\n          steps = [val];\n        }\n      }\n      \n      return {\n        description: desc.trim(),\n        howToUse: steps\n      };\n    }\n  } catch (e) {\n    // พยายามใช้ Regex หาก JSON.parse พัง\n  }\n\n  // 2. ใช้ Regex ในการสกัดคีย์ภาษาไทยและคีย์ภาษาอังกฤษ\n  let description = '';\n  const descRegex = /\\\"(description|คำอธิบาย|รายละเอียด|สรุป)\\\"\\\\s*:\\\\s*\\\"([^\\\"\\\\\\\\]*(?:\\\\\\\\.[^\\\"\\\\\\\\]*)*)\\\"/i;\n  const descMatch = cleaned.match(descRegex);\n  if (descMatch && descMatch[2]) {\n    description = unescapeUnicode(descMatch[2])\n      .replace(/\\\\\\\"/g, '\"')\n      .replace(/\\\\n/g, '\\n')\n      .replace(/\\\\r/g, '\\r')\n      .replace(/\\\\t/g, '\\t');\n  } else {\n    const looseDescRegex = /\\\"(description|คำอธิบาย|รายละเอียด|สรุป)\\\"\\\\s*:\\\\s*([^,}\\\\]+)/i;\n    const looseDescMatch = cleaned.match(looseDescRegex);\n    if (looseDescMatch && looseDescMatch[2]) {\n      description = unescapeUnicode(looseDescMatch[2].trim().replace(/^[\\\"']|[\\\"']$/g, ''));\n    }\n  }\n\n  let howToUse = [];\n  const howToUseRegex = /\\\"(howToUse|ขั้นตอน|วิธีใช้งาน|วิธีการใช้งาน)\\\"\\\\s*:\\\\s*\\\\[([\\\\s\\\\S]*?)\\\\]/i;\n  const howToUseMatch = cleaned.match(howToUseRegex);\n  if (howToUseMatch && howToUseMatch[2]) {\n    const arrayContent = howToUseMatch[2];\n    const stringMatches = Array.from(arrayContent.matchAll(/\\\"([^\\\"\\\\\\\\]*(?:\\\\\\\\.[^\\\"\\\\\\\\]*)*)\\\"/g));\n    for (const m of stringMatches) {\n      if (m[1]) {\n        howToUse.push(\n          unescapeUnicode(m[1])\n            .replace(/\\\\\\\"/g, '\"')\n            .replace(/\\\\n/g, '\\n')\n            .replace(/\\\\r/g, '\\r')\n            .replace(/\\\\t/g, '\\t')\n        );\n      }\n    }\n  }\n\n  // ถ้าล้มเหลวในการสกัด ให้ทำความสะอาด raw text\n  if (!description && !howToUse.length) {\n    let plainText = cleaned\n      .replace(/\\\\{([\\\\s\\\\S]*?)\\\\}/g, '$1')\n      .replace(/\\\"(description|คำอธิบาย|รายละเอียด|สรุป)\\\"\\\\s*:\\\\s*/gi, '')\n      .replace(/\\\"(howToUse|ขั้นตอน|วิธีใช้งาน|วิธีการใช้งาน)\\\"\\\\s*:\\\\s*/gi, '')\n      .replace(/[\\\\[\\\\]\\\"\\\\{}]/g, '')\n      .replace(/^\\\\s*,/gm, '')\n      .trim();\n    \n    description = plainText.split('\\n')[0] || plainText;\n  }\n\n  return {\n    description: description.trim(),\n    howToUse: howToUse.filter(Boolean)\n  };\n}\n\nlet parsed = { description: '', howToUse: [] };\ntry {\n  parsed = cleanAndParseGeminiResponse(rawText);\n} catch (e) {\n  parsed = {\n    description: rawText.slice(0, 500),\n    howToUse: ['ไม่สามารถ parse ผลลัพธ์ได้ กรุณาลองใหม่']\n  };\n}\n\nif (!parsed.description || parsed.description.trim() === '') {\n  parsed.description = rawText.slice(0, 500);\n}\n\nconst prevJson = $('ตรวจสอบโควต้า').first().json;\n\nreturn [{\n  json: {\n    success: true,\n    description: parsed.description || '',\n    howToUse: parsed.howToUse || [],\n    quota: {\n      used: prevJson.used,\n      limit: prevJson.limit,\n      remaining: prevJson.remaining\n    },\n    tokenUsage: {\n      inputTokens: usage.promptTokenCount || 0,\n      outputTokens: usage.candidatesTokenCount || 0,\n      totalTokens: usage.totalTokenCount || 0,\n      maxTokensAllowed: 2500\n    }\n  }\n}];"
+      },
+      "id": "ad06a848-a5b1-4077-b510-e386ecdecda0",
+      "name": "Parse ผลลัพธ์",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -832,
+        960
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "0c91f5ae-5a3d-4323-b4fe-e4342a20b29c",
+      "name": "ตอบ 200 Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        960
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ตรวจสอบ API Key / Token จาก Header\nconst inputItem = $input.first();\nconst headers = inputItem.json.headers || {};\nconst body = inputItem.json.body || {};\nconst apiKey = headers['x-api-key'] || headers['authorization'] || '';\n\nconst VALID_API_KEYS = [\n  'your-secret-api-key-1',\n  'your-secret-api-key-2'\n];\n\nconst cleanKey = apiKey.replace('Bearer ', '').trim();\n\nif (!cleanKey || !VALID_API_KEYS.includes(cleanKey)) {\n  return [{ json: { passed: false, step: 'credential', reason: 'API Key ไม่ถูกต้องหรือไม่มีสิทธิ์เข้าถึง' } }];\n}\n\n// ส่ง body data (ข้อมูลไฟล์) ต่อไปยัง node ถัดไป\nreturn [{ json: { passed: true, apiKey: cleanKey, fileData: body } }];"
+      },
+      "id": "334b64de-41dd-49ca-8ea8-8899c5b141cd",
+      "name": "ตรวจสอบ Credential",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1488,
+        1408
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.passed }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "03e693bc-95bf-456f-95cc-384083da0f51",
+      "name": "Credential ผ่าน?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -1280,
+        1408
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ approved: false, step: 'credential', message: $json.reason }) }}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "id": "214730b1-4439-4dc5-9928-5be563520d71",
+      "name": "ตอบ 401 Unauthorized",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -1088,
+        1584
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ========================================\n// อ่านข้อมูลไฟล์จาก JSON body (ส่งมาจาก Next.js)\n// ไม่ใช้ binary เพื่อหลีกเลี่ยง encoding issues\n// ========================================\nconst inputJson = $input.first().json;\nconst fd = inputJson.fileData || inputJson.body || inputJson;\n\nconst fileName    = fd.fileName || '';\nconst mimeType    = fd.mimeType || '';\nconst fileSize    = fd.fileSize || 0;\nconst fileContent = fd.fileContent || '';\n\nif (!fileContent) {\n  return [{ json: { passed: false, step: 'file_meta', reason: 'ไม่พบเนื้อหาไฟล์ในคำขอ (fileContent ว่าง)' } }];\n}\n\nconst ext = fileName.toLowerCase().slice(fileName.lastIndexOf('.'));\n\nconst allowedExt  = ['.json'];\nconst allowedMime = ['application/json', 'text/plain'];\n\nif (fileName && !allowedExt.includes(ext)) {\n  return [{ json: { passed: false, step: 'file_meta', reason: `นามสกุล ${ext} ไม่อนุญาต ต้องเป็นไฟล์ .json เท่านั้น` } }];\n}\n\nif (mimeType && !allowedMime.includes(mimeType)) {\n  return [{ json: { passed: false, step: 'file_meta', reason: `MIME type ${mimeType} ไม่ใช่ JSON ที่ถูกต้อง` } }];\n}\n\nif (fileName.includes('..') || fileName.includes('/') || fileName.includes('\\\\')) {\n  return [{ json: { passed: false, step: 'file_meta', reason: 'ชื่อไฟล์มีอักขระอันตราย (path traversal)' } }];\n}\n\n// เก็บ warnings แทนการ block\nconst warnings = [];\n\ntry {\n\n  const parsed = JSON.parse(fileContent);\n\n  if (!parsed.nodes && !parsed.connections) {\n    return [{ json: { passed: false, step: 'file_meta', reason: 'ไฟล์ JSON ไม่ใช่รูปแบบ n8n workflow (ไม่พบ nodes หรือ connections)' } }];\n  }\n\n  const scanForSecrets = (text) => {\n    if (!text || typeof text !== 'string') return null;\n    if (/AIzaSy[A-Za-z0-9_\\-]{20,}/.test(text)) return 'ตรวจพบ Google API Key (AIzaSy...)';\n    if (/sk-(?:proj-)?[a-zA-Z0-9_\\-]{40,}/.test(text)) return 'ตรวจพบ OpenAI API Key (sk-...)';\n    if (/sk-ant-[a-zA-Z0-9_\\-]{40,}/.test(text)) return 'ตรวจพบ Anthropic API Key';\n    if (/AKIA[A-Z0-9]{16}/.test(text)) return 'ตรวจพบ AWS Access Key';\n    if (/gh[pso]_[a-zA-Z0-9]{36,}/.test(text)) return 'ตรวจพบ GitHub Token';\n    if (/xox[baprs]-[a-zA-Z0-9\\-]{10,}/.test(text)) return 'ตรวจพบ Slack Token';\n    if (/-----BEGIN[^-]*PRIVATE KEY-----/.test(text)) return 'ตรวจพบ Private Key';\n    if (/Bearer\\s+eyJ[a-zA-Z0-9_\\-]{20,}/.test(text)) return 'ตรวจพบ Bearer JWT Token';\n    if (/hf_[a-zA-Z0-9]{20,}/.test(text)) return 'ตรวจพบ Hugging Face Token';\n    const urlMatch = /[?&](key|api[-_]?key|token|secret|access[-_]?token|client[-_]?secret|password|passwd|apikey)(?:=|%3D|\\\\u003d)([A-Za-z0-9_\\-]{10,})/i.exec(text);\n    if (urlMatch) return 'ตรวจพบ API Key/Secret ใน URL Parameter (' + urlMatch[1] + ')';\n    return null;\n  };\n\n  const isSafeValue = (val) => {\n    if (typeof val !== 'string') return true;\n    const v = val.trim();\n    if (v.length === 0 || v.length < 6) return true;\n    if (/^\\{\\{.*\\}\\}$/.test(v) || /^=\\{\\{.*\\}\\}$/.test(v) || v.startsWith('={{')) return true;\n    if (/^(your[_-]|example[_-]|test[_-]|dummy[_-]|fake[_-]|sample[_-]|placeholder|changeme|xxx|TODO|CHANGE_ME|INSERT_HERE|REPLACE_ME)$/i.test(v)) return true;\n    if (/^your[_-]?(secret|api|key|token|password)/i.test(v)) return true;\n    if (/^(true|false|null|undefined|none|0|1)$/i.test(v)) return true;\n    if (/^https?:\\/\\//i.test(v) && !/[?&](key|token|secret|password|api_key|apikey)=/i.test(v)) return true;\n    if (/^\\$/.test(v)) return true;\n    if (/^(headers|process\\.env|req\\.|request\\.)/.test(v)) return true;\n    return false;\n  };\n\n  // ---- Step 1: raw regex scan ทั้งไฟล์ ----\n  const rawResult = scanForSecrets(fileContent);\n  if (rawResult) {\n    warnings.push(rawResult + ' ในไฟล์โดยตรง — กรุณาใช้ Credentials ของ n8n แทน');\n  }\n\n  // ---- Step 2: deep scan แต่ละ node ----\n  if (Array.isArray(parsed.nodes)) {\n    for (const node of parsed.nodes) {\n      const nodeName = node.name || node.id || 'unknown';\n\n      // 2a. regex scan on parameters\n      const paramResult = scanForSecrets(JSON.stringify(node.parameters || {}));\n      if (paramResult) {\n        warnings.push(paramResult + ' (node: ' + nodeName + ')');\n      }\n\n      // 2b. credentials field — Credential ID (เตือนแทนการ block)\n      if (node.credentials && typeof node.credentials === 'object') {\n        for (const [credType, credVal] of Object.entries(node.credentials)) {\n          if (credVal?.id && credVal.id !== '' && !/^\\{\\{/.test(credVal.id)) {\n            warnings.push('พบ Credential ID (type: ' + credType + ') ใน node \"' + nodeName + '\" — ไม่มีผลต่อการอัพโหลด แต่ควรลบก่อน export');\n          }\n        }\n        const credResult = scanForSecrets(JSON.stringify(node.credentials));\n        if (credResult) {\n          warnings.push(credResult + ' (credentials ของ node: ' + nodeName + ')');\n        }\n      }\n\n      // 2c. meta / typeOptions scan\n      const metaResult = scanForSecrets(JSON.stringify({ meta: node.meta, typeOptions: node.typeOptions }));\n      if (metaResult) {\n        warnings.push(metaResult + ' (meta ของ node: ' + nodeName + ')');\n      }\n    }\n  }\n\n} catch (e) {\n  return [{ json: { passed: false, step: 'file_meta', reason: 'ไฟล์ไม่ใช่ JSON หรือเนื้อหาเสียหาย: ' + e.message } }];\n}\n\nreturn [{\n  json: {\n    passed: true,\n    fileName,\n    fileSize,\n    mimeType,\n    ext,\n    warnings\n  }\n}];\n"
+      },
+      "id": "859c0104-1a18-442d-92e8-395a07bef238",
+      "name": "ตรวจสอบข้อมูลไฟล์",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1088,
+        1408
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.passed }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "795ca64d-784a-4025-ab70-68b574574990",
+      "name": "ข้อมูลไฟล์ผ่าน?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -880,
+        1408
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ approved: false, step: $json.step, message: $json.reason }) }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "e0e33068-1b6d-4582-a1e6-ca1bdf532c94",
+      "name": "ตอบ 400 File Invalid",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -688,
+        1584
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({\n  approved: true,\n  message: 'ไฟล์ผ่านการตรวจสอบทั้งหมด',\n  fileName: $('ตรวจสอบข้อมูลไฟล์').first().json.fileName,\n  fileSize: $('ตรวจสอบข้อมูลไฟล์').first().json.fileSize,\n  mimeType: $('ตรวจสอบข้อมูลไฟล์').first().json.mimeType,\n  warnings: $('ตรวจสอบข้อมูลไฟล์').first().json.warnings || [],\n  virusScan: 'clean',\n  checkedAt: new Date().toISOString()\n}) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "f2e3e512-5317-4f3f-9f2a-3b7796bcc0c6",
+      "name": "ตอบ 200 Approved",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        320,
+        1264
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "check-file",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "f9907c31-5b85-4d44-a202-375c7d2f29c5",
+      "name": "Webhook1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -1680,
+        1408
+      ],
+      "webhookId": "check-file"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "ตรวจสอบโควต้า",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ตรวจสอบโควต้า": {
+      "main": [
+        [
+          {
+            "node": "โควต้าผ่าน?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "โควต้าผ่าน?": {
+      "main": [
+        [
+          {
+            "node": "สร้าง Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ตอบ 429 Quota Exceeded",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "สร้าง Prompt": {
+      "main": [
+        [
+          {
+            "node": "เรียก Gemini API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "เรียก Gemini API": {
+      "main": [
+        [
+          {
+            "node": "Parse ผลลัพธ์",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse ผลลัพธ์": {
+      "main": [
+        [
+          {
+            "node": "ตอบ 200 Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ตรวจสอบ Credential": {
+      "main": [
+        [
+          {
+            "node": "Credential ผ่าน?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Credential ผ่าน?": {
+      "main": [
+        [
+          {
+            "node": "ตรวจสอบข้อมูลไฟล์",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ตอบ 401 Unauthorized",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ตรวจสอบข้อมูลไฟล์": {
+      "main": [
+        [
+          {
+            "node": "ข้อมูลไฟล์ผ่าน?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ข้อมูลไฟล์ผ่าน?": {
+      "main": [
+        [
+          {
+            "node": "ตอบ 200 Approved",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ตอบ 400 File Invalid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "ตรวจสอบ Credential",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "2fbef492-a9a0-41d2-9b4e-a91a79038f72",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "29855c8122e4e81f1a541b573a69bc629a8086780c366f661025df0cdba333ab"
+  },
+  "id": "5N7KXMSxaGxJw5Sk",
+  "tags": []
+}

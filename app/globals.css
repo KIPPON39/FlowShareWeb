@@ -16,8 +16,8 @@
   --text-subtle: #333333;
   --muted: #666666;
   --muted-strong: #555555;
-  --muted-soft: #999999;
-  --muted-light: #bbbbbb;
+  --muted-soft: #707075;
+  --muted-light: #8e8e93;
   --hero-title: #1a0d08;
   --hero-desc: #3d1f15;
   --border: rgba(0, 0, 0, 0.06);
@@ -52,14 +52,15 @@
   --hero-desc: var(--muted);
   --border: rgba(255, 255, 255, 0.11);
   --border-strong: rgba(255, 255, 255, 0.18);
-  --accent-glow: rgba(167, 59, 36, 0.25);
-  --accent-soft: rgba(167, 59, 36, 0.12);
+  --accent: #f97316;
+  --accent-glow: rgba(249, 115, 22, 0.25);
+  --accent-soft: rgba(249, 115, 22, 0.12);
   --tag-alt-bg: rgba(255, 255, 255, 0.10);
   --tag-alt-text: #e0e0e4;
   --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.3);
   --glass: transparent;
-  --ring: 0 0 0 3px rgba(167, 59, 36, 0.15);
+  --ring: 0 0 0 3px rgba(249, 115, 22, 0.15);
   --gridline: rgba(255, 255, 255, 0.05);
   --panel-inset: none;
   --skeleton-base: rgba(255, 255, 255, 0.07);
@@ -71,6 +72,7 @@
   * {
     @apply border-[var(--border)];
   }
+
   body {
     @apply bg-[var(--bg)] text-[var(--text)] font-kanit antialiased;
     overflow-x: hidden;
@@ -79,16 +81,24 @@
     transition: background-color 300ms ease, color 300ms ease;
   }
 
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--muted-soft) !important;
+    opacity: 0.8 !important;
+  }
+
   @keyframes page-transition {
     from {
       opacity: 0;
       transform: translateY(8px);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
     }
   }
+
   .animate-page-transition {
     animation: page-transition 200ms ease forwards;
   }
@@ -98,11 +108,13 @@
       opacity: 0;
       transform: translateY(20px);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
     }
   }
+
   .animate-slide-up-fade {
     animation: slide-up-fade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
@@ -164,12 +176,93 @@
       radial-gradient(800px circle at 50% 15%, rgba(167, 59, 36, 0.22), transparent 55%),
       radial-gradient(500px circle at 50% 45%, rgba(167, 59, 36, 0.12), transparent 45%);
   }
+
+  /* ─── Hero Gradient Text (Apple-style) ─── */
+  .hero-gradient-text {
+    background: linear-gradient(
+      135deg,
+      #cbd5e1 0%,
+      #f1f5f9 15%,
+      #ffffff 30%,
+      #cbd5e1 45%,
+      #f8fafc 55%,
+      #ffffff 70%,
+      #cbd5e1 85%,
+      #f1f5f9 100%
+    );
+    background-size: 250% 250%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: hero-shine 5s ease-in-out infinite;
+    filter: drop-shadow(0 1px 4px rgba(160, 170, 185, 0.25));
+  }
+
+  /* ─── Navbar Brand Text (Matching Hero Gradient in Light Mode) ─── */
+  .navbar-brand-text {
+    background: linear-gradient(
+      135deg,
+      #cbd5e1 0%,
+      #f1f5f9 15%,
+      #ffffff 30%,
+      #cbd5e1 45%,
+      #f8fafc 55%,
+      #ffffff 70%,
+      #cbd5e1 85%,
+      #f1f5f9 100%
+    );
+    background-size: 250% 250%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    -webkit-text-stroke: 0.35px rgba(0, 0, 0, 0.22);
+    animation: hero-shine 5s ease-in-out infinite;
+    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.12));
+  }
+
+  [data-theme="dark"] .navbar-brand-text {
+    background: none;
+    -webkit-background-clip: unset;
+    background-clip: unset;
+    -webkit-text-fill-color: var(--text);
+    -webkit-text-stroke: unset;
+    animation: none;
+    filter: none;
+    color: var(--text);
+  }
+
+  [data-theme="dark"] .hero-gradient-text {
+    background: linear-gradient(
+      135deg,
+      #f97316 0%,
+      #fbbf24 25%,
+      #f97316 50%,
+      #fb923c 75%,
+      #f97316 100%
+    );
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: hero-shine 6s ease-in-out infinite;
+    filter: drop-shadow(0 1px 8px rgba(249, 115, 22, 0.3));
+  }
+
+  @keyframes hero-shine {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
 }
 
 /* ─── Glass Navbar ─── */
 .glass {
   background: transparent;
 }
+
 
 /* ─── Workflow Card ─── */
 .workflow-card {
@@ -188,19 +281,26 @@
 .workflow-card::before {
   content: "";
   @apply absolute inset-0 opacity-0 transition-opacity duration-500 pointer-events-none;
-  background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255,255,255,0.04), transparent 40%);
+  background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255, 255, 255, 0.04), transparent 40%);
 }
+
 [data-theme="dark"] .workflow-card::before {
   background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(167, 59, 36, 0.07), transparent 40%);
 }
+
 .workflow-card:hover::before {
   @apply opacity-100;
 }
 
 /* ─── Scroll Animation ─── */
 @keyframes scroll-left {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
 .animate-scroll {
@@ -215,19 +315,42 @@
 }
 
 @keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 /* ─── Custom Scrollbar ─── */
-.custom-scrollbar::-webkit-scrollbar { width: 4px; }
-.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 100px; }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--muted-soft); }
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 100px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-soft);
+}
 
 /* ─── Hidden Scrollbar ─── */
-.scrollbar-hide::-webkit-scrollbar { display: none; }
-.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
 
 /* ─── Search Glow ─── */
 .search-glow {
@@ -255,9 +378,17 @@
 }
 
 @keyframes glow-rotate {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 [data-theme="dark"] .search-glow::before {
@@ -309,6 +440,7 @@
 .focus-ring {
   @apply outline-hidden transition-all;
 }
+
 .focus-ring:focus {
   box-shadow: 0 0 0 3px var(--accent-soft);
   border-color: var(--accent);
@@ -320,14 +452,27 @@
   transform: translateY(32px);
   transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
 .reveal.visible {
   opacity: 1;
   transform: translateY(0);
 }
-.reveal-delay-1 { transition-delay: 0.1s; }
-.reveal-delay-2 { transition-delay: 0.2s; }
-.reveal-delay-3 { transition-delay: 0.3s; }
-.reveal-delay-4 { transition-delay: 0.4s; }
+
+.reveal-delay-1 {
+  transition-delay: 0.1s;
+}
+
+.reveal-delay-2 {
+  transition-delay: 0.2s;
+}
+
+.reveal-delay-3 {
+  transition-delay: 0.3s;
+}
+
+.reveal-delay-4 {
+  transition-delay: 0.4s;
+}
 
 /* ─── Feature Card ─── */
 .feature-card {
@@ -379,8 +524,17 @@
 }
 
 @keyframes cta-pulse {
-  0%, 100% { opacity: 0.6; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.02); }
+
+  0%,
+  100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
 }
 
 /* ─── Stat Counter ─── */
@@ -404,8 +558,13 @@
 
 /* ─── Animated Hover Border Glow ─── */
 @keyframes border-glow-sweep {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 200% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+
+  100% {
+    background-position: 200% 50%;
+  }
 }
 
 .futuristic-hover {
