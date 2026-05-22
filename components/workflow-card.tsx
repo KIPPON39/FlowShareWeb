@@ -43,59 +43,63 @@ function DownloadFormModal({
   const [reason, setReason] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setFormState('submitting');
+    e.preventDefault();
+    setFormState('submitting');
 
-  try {
-    const response = await fetch('/api/workflows/download', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        workflowId: workflowId,        // ต้องส่ง id เข้ามาใน props ด้วย
-        requesterName: name,
-        requesterEmail: email,
-        ownerEmail,
-        reason,
-      }),
-    });
+    try {
+      const response = await fetch('/api/workflows/download', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          workflowId: workflowId,        // ต้องส่ง id เข้ามาใน props ด้วย
+          requesterName: name,
+          requesterEmail: email,
+          ownerEmail,
+          reason,
+        }),
+      });
 
-    if (!response.ok) throw new Error('Failed');
+      if (!response.ok) throw new Error('Failed');
 
-    setFormState('success');
-    setTimeout(() => {
-      onClose();
+      setFormState('success');
+      setTimeout(() => {
+        onClose();
+        setFormState('idle');
+        setName('');
+        setEmail('');
+        setReason('');
+      }, 1500);
+    } catch {
       setFormState('idle');
-      setName('');
-      setEmail('');
-      setReason('');
-    }, 1500);
-  } catch {
-    setFormState('idle');
-    alert('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
-  }
-};
+      alert('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
+    }
+  };
 
-  return typeof document !== 'undefined' ? createPortal(
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0, y: 10 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.95, opacity: 0, y: 10 }}
-        transition={{ duration: 0.2 }}
-        className="relative w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-8 shadow-2xl max-h-[90vh] sm:max-h-[85vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Close button */}
-        <button onClick={onClose} className="absolute top-4 right-4 p-1.5 rounded-lg text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--surface-alt)] transition-colors">
-          <X size={18} />
-        </button>
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+          onClick={onClose}
+        >
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0, y: 10 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 10 }}
+            transition={{ duration: 0.2 }}
+            className="relative w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-8 shadow-2xl max-h-[90vh] sm:max-h-[85vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button onClick={onClose} className="absolute top-4 right-4 p-1.5 rounded-lg text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--surface-alt)] transition-colors">
+              <X size={18} />
+            </button>
 
             {formState === 'success' ? (
               <div className="flex flex-col items-center justify-center py-8 gap-4">
@@ -121,67 +125,69 @@ function DownloadFormModal({
                   </div>
                 </div>
 
-            <form onSubmit={handleSubmit} className="grid gap-4">
-              <div className="grid gap-1.5">
-                <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.your_name')}</label>
-                <input
-                  type="text"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-soft)]"
-                  placeholder="John Doe"
-                />
-              </div>
-              <div className="grid gap-1.5">
-                <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.your_email')}</label>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-soft)]"
-                  placeholder="you@example.com"
-                />
-              </div>
-              <div className="grid gap-1.5">
-                <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.reason')}</label>
-                <textarea
-                  required
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                  rows={3}
-                  className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all resize-none placeholder:text-[var(--muted-soft)]"
-                  placeholder={t('form.reason_placeholder')}
-                />
-              </div>
-              <div className="flex gap-3 mt-2">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="flex-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] py-2.5 text-[0.85rem] font-medium text-[var(--muted-strong)] hover:text-[var(--text)] hover:bg-[var(--surface-alt)] transition-all"
-                >
-                  {t('form.cancel')}
-                </button>
-                <button
-                  type="submit"
-                  disabled={formState === 'submitting'}
-                  className="flex-1 rounded-xl bg-[var(--accent)] py-2.5 text-[0.85rem] font-semibold text-white transition-all hover:opacity-90 active:scale-[0.97] disabled:opacity-60 shadow-sm shadow-[var(--accent-glow)]"
-                >
-                  {formState === 'submitting' ? t('form.submitting') : t('form.submit')}
-                </button>
-              </div>
-            </form>
-          </>
-        )}
-      </motion.div>
-    </motion.div>,
+                <form onSubmit={handleSubmit} className="grid gap-4">
+                  <div className="grid gap-1.5">
+                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.your_name')}</label>
+                    <input
+                      type="text"
+                      required
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-soft)]"
+                      placeholder="John Doe"
+                    />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.your_email')}</label>
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-soft)]"
+                      placeholder="you@example.com"
+                    />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.reason')}</label>
+                    <textarea
+                      required
+                      value={reason}
+                      onChange={(e) => setReason(e.target.value)}
+                      rows={3}
+                      className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all resize-none placeholder:text-[var(--muted-soft)]"
+                      placeholder={t('form.reason_placeholder')}
+                    />
+                  </div>
+                  <div className="flex gap-3 mt-2">
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      className="flex-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] py-2.5 text-[0.85rem] font-medium text-[var(--muted-strong)] hover:text-[var(--text)] hover:bg-[var(--surface-alt)] transition-all"
+                    >
+                      {t('form.cancel')}
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={formState === 'submitting'}
+                      className="flex-1 rounded-xl bg-[var(--accent)] py-2.5 text-[0.85rem] font-semibold text-white transition-all hover:opacity-90 active:scale-[0.97] disabled:opacity-60 shadow-sm shadow-[var(--accent-glow)]"
+                    >
+                      {formState === 'submitting' ? t('form.submitting') : t('form.submit')}
+                    </button>
+                  </div>
+                </form>
+              </>
+            )}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>,
     document.body
-  ) : null;
+  );
 }
 
 /* ─── Invite Speaker Form Modal ─── */
-function SpeakerFormModal({ onClose, flowTitle }: { onClose: () => void; flowTitle: string }) {
+function SpeakerFormModal({ isOpen, onClose, flowTitle }: { isOpen: boolean; onClose: () => void; flowTitle: string }) {
   const { t } = useI18n();
   const [formState, setFormState] = useState<'idle' | 'submitting' | 'success'>('idle');
   const [name, setName] = useState('');
@@ -203,99 +209,105 @@ function SpeakerFormModal({ onClose, flowTitle }: { onClose: () => void; flowTit
     }, 1000);
   };
 
-  return typeof document !== 'undefined' ? createPortal(
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0, y: 10 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.95, opacity: 0, y: 10 }}
-        transition={{ duration: 0.2 }}
-        className="relative w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-8 shadow-2xl max-h-[90vh] sm:max-h-[85vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button onClick={onClose} className="absolute top-4 right-4 p-1.5 rounded-lg text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--surface-alt)] transition-colors">
-          <X size={18} />
-        </button>
+  if (typeof document === 'undefined') return null;
 
-        {formState === 'success' ? (
-          <div className="flex flex-col items-center justify-center py-8 gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
-              <Check size={32} />
-            </div>
-            <p className="text-lg font-semibold text-[var(--text)]">{t('form.success')}</p>
-          </div>
-        ) : (
-          <>
-            <div className="mb-6">
-              <h3 className="text-lg font-bold text-[var(--text)] tracking-tight">{t('form.speaker_title')}</h3>
-              <p className="text-[0.82rem] text-[var(--muted)] mt-1">{t('form.speaker_desc')}</p>
-              <p className="text-[0.75rem] text-[var(--accent)] font-semibold mt-2 truncate">{flowTitle}</p>
-            </div>
+  return createPortal(
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+          onClick={onClose}
+        >
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0, y: 10 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 10 }}
+            transition={{ duration: 0.2 }}
+            className="relative w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-8 shadow-2xl max-h-[90vh] sm:max-h-[85vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button onClick={onClose} className="absolute top-4 right-4 p-1.5 rounded-lg text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--surface-alt)] transition-colors">
+              <X size={18} />
+            </button>
 
-            <form onSubmit={handleSubmit} className="grid gap-4">
-              <div className="grid gap-1.5">
-                <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.your_name')}</label>
-                <input
-                  type="text"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-soft)]"
-                  placeholder="John Doe"
-                />
+            {formState === 'success' ? (
+              <div className="flex flex-col items-center justify-center py-8 gap-4">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
+                  <Check size={32} />
+                </div>
+                <p className="text-lg font-semibold text-[var(--text)]">{t('form.success')}</p>
               </div>
-              <div className="grid gap-1.5">
-                <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.your_email')}</label>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-soft)]"
-                  placeholder="you@example.com"
-                />
-              </div>
-              <div className="grid gap-1.5">
-                <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.organization')}</label>
-                <input
-                  type="text"
-                  required
-                  value={organization}
-                  onChange={(e) => setOrganization(e.target.value)}
-                  className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-soft)]"
-                  placeholder={t('form.org_placeholder')}
-                />
-              </div>
-              <div className="flex gap-3 mt-2">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="flex-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] py-2.5 text-[0.85rem] font-medium text-[var(--muted-strong)] hover:text-[var(--text)] hover:bg-[var(--surface-alt)] transition-all"
-                >
-                  {t('form.cancel')}
-                </button>
-                <button
-                  type="submit"
-                  disabled={formState === 'submitting'}
-                  className="flex-1 rounded-xl bg-[var(--accent)] py-2.5 text-[0.85rem] font-semibold text-white transition-all hover:opacity-90 active:scale-[0.97] disabled:opacity-60 shadow-sm shadow-[var(--accent-glow)]"
-                >
-                  {formState === 'submitting' ? t('form.submitting') : t('form.submit')}
-                </button>
-              </div>
-            </form>
-          </>
-        )}
-      </motion.div>
-    </motion.div>,
+            ) : (
+              <>
+                <div className="mb-6">
+                  <h3 className="text-lg font-bold text-[var(--text)] tracking-tight">{t('form.speaker_title')}</h3>
+                  <p className="text-[0.82rem] text-[var(--muted)] mt-1">{t('form.speaker_desc')}</p>
+                  <p className="text-[0.75rem] text-[var(--accent)] font-semibold mt-2 truncate">{flowTitle}</p>
+                </div>
+
+                <form onSubmit={handleSubmit} className="grid gap-4">
+                  <div className="grid gap-1.5">
+                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.your_name')}</label>
+                    <input
+                      type="text"
+                      required
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-soft)]"
+                      placeholder="John Doe"
+                    />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.your_email')}</label>
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-soft)]"
+                      placeholder="you@example.com"
+                    />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.organization')}</label>
+                    <input
+                      type="text"
+                      required
+                      value={organization}
+                      onChange={(e) => setOrganization(e.target.value)}
+                      className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-soft)]"
+                      placeholder={t('form.org_placeholder')}
+                    />
+                  </div>
+                  <div className="flex gap-3 mt-2">
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      className="flex-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] py-2.5 text-[0.85rem] font-medium text-[var(--muted-strong)] hover:text-[var(--text)] hover:bg-[var(--surface-alt)] transition-all"
+                    >
+                      {t('form.cancel')}
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={formState === 'submitting'}
+                      className="flex-1 rounded-xl bg-[var(--accent)] py-2.5 text-[0.85rem] font-semibold text-white transition-all hover:opacity-90 active:scale-[0.97] disabled:opacity-60 shadow-sm shadow-[var(--accent-glow)]"
+                    >
+                      {formState === 'submitting' ? t('form.submitting') : t('form.submit')}
+                    </button>
+                  </div>
+                </form>
+              </>
+            )}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>,
     document.body
-  ) : null;
+  );
 }
 
 export function WorkflowCard({ id, title, description, tags, keys, creators, nodes = 4, views, downloads, updatedAt }: WorkflowCardProps) {
@@ -386,8 +398,8 @@ export function WorkflowCard({ id, title, description, tags, keys, creators, nod
 
                 {/* Tooltip */}
                 <div className={`absolute top-full right-0 mt-2 w-56 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-lg transition-all duration-200 z-20 backdrop-blur-md ${showTooltip
-                    ? 'opacity-100 pointer-events-auto translate-y-0'
-                    : 'opacity-0 pointer-events-none translate-y-[-4px] md:group-hover/creator:opacity-100 md:group-hover/creator:pointer-events-auto md:group-hover/creator:translate-y-0'
+                  ? 'opacity-100 pointer-events-auto translate-y-0'
+                  : 'opacity-0 pointer-events-none translate-y-[-4px] md:group-hover/creator:opacity-100 md:group-hover/creator:pointer-events-auto md:group-hover/creator:translate-y-0'
                   }`}>
                   <strong className="text-[0.7rem] font-medium uppercase tracking-wider text-[var(--accent)] mb-3 block">{t('card.contributors')}</strong>
                   <div className="grid gap-2.5">
@@ -502,7 +514,7 @@ export function WorkflowCard({ id, title, description, tags, keys, creators, nod
       </div>
 
       {/* Form Modals */}
-      <DownloadFormModal isOpen={showDownloadForm} onClose={() => setShowDownloadForm(false)} flowTitle={title} ownerEmail={ownerEmail} workflowId={id}/>
+      <DownloadFormModal isOpen={showDownloadForm} onClose={() => setShowDownloadForm(false)} flowTitle={title} ownerEmail={ownerEmail} workflowId={id} />
       <SpeakerFormModal isOpen={showSpeakerForm} onClose={() => setShowSpeakerForm(false)} flowTitle={title} />
     </>
   );
