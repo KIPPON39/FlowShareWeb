@@ -131,7 +131,7 @@ export function Hero({ workflows = [], isLoading = false }: HeroProps) {
           <h1 className="mx-auto max-w-3xl text-[1.6rem] sm:text-4xl md:text-5xl lg:text-[3.25rem] font-semibold leading-[1.2] sm:leading-[1.12] tracking-tight text-[var(--hero-title)] break-words">
             {lang === 'th' ? (
               <>
-                <span className="text-[var(--accent)]">{t('hero.title.1')}</span>{' '}
+                <span className="hero-gradient-text">{t('hero.title.1')}</span>{' '}
                 {t('hero.title.2')} <br className="hidden sm:inline" />
                 {t('hero.title.3')}
               </>
@@ -152,8 +152,8 @@ export function Hero({ workflows = [], isLoading = false }: HeroProps) {
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <a 
-            href="#browse" 
+          <a
+            href="#browse"
             onClick={(e) => {
               e.preventDefault();
               document.getElementById('browse')?.scrollIntoView({ behavior: 'smooth' });
@@ -168,7 +168,7 @@ export function Hero({ workflows = [], isLoading = false }: HeroProps) {
         {(items.length > 0 || isLoading) && (
           <div className="relative mt-6 w-full flex flex-col items-center">
             {/* Carousel container */}
-            <div 
+            <div
               className="relative w-full h-[190px] flex items-center justify-center overflow-hidden touch-pan-y"
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
@@ -178,7 +178,7 @@ export function Hero({ workflows = [], isLoading = false }: HeroProps) {
                 const position = getPosition(itemIndex);
                 const isCenter = position === 2;
                 const style = position !== null ? getCardStyle(position) : hiddenStyle;
-                
+
                 if (isLoading) {
                   return (
                     <div
@@ -224,8 +224,8 @@ export function Hero({ workflows = [], isLoading = false }: HeroProps) {
                       {/* Title — BIG and prominent */}
                       <h3 className={`
                         font-bold tracking-tight leading-snug line-clamp-3 flex-1
-                        ${isCenter 
-                          ? 'text-[1.15rem] text-[var(--text)]' 
+                        ${isCenter
+                          ? 'text-[1.15rem] text-[var(--text)]'
                           : 'text-[0.95rem] text-[var(--text)]/80'
                         }
                         mb-2
@@ -236,12 +236,12 @@ export function Hero({ workflows = [], isLoading = false }: HeroProps) {
                       {/* Tags row */}
                       <div className="flex flex-wrap gap-1.5 mb-2">
                         {flow.tags?.slice(0, 3).map((tag: string, tagIdx: number) => (
-                          <span 
-                            key={tagIdx} 
+                          <span
+                            key={tagIdx}
                             className={`
                               inline-flex items-center whitespace-nowrap shrink-0 rounded-full px-2.5 h-[20px] text-[0.6rem] font-semibold uppercase tracking-wide
-                              ${isCenter 
-                                ? 'bg-[var(--accent-soft)] text-[var(--accent)] border border-[var(--accent)]/15' 
+                              ${isCenter
+                                ? 'bg-[var(--accent-soft)] text-[var(--accent)] border border-[var(--accent)]/15'
                                 : 'bg-[var(--tag-alt-bg)] text-[var(--muted-strong)] border border-[var(--border)]'
                               }
                             `}
@@ -257,9 +257,9 @@ export function Hero({ workflows = [], isLoading = false }: HeroProps) {
                           <Component size={11} className="opacity-60" />
                           <span>{flow.nodes || 1} nodes</span>
                         </div>
-                        
+
                         <span className="truncate max-w-[80px] opacity-70 text-center">{flow.keys?.[0] || '—'}</span>
-                        
+
                         <div className="flex items-center gap-1.5">
                           <Download size={11} className="opacity-60" />
                           <span>{flow.downloads || 0}</span>
@@ -324,7 +324,7 @@ export function Hero({ workflows = [], isLoading = false }: HeroProps) {
       </div>
 
       {/* Scroll Down Indicator */}
-      <div 
+      <div
         className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 cursor-pointer text-[var(--muted)] hover:text-[var(--text)] transition-colors animate-bounce"
         onClick={() => document.getElementById('browse')?.scrollIntoView({ behavior: 'smooth' })}
       >

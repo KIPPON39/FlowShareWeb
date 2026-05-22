@@ -1,6 +1,6 @@
 'use client';
 
-import { Upload, Send, Plus, X, Bot, Database, Terminal, CloudUpload, Lightbulb, UserPlus, Tag, ChevronDown, GripVertical, CheckCircle2, XCircle } from 'lucide-react';
+import { Upload, Send, Plus, X, Bot, Database, Terminal, CloudUpload, Lightbulb, UserPlus, Tag, ChevronDown, GripVertical, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
@@ -86,20 +86,93 @@ function extractNodeCredentials(nodes: JsonRecord[]) {
   const names = new Set<string>();
 
   nodes.forEach((node) => {
+    // 1. ดึงจาก standard credentials object
     const credentials = node.credentials;
-    if (!credentials || typeof credentials !== 'object') return;
+    if (credentials && typeof credentials === 'object') {
+      Object.entries(credentials).forEach(([credentialType, credentialValue]) => {
+        if (credentialValue && typeof credentialValue === 'object') {
+          const platform = credentialTypeToPlatform(credentialType) || extractCredentialPlatform(credentialValue as JsonRecord);
+          if (platform) {
+            names.add(platform);
+            return;
+          }
+        }
+        names.add(credentialTypeToPlatform(credentialType) || credentialType);
+      });
+    }
 
-    Object.entries(credentials).forEach(([credentialType, credentialValue]) => {
-      if (credentialValue && typeof credentialValue === 'object') {
-        const platform = credentialTypeToPlatform(credentialType) || extractCredentialPlatform(credentialValue as JsonRecord);
-        if (platform) {
-          names.add(platform);
-          return;
+    // 2. ดึงจากพวกที่เป็น HTTP Request Nodes (เช่น Headers, Query Params, Body Params ที่เป็น Key/Token)
+    const nodeType = String(node.type || '').toLowerCase();
+    if (nodeType.includes('httprequest') || nodeType.includes('http request') || nodeType === 'n8n-nodes-base.httprequest') {
+      const params = node.parameters || {};
+      
+      // ตรวจสอบ genericAuthType (เช่น httpHeaderAuth, httpBasicAuth, httpQueryAuth, httpDigestAuth)
+      if (params.authentication === 'genericCredentialType' && params.genericAuthType) {
+        const authName = credentialTypeToPlatform(params.genericAuthType) || String(params.genericAuthType);
+        if (authName) {
+          names.add(authName);
         }
       }
 
-      names.add(credentialTypeToPlatform(credentialType) || credentialType);
-    });
+      // ตรวจสอบ Headers ใน HTTP Request
+      const headerParams = params.headerParameters?.parameters;
+      if (Array.isArray(headerParams)) {
+        headerParams.forEach((p: any) => {
+          const headerName = String(p.name || '').toLowerCase();
+          if (
+            headerName.includes('api-key') ||
+            headerName.includes('apikey') ||
+            headerName.includes('authorization') ||
+            headerName.includes('token') ||
+            headerName.includes('x-api') ||
+            headerName.includes('x-auth') ||
+            headerName.includes('secret')
+          ) {
+            // แสดงชื่อ Header ให้สวยงาม เช่น "Authorization Header" หรือ "X-Api-Key Header"
+            const prettyName = toTitleCase(headerName.replace(/-/g, ' ')) + ' Header';
+            names.add(prettyName);
+          }
+        });
+      }
+
+      // ตรวจสอบ Query Parameters ใน HTTP Request
+      const queryParams = params.queryParameters?.parameters;
+      if (Array.isArray(queryParams)) {
+        queryParams.forEach((p: any) => {
+          const queryName = String(p.name || '').toLowerCase();
+          if (
+            queryName.includes('api_key') ||
+            queryName.includes('apikey') ||
+            queryName.includes('api-key') ||
+            queryName.includes('token') ||
+            queryName.includes('secret') ||
+            queryName.includes('key')
+          ) {
+            const prettyName = toTitleCase(queryName.replace(/[_-]/g, ' ')) + ' Query Param';
+            names.add(prettyName);
+          }
+        });
+      }
+
+      // ตรวจสอบ Body Parameters ใน HTTP Request
+      const bodyParams = params.bodyParameters?.parameters;
+      if (Array.isArray(bodyParams)) {
+        bodyParams.forEach((p: any) => {
+          const bodyName = String(p.name || '').toLowerCase();
+          if (
+            bodyName.includes('api_key') ||
+            bodyName.includes('apikey') ||
+            bodyName.includes('api-key') ||
+            bodyName.includes('token') ||
+            bodyName.includes('secret') ||
+            bodyName.includes('key')
+          ) {
+            const prettyName = toTitleCase(bodyName.replace(/[_-]/g, ' ')) + ' Body Param';
+            names.add(prettyName);
+          }
+        });
+      }
+    }
   });
 
   return Array.from(names);
@@ -248,6 +321,202 @@ export function UploadSection() {
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
   const canShipWorkflow = Boolean(rawJson && title && description && creatorEmail.includes('@') && tags.length > 0);
 
+  // States สำหรับระบบตรวจสอบไฟล์แบบเรียลไทม์ และระบบเจนคำอธิบายอัตโนมัติด้วย AI
+  const [isGeneratingDesc, setIsGeneratingDesc] = useState(false);
+  const [geminiQuotaInfo, setGeminiQuotaInfo] = useState<{ used: number; limit: number; remaining: number } | null>(null);
+  const [weeklyQuota, setWeeklyQuota] = useState<{ remaining: number; limit: number }>({ remaining: 5, limit: 5 });
+  const [isValidatingFile, setIsValidatingFile] = useState(false);
+  const [fileValidationStatus, setFileValidationStatus] = useState<'idle' | 'checking' | 'passed' | 'failed'>('idle');
+  const [credentialWarnings, setCredentialWarnings] = useState<string[]>([]);
+
+  const getWeeklyQuotaStatus = () => {
+    if (typeof window === 'undefined') return { remaining: 5, limit: 5, timestamps: [] as number[] };
+    const quotaData = localStorage.getItem('flowshare_weekly_quota');
+    const now = Date.now();
+    const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
+    
+    if (!quotaData) {
+      return { remaining: 5, limit: 5, timestamps: [] as number[] };
+    }
+    
+    try {
+      const parsed = JSON.parse(quotaData);
+      if (Array.isArray(parsed)) {
+        const activeTimestamps = parsed.filter((ts: number) => now - ts < oneWeekMs);
+        localStorage.setItem('flowshare_weekly_quota', JSON.stringify(activeTimestamps));
+        return {
+          remaining: Math.max(0, 5 - activeTimestamps.length),
+          limit: 5,
+          timestamps: activeTimestamps
+        };
+      }
+    } catch (e) {
+      console.error('Error parsing weekly quota data', e);
+    }
+    return { remaining: 5, limit: 5, timestamps: [] as number[] };
+  };
+
+  useEffect(() => {
+    const status = getWeeklyQuotaStatus();
+    setWeeklyQuota({ remaining: status.remaining, limit: status.limit });
+  }, []);
+
+  const getSessionId = () => {
+    if (typeof window === 'undefined') return 'server-session';
+    let sid = localStorage.getItem('flowshare_sessionId');
+    if (!sid) {
+      sid = 'session_' + Math.random().toString(36).substring(2, 15);
+      localStorage.setItem('flowshare_sessionId', sid);
+    }
+    return sid;
+  };
+
+  const handleGenerateDescription = async () => {
+    if (!rawJson) {
+      setStatusMessage(lang === 'th' ? 'กรุณาอัพโหลดไฟล์ JSON ก่อนเพื่อใช้ AI ช่วยสรุป' : 'Please upload a JSON file first to use AI.');
+      return;
+    }
+
+    const currentQuota = getWeeklyQuotaStatus();
+    if (currentQuota.remaining <= 0) {
+      setStatusMessage(
+        lang === 'th'
+          ? 'ขออภัย คุณใช้งาน AI ครบโควต้า 5 ครั้งสำหรับสัปดาห์นี้แล้ว โปรดลองอีกครั้งในสัปดาห์ถัดไป'
+          : 'Sorry, you have exhausted your limit of 5 generations for this week. Please try again next week.'
+      );
+      return;
+    }
+
+    setIsGeneratingDesc(true);
+    setStatusMessage('');
+
+    try {
+      const sessionId = getSessionId();
+
+      const nodeContext = {
+        title: title || uploadedFilename,
+        nodes: steps.map((s, i) => `${i + 1}. ${s.title} (${s.nodeName})`),
+        credentials: keys.map(k => k.name)
+      };
+
+      const response = await fetch('/api/workflows/generate-desc', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          topic: title || uploadedFilename || 'n8n Workflow',
+          context: JSON.stringify(nodeContext),
+          language: lang
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'AI Generation failed.');
+      }
+
+      // description = สรุปสั้น ๆ ว่า Flow นี้ทำอะไร (ส่วนแรก) พร้อมการทำความสะอาด JSON หากหลุดมา
+      if (data.description) {
+        let cleanDesc = data.description;
+        if (typeof cleanDesc === 'string') {
+          const trimmed = cleanDesc.trim();
+          if (trimmed.startsWith('{') || trimmed.includes('"description"') || trimmed.includes('"คำอธิบาย"') || trimmed.includes('"รายละเอียด"')) {
+            try {
+              const cleanText = trimmed.replace(/```json|```/g, '').trim();
+              const parsedDescObj = JSON.parse(cleanText);
+              if (parsedDescObj && typeof parsedDescObj === 'object') {
+                const keysList = Object.keys(parsedDescObj);
+                let descKey = keysList.find(k => k.toLowerCase() === 'description');
+                if (!descKey && keysList.length > 0) {
+                  descKey = keysList.find(k => 
+                    k.toLowerCase().includes('desc') || 
+                    k.includes('อธิบาย') || 
+                    k.includes('รายละเอียด') || 
+                    k.includes('สรุป')
+                  );
+                  if (!descKey) descKey = keysList[0];
+                }
+                cleanDesc = descKey ? String(parsedDescObj[descKey]) : JSON.stringify(parsedDescObj);
+              }
+            } catch {
+              const descMatch = trimmed.match(/"(description|คำอธิบาย|รายละเอียด|สรุป)"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)"/i);
+              if (descMatch && descMatch[2]) {
+                cleanDesc = descMatch[2].replace(/\\"/g, '"');
+              } else {
+                cleanDesc = trimmed
+                  .replace(/[\[\]"{}]+/g, '')
+                  .replace(/"(description|คำอธิบาย|รายละเอียด|สรุป)"\s*:\s*/gi, '')
+                  .replace(/"(howToUse|ขั้นตอน|วิธีใช้งาน|วิธีการใช้งาน)"\s*:\s*[\s\S]*$/gi, '')
+                  .trim();
+              }
+            }
+          }
+        }
+        setDescription(cleanDesc);
+      }
+
+      // howToUse = ขั้นตอน setup / customization
+      let extractedHowToUse = data.howToUse;
+      if (data.description && typeof data.description === 'string' && data.description.trim().startsWith('{')) {
+        try {
+          const cleanText = data.description.trim().replace(/```json|```/g, '').trim();
+          const parsedDescObj = JSON.parse(cleanText);
+          if (parsedDescObj && typeof parsedDescObj === 'object') {
+            const keysList = Object.keys(parsedDescObj);
+            let howToUseKey = keysList.find(k => k.toLowerCase() === 'howtouse');
+            if (!howToUseKey && keysList.length > 1) {
+              howToUseKey = keysList.find(k => 
+                k.toLowerCase().includes('use') || 
+                k.toLowerCase().includes('how') || 
+                k.includes('ขั้นตอน') || 
+                k.includes('วิธี')
+              );
+            }
+            if (howToUseKey && Array.isArray(parsedDescObj[howToUseKey])) {
+              extractedHowToUse = parsedDescObj[howToUseKey];
+            }
+          }
+        } catch {}
+      }
+
+      if (extractedHowToUse && extractedHowToUse.length > 0) {
+        const updatedSteps = extractedHowToUse.map((stepText: string, index: number) => {
+          const originalStep = steps[index];
+          return {
+            id: originalStep?.id || String(index + 1),
+            title: stepText,
+            nodeName: originalStep?.nodeName || 'Workflow Node'
+          };
+        });
+        setSteps(updatedSteps);
+      }
+
+      if (data.quota) {
+        setGeminiQuotaInfo(data.quota);
+      }
+
+      // บันทึกการใช้งานโควต้ารายสัปดาห์ใน localStorage
+      const status = getWeeklyQuotaStatus();
+      const updatedTimestamps = [...status.timestamps, Date.now()];
+      localStorage.setItem('flowshare_weekly_quota', JSON.stringify(updatedTimestamps));
+      setWeeklyQuota({ remaining: Math.max(0, 5 - updatedTimestamps.length), limit: 5 });
+
+      setSubmitState('idle');
+      setStatusMessage(
+        lang === 'th'
+          ? `⟡ AI สร้างคำอธิบายสำเร็จแล้ว (โควต้าสัปดาห์นี้เหลือ ${Math.max(0, 5 - updatedTimestamps.length)}/5 ครั้ง)`
+          : `⟡ AI generated description successfully (Weekly quota: ${Math.max(0, 5 - updatedTimestamps.length)}/5 remaining)`
+      );
+    } catch (err) {
+      setSubmitState('error');
+      setStatusMessage(err instanceof Error ? err.message : 'Failed to generate description.');
+      console.error(err);
+    } finally {
+      setIsGeneratingDesc(false);
+    }
+  };
+
   const toggleTag = (tag: string) => {
     if (tags.includes(tag)) {
       setTags(tags.filter(t => t !== tag));
@@ -335,13 +604,48 @@ export function UploadSection() {
   const handleJsonFile = async (file?: File) => {
     if (!file) return;
 
+    setIsValidatingFile(true);
+    setFileValidationStatus('checking');
+    setSubmitState('idle');
+    setStatusMessage(lang === 'th' ? 'กำลังตรวจสอบความปลอดภัยและโครงสร้างไฟล์...' : 'Checking file safety and structure...');
+
     try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch('/api/workflows/validate', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await res.json();
+
+      if (!res.ok || result.approved === false) {
+        setSubmitState('error');
+        setFileValidationStatus('failed');
+        setStatusMessage(result.message || (lang === 'th' ? 'การตรวจสอบไฟล์ล้มเหลว' : 'File validation failed.'));
+        setIsValidatingFile(false);
+        return;
+      }
+
       const text = await file.text();
       applyJsonWorkflow(JSON.parse(text));
       setUploadedFilename(file.name);
+      setFileValidationStatus('passed');
+      // เก็บ warnings จาก validator (ถ้ามี)
+      if (result.warnings && Array.isArray(result.warnings) && result.warnings.length > 0) {
+        setCredentialWarnings(result.warnings);
+      } else {
+        setCredentialWarnings([]);
+      }
+      setSubmitState('idle');
+      setStatusMessage(lang === 'th' ? 'นำเข้าและตรวจสอบโครงสร้างไฟล์สำเร็จแล้ว' : 'File imported and validated successfully.');
     } catch {
       setSubmitState('error');
-      setStatusMessage('Could not parse that JSON file. Please check the file format.');
+      setFileValidationStatus('failed');
+      setStatusMessage(lang === 'th' ? 'เกิดข้อผิดพลาดในการตรวจสอบไฟล์ JSON' : 'Could not parse that JSON file. Please check the file format.');
+    } finally {
+      setIsValidatingFile(false);
     }
   };
 
@@ -355,6 +659,9 @@ export function UploadSection() {
     setTags([]);
     setSubmitState('idle');
     setStatusMessage('');
+    setFileValidationStatus('idle');
+    setGeminiQuotaInfo(null);
+    setCredentialWarnings([]);
   };
 
   const addContributor = () => {
@@ -508,19 +815,58 @@ export function UploadSection() {
 
             <div className="grid gap-6 text-left">
               {uploadedFilename ? (
-                <div className="flex items-center justify-between rounded-xl border border-[var(--accent)]/30 bg-[var(--accent)]/5 px-5 py-4">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--accent)]/10 text-[var(--accent)]">
-                      <CloudUpload size={20} />
+                <div className="rounded-xl border border-[var(--accent)]/30 bg-[var(--accent)]/5 px-5 py-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--accent)]/10 text-[var(--accent)]">
+                        <CloudUpload size={20} />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="truncate text-[0.85rem] font-medium text-[var(--text)]">{uploadedFilename}</div>
+                        <div className="text-[0.7rem] text-[var(--muted)] mt-0.5">{t('upload.json_imported')}</div>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <div className="truncate text-[0.85rem] font-medium text-[var(--text)]">{uploadedFilename}</div>
-                      <div className="text-[0.7rem] text-[var(--muted)] mt-0.5">{t('upload.json_imported')}</div>
-                    </div>
+                    <button onClick={removeUploadedFile} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[var(--muted)] hover:bg-red-500/10 hover:text-red-500 transition-colors">
+                      <X size={16} />
+                    </button>
                   </div>
-                  <button onClick={removeUploadedFile} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[var(--muted)] hover:bg-red-500/10 hover:text-red-500 transition-colors">
-                    <X size={16} />
-                  </button>
+                  {/* Validation Status Badge */}
+                  {fileValidationStatus !== 'idle' && (
+                    <div className={`mt-3 flex items-center gap-2 rounded-lg px-3 py-2 text-[0.72rem] font-semibold ${
+                      fileValidationStatus === 'checking'
+                        ? 'bg-[var(--surface-alt)] text-[var(--muted)] border border-[var(--border)]'
+                        : fileValidationStatus === 'passed'
+                          ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
+                          : 'bg-red-500/10 text-red-500 border border-red-500/20'
+                    }`}>
+                      {fileValidationStatus === 'checking' && (
+                        <><span className="inline-block animate-spin">⟡</span> {lang === 'th' ? 'กำลังตรวจสอบ...' : 'Validating...'}</>
+                      )}
+                      {fileValidationStatus === 'passed' && (
+                        <><CheckCircle2 size={14} /> {lang === 'th' ? 'ตรวจสอบโครงสร้างผ่านแล้ว — ไฟล์ n8n workflow ที่ถูกต้อง' : 'Structure verified — valid n8n workflow file'}</>
+                      )}
+                      {fileValidationStatus === 'failed' && (
+                        <><XCircle size={14} /> {lang === 'th' ? 'ตรวจสอบไม่ผ่าน — ไฟล์อาจไม่ใช่ n8n workflow' : 'Validation failed — file may not be a valid n8n workflow'}</>
+                      )}
+                    </div>
+                  )}
+                  {/* Credential Warnings */}
+                  {credentialWarnings.length > 0 && (
+                    <div className="mt-3 rounded-lg border border-amber-500/25 bg-amber-500/5 px-4 py-3">
+                      <div className="flex items-center gap-2 text-[0.75rem] font-bold text-amber-600 dark:text-amber-400 mb-2">
+                        <AlertTriangle size={14} />
+                        {lang === 'th' ? 'พบ Credential ในไฟล์ (แจ้งเตือน — ไม่กระทบการอัพโหลด)' : 'Credentials found in file (warning — does not affect upload)'}
+                      </div>
+                      <ul className="grid gap-1 text-[0.7rem] text-amber-700 dark:text-amber-300/80">
+                        {credentialWarnings.map((warning, i) => (
+                          <li key={i} className="flex items-start gap-1.5">
+                            <span className="mt-1 h-1 w-1 rounded-full bg-amber-500 flex-shrink-0" />
+                            <span>{warning}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <label
@@ -556,14 +902,76 @@ export function UploadSection() {
                 {hasAttemptedSubmit && !title && (
                   <span className="text-red-500 text-[0.72rem] font-semibold mt-[-10px] pl-1">* {lang === 'th' ? 'กรุณากรอกชื่อเรื่อง' : 'Title is required'}</span>
                 )}
-                <textarea
-                  id="upload-desc"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows={3}
-                  className={`rounded-lg border ${hasAttemptedSubmit && !description ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : 'border-[var(--border)]'} bg-[var(--surface-alt)] px-4 py-3 text-[0.9rem] leading-relaxed outline-hidden focus:ring-[3px] focus:ring-[var(--accent-soft)] focus:border-[var(--accent)] transition-all resize-none text-[var(--text)]`}
-                  placeholder={t('upload.flow_desc')}
-                />
+                <div className="flex items-center justify-between mt-2 mb-1">
+                  <label htmlFor="upload-desc" className="text-xs font-semibold text-[var(--muted-strong)]">
+                    {lang === 'th' ? 'รายละเอียดคำอธิบาย Flow' : 'Flow Description'}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleGenerateDescription}
+                    disabled={isGeneratingDesc || !rawJson || weeklyQuota.remaining <= 0}
+                    className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[0.7rem] font-bold tracking-wide transition-all duration-200 border ${
+                      rawJson && weeklyQuota.remaining > 0
+                        ? 'bg-[var(--accent-soft)] text-[var(--accent)] border-[var(--accent)]/25 hover:bg-[var(--accent)]/15 hover:border-[var(--accent)]/40 cursor-pointer shadow-[0_0_8px_var(--accent-glow)] active:scale-95'
+                        : 'bg-transparent text-[var(--muted-soft)] border-[var(--border)] cursor-not-allowed opacity-40'
+                    }`}
+                    title={!rawJson 
+                      ? (lang === 'th' ? 'อัพโหลดไฟล์ JSON ก่อนจึงจะกดช่วยสรุปได้' : 'Upload JSON file first to use AI') 
+                      : weeklyQuota.remaining <= 0
+                        ? (lang === 'th' ? 'คุณใช้งาน AI ครบโควต้าในสัปดาห์นี้แล้ว' : 'You have exhausted your weekly AI quota')
+                        : (lang === 'th' ? 'ให้ AI เขียนคำอธิบาย Flow ให้อัตโนมัติ' : 'Let AI write the description automatically')
+                    }
+                  >
+                    <span className={`text-sm leading-none ${isGeneratingDesc ? 'animate-spin inline-block' : ''}`}>⟡</span>
+                    <span>
+                      {isGeneratingDesc
+                        ? (lang === 'th' ? 'กำลังเขียน...' : 'Writing...')
+                        : (lang === 'th' ? 'AI สรุปให้' : 'AI Generate')}
+                    </span>
+                  </button>
+                </div>
+                {/* Description field with skeleton overlay during AI generation */}
+                <div className="relative">
+                  <textarea
+                    id="upload-desc"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={4}
+                    disabled={isGeneratingDesc}
+                    className={`w-full rounded-lg border ${hasAttemptedSubmit && !description ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : 'border-[var(--border)]'} bg-[var(--surface-alt)] px-4 py-3 text-[0.9rem] leading-relaxed outline-hidden focus:ring-[3px] focus:ring-[var(--accent-soft)] focus:border-[var(--accent)] transition-all resize-none text-[var(--text)] ${isGeneratingDesc ? 'opacity-0' : ''}`}
+                    placeholder={t('upload.flow_desc')}
+                  />
+                  {/* Skeleton overlay while AI is writing */}
+                  {isGeneratingDesc && (
+                    <div className="absolute inset-0 rounded-lg border border-[var(--accent)]/20 bg-[var(--surface-alt)] p-4 overflow-hidden">
+                      <div className="grid gap-2.5 animate-pulse">
+                        <div className="h-3 w-4/5 rounded-md bg-[var(--accent)]/10" />
+                        <div className="h-3 w-full rounded-md bg-[var(--accent)]/8" />
+                        <div className="h-3 w-3/5 rounded-md bg-[var(--accent)]/10" />
+                        <div className="h-3 w-[90%] rounded-md bg-[var(--accent)]/6" />
+                      </div>
+                      <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between">
+                        <span className="text-[0.65rem] font-semibold text-[var(--accent)] tracking-wide flex items-center gap-1.5">
+                          <span className="inline-block animate-spin">⟡</span>
+                          {lang === 'th' ? 'AI กำลังวิเคราะห์โหนดและเขียนสรุป...' : 'AI analyzing nodes & writing summary...'}
+                        </span>
+                        <span className="text-[0.6rem] font-medium text-[var(--muted)] animate-pulse">
+                          {lang === 'th' ? `โควต้า ${weeklyQuota.remaining}/${weeklyQuota.limit}` : `Quota ${weeklyQuota.remaining}/${weeklyQuota.limit}`}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {/* Quota indicator shown ALWAYS from the beginning */}
+                {!isGeneratingDesc && (
+                  <div className="flex items-center justify-end gap-2 -mt-2">
+                    <span className={`text-[0.62rem] font-medium ${weeklyQuota.remaining === 0 ? 'text-red-500 font-semibold animate-pulse' : 'text-[var(--muted-soft)]'}`}>
+                      {lang === 'th'
+                        ? `⟡ โควต้าช่วยสรุปโดย AI: เหลือ ${weeklyQuota.remaining}/${weeklyQuota.limit} ครั้งในสัปดาห์นี้`
+                        : `⟡ AI Summary Quota: ${weeklyQuota.remaining}/${weeklyQuota.limit} remaining this week`}
+                    </span>
+                  </div>
+                )}
                 {hasAttemptedSubmit && !description && (
                   <span className="text-red-500 text-[0.72rem] font-semibold mt-[-10px] pl-1">* {lang === 'th' ? 'กรุณากรอกรายละเอียด' : 'Description is required'}</span>
                 )}

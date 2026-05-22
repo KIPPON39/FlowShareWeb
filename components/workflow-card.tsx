@@ -305,11 +305,11 @@ export function WorkflowCard({ id, title, description, tags, keys, creators, nod
           <div className="grid gap-3 text-left">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center rounded-md bg-[var(--surface-alt)] px-2 py-0.5 text-[0.65rem] font-mono tabular-nums text-[var(--muted-strong)] border border-[var(--border)]">
+                <span className="inline-flex items-center rounded-md bg-[var(--surface-alt)] px-2 py-0.5 text-[0.65rem] font-kanit font-medium tabular-nums text-[var(--muted-strong)] border border-[var(--border)]">
                   {nodes} {t('card.nodes')}
                 </span>
                 {views !== undefined && (
-                  <span className="inline-flex items-center gap-1 rounded-md bg-[var(--surface-alt)] px-2 py-0.5 text-[0.65rem] font-mono tabular-nums text-[var(--muted-strong)] border border-[var(--border)]">
+                  <span className="inline-flex items-center gap-1 rounded-md bg-[var(--surface-alt)] px-2 py-0.5 text-[0.65rem] font-kanit font-medium tabular-nums text-[var(--muted-strong)] border border-[var(--border)]">
                     <Eye size={10} /> {views.toLocaleString()}
                   </span>
                 )}

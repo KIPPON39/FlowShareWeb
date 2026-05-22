@@ -1,7 +1,6 @@
 'use client';
 
 import { Navbar } from '@/components/navbar';
-import { HeroBackground } from '@/components/hero-background';
 import { WorkflowCard } from '@/components/workflow-card';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { type WorkflowTemplate, CATEGORY_MAPPINGS } from '@/lib/workflows';
@@ -119,7 +118,6 @@ export default function FlowsPage() {
 
   return (
     <main className="min-h-screen">
-      <HeroBackground />
       <Navbar />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-6 pb-20">
