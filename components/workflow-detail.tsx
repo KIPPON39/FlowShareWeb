@@ -19,7 +19,17 @@ import { useI18n } from '@/lib/i18n';
 import type { WorkflowTemplate } from '@/lib/workflows';
 
 /* ─── Download Flow Form Modal ─── */
-function DownloadFormModal({ isOpen, onClose, flowTitle }: { isOpen: boolean; onClose: () => void; flowTitle: string }) {
+function DownloadFormModal({
+  isOpen,
+  onClose,
+  flowTitle,
+  ownerEmail,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  flowTitle: string;
+  ownerEmail?: string;
+}) {
   const { t } = useI18n();
   const [formState, setFormState] = useState<'idle' | 'submitting' | 'success'>('idle');
   const [name, setName] = useState('');
@@ -52,7 +62,16 @@ function DownloadFormModal({ isOpen, onClose, flowTitle }: { isOpen: boolean; on
                 <div className="mb-6">
                   <h3 className="text-lg font-bold text-[var(--text)] tracking-tight">{t('form.download_title')}</h3>
                   <p className="text-[0.82rem] text-[var(--muted)] mt-1">{t('form.download_desc')}</p>
-                  <p className="text-[0.75rem] text-[var(--accent)] font-semibold mt-2 truncate">{flowTitle}</p>
+                  <div className="mt-4 grid gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-alt)]/60 p-3">
+                    <div className="grid gap-1">
+                      <span className="text-[0.62rem] font-bold uppercase tracking-wider text-[var(--muted-soft)]">Flow name</span>
+                      <span className="text-[0.82rem] font-semibold leading-snug text-[var(--text)]">{flowTitle}</span>
+                    </div>
+                    <div className="grid gap-1">
+                      <span className="text-[0.62rem] font-bold uppercase tracking-wider text-[var(--muted-soft)]">Owner email</span>
+                      <span className="break-all font-mono text-[0.76rem] font-semibold text-[var(--accent)]">{ownerEmail || '-'}</span>
+                    </div>
+                  </div>
                 </div>
                 <form onSubmit={handleSubmit} className="grid gap-4">
                   <div className="grid gap-1.5">
@@ -239,6 +258,7 @@ export function WorkflowDetail() {
 
   const displayedPipeline = showAllPipeline ? steps : steps.slice(0, 5);
   const displayedCreds = showAllCreds ? keys : keys.slice(0, 6);
+  const ownerEmail = creators[0]?.email || '';
 
   return (
     <>
@@ -453,7 +473,7 @@ export function WorkflowDetail() {
     </section>
 
       {/* Form Modals */}
-      <DownloadFormModal isOpen={showDownloadForm} onClose={() => setShowDownloadForm(false)} flowTitle={workflow.title} />
+      <DownloadFormModal isOpen={showDownloadForm} onClose={() => setShowDownloadForm(false)} flowTitle={workflow.title} ownerEmail={ownerEmail} />
       <SpeakerFormModal isOpen={showSpeakerForm} onClose={() => setShowSpeakerForm(false)} flowTitle={workflow.title} />
     </>
   );
