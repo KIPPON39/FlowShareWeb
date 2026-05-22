@@ -195,6 +195,24 @@ export const translations: Record<Language, Record<string, string>> = {
     // Loading
     'loading.title': 'กำลังโหลด',
     'loading.subtitle': 'กำลังเตรียมพื้นที่ทำงานของคุณ',
+
+    // Auth
+    'auth.login_title': 'ยินดีต้อนรับกลับ',
+    'auth.login_subtitle': 'กรุณาเข้าสู่ระบบเพื่อดำเนินการต่อ',
+    'auth.username': 'ชื่อผู้ใช้',
+    'auth.username_placeholder': 'กรอกชื่อผู้ใช้ของคุณ',
+    'auth.password': 'รหัสผ่าน',
+    'auth.password_placeholder': '••••••••',
+    'auth.signin': 'เข้าสู่ระบบ',
+    'auth.no_account': 'ยังไม่มีบัญชีใช่หรือไม่?',
+    'auth.signup_link': 'ลงทะเบียน',
+    'auth.register_title': 'สร้างบัญชีผู้ใช้',
+    'auth.register_subtitle': 'เข้าร่วมกับเราเพื่อเริ่มแชร์ Flow',
+    'auth.register_username_placeholder': 'ตั้งชื่อผู้ใช้ของคุณ',
+    'auth.confirm_password': 'ยืนยันรหัสผ่าน',
+    'auth.signup': 'สร้างบัญชี',
+    'auth.has_account': 'มีบัญชีอยู่แล้วใช่หรือไม่?',
+    'auth.signin_link': 'เข้าสู่ระบบ',
   },
   en: {
     // Navbar
@@ -370,6 +388,24 @@ export const translations: Record<Language, Record<string, string>> = {
     // Loading
     'loading.title': 'Loading',
     'loading.subtitle': 'Preparing your workspace',
+
+    // Auth
+    'auth.login_title': 'Welcome Back',
+    'auth.login_subtitle': 'Please sign in to your account',
+    'auth.username': 'Username',
+    'auth.username_placeholder': 'Enter your username',
+    'auth.password': 'Password',
+    'auth.password_placeholder': '••••••••',
+    'auth.signin': 'Sign In',
+    'auth.no_account': "Don't have an account?",
+    'auth.signup_link': 'Sign up',
+    'auth.register_title': 'Create Account',
+    'auth.register_subtitle': 'Join us to start sharing workflows',
+    'auth.register_username_placeholder': 'Choose a username',
+    'auth.confirm_password': 'Confirm Password',
+    'auth.signup': 'Create Account',
+    'auth.has_account': 'Already have an account?',
+    'auth.signin_link': 'Sign in',
   },
 };
 

@@ -4,14 +4,38 @@ import Link from 'next/link';
 import { Zap, Menu, X } from 'lucide-react';
 import { ThemeToggle } from './theme-toggle';
 import { LanguageToggle } from './language-toggle';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useI18n } from '@/lib/i18n';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { t } = useI18n();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState<{ username: string } | null>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/auth/session')
+      .then(res => res.json())
+      .then(data => {
+        if (data.user) setUser(data.user);
+      })
+      .catch(console.error);
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      setUser(null);
+      setProfileOpen(false);
+      router.push('/login');
+      router.refresh();
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const navLinks = [
     { href: '/', label: t('nav.explore'), exact: true },
@@ -51,6 +75,40 @@ export function Navbar() {
           <div className="mx-1.5 h-4 w-px bg-[var(--border)]" />
           <ThemeToggle />
           <LanguageToggle />
+          
+          <div className="mx-1.5 h-4 w-px bg-[var(--border)]" />
+          {user ? (
+            <div className="relative">
+              <button
+                onClick={() => setProfileOpen(!profileOpen)}
+                className="flex items-center justify-center h-8 w-8 rounded-full bg-gradient-to-tr from-[var(--accent)] to-blue-500 text-white shadow-sm transition-transform hover:scale-105 active:scale-95"
+              >
+                <span className="text-xs font-bold uppercase">{user.username.charAt(0)}</span>
+              </button>
+              
+              {profileOpen && (
+                <div className="absolute right-0 mt-2 w-48 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-2 shadow-xl backdrop-blur-xl">
+                  <div className="px-3 py-2 border-b border-[var(--border)] mb-1">
+                    <p className="text-[0.75rem] text-[var(--muted)]">Signed in as</p>
+                    <p className="text-[0.85rem] font-medium text-[var(--text)] truncate">{user.username}</p>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left rounded-lg px-3 py-2 text-[0.85rem] font-medium text-red-500 hover:bg-red-500/10 transition-colors"
+                  >
+                    Log out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              className="ml-1 rounded-full bg-[var(--accent)] px-4 py-1.5 text-[0.8rem] font-semibold text-white shadow-sm shadow-[var(--accent-glow)] transition-all hover:opacity-90 active:scale-95"
+            >
+              Sign In
+            </Link>
+          )}
         </div>
 
         {/* Mobile Controls */}
@@ -81,6 +139,39 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
+          </div>
+
+          <div className="mt-4 border-t border-[var(--border)] pt-4">
+            {user ? (
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 px-2">
+                  <div className="flex items-center justify-center h-10 w-10 rounded-full bg-gradient-to-tr from-[var(--accent)] to-blue-500 text-white shadow-sm">
+                    <span className="text-sm font-bold uppercase">{user.username.charAt(0)}</span>
+                  </div>
+                  <div>
+                    <p className="text-[0.75rem] text-[var(--muted)]">Signed in as</p>
+                    <p className="text-[0.9rem] font-medium text-[var(--text)]">{user.username}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full rounded-lg bg-red-500/10 px-4 py-2.5 text-sm font-medium text-red-500 transition-colors hover:bg-red-500/20"
+                >
+                  Log out
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex w-full items-center justify-center rounded-lg bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-[var(--accent-glow)] transition-all hover:opacity-90"
+              >
+                Sign In
+              </Link>
+            )}
           </div>
         </div>
       )}
