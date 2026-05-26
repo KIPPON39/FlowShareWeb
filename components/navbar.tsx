@@ -13,7 +13,7 @@ export function Navbar() {
   const router = useRouter();
   const { t } = useI18n();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [user, setUser] = useState<{ username: string } | null>(null);
+  const [user, setUser] = useState<{ username: string; email?: string; imageUrl?: string } | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
 
   useEffect(() => {
@@ -81,9 +81,18 @@ export function Navbar() {
             <div className="relative">
               <button
                 onClick={() => setProfileOpen(!profileOpen)}
-                className="flex items-center justify-center h-8 w-8 rounded-full bg-gradient-to-tr from-[var(--accent)] to-blue-500 text-white shadow-sm transition-transform hover:scale-105 active:scale-95"
+                className="flex items-center justify-center h-8 w-8 rounded-full bg-gradient-to-tr from-[var(--accent)] to-blue-500 text-white shadow-sm transition-transform hover:scale-105 active:scale-95 overflow-hidden"
               >
-                <span className="text-xs font-bold uppercase">{user.username.charAt(0)}</span>
+                {user.imageUrl ? (
+                  <img
+                    src={user.imageUrl}
+                    alt={user.username}
+                    className="h-full w-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <span className="text-xs font-bold uppercase">{user.username.charAt(0)}</span>
+                )}
               </button>
               
               {profileOpen && (
@@ -91,6 +100,7 @@ export function Navbar() {
                   <div className="px-3 py-2 border-b border-[var(--border)] mb-1">
                     <p className="text-[0.75rem] text-[var(--muted)]">Signed in as</p>
                     <p className="text-[0.85rem] font-medium text-[var(--text)] truncate">{user.username}</p>
+                    {user.email && <p className="text-[0.75rem] text-[var(--muted)] truncate">{user.email}</p>}
                   </div>
                   <button
                     onClick={handleLogout}
@@ -145,12 +155,22 @@ export function Navbar() {
             {user ? (
               <div className="space-y-3">
                 <div className="flex items-center gap-3 px-2">
-                  <div className="flex items-center justify-center h-10 w-10 rounded-full bg-gradient-to-tr from-[var(--accent)] to-blue-500 text-white shadow-sm">
-                    <span className="text-sm font-bold uppercase">{user.username.charAt(0)}</span>
+                  <div className="flex items-center justify-center h-10 w-10 rounded-full bg-gradient-to-tr from-[var(--accent)] to-blue-500 text-white shadow-sm overflow-hidden">
+                    {user.imageUrl ? (
+                      <img
+                        src={user.imageUrl}
+                        alt={user.username}
+                        className="h-full w-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <span className="text-sm font-bold uppercase">{user.username.charAt(0)}</span>
+                    )}
                   </div>
                   <div>
                     <p className="text-[0.75rem] text-[var(--muted)]">Signed in as</p>
                     <p className="text-[0.9rem] font-medium text-[var(--text)]">{user.username}</p>
+                    {user.email && <p className="text-[0.75rem] text-[var(--muted)] truncate">{user.email}</p>}
                   </div>
                 </div>
                 <button

@@ -15,6 +15,8 @@ export default function RegisterPage() {
   const { t } = useI18n();
 
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
@@ -37,11 +39,23 @@ export default function RegisterPage() {
       return;
     }
 
+    if (!email.trim()) {
+      setError('Email is required');
+      setIsLoading(false);
+      return;
+    }
+
+    if (!imageUrl.trim()) {
+      setError('Image URL is required');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, email, imageUrl, password }),
       });
 
       const data = await response.json();
@@ -99,6 +113,35 @@ export default function RegisterPage() {
                   className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)]/50 py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-soft)]"
                   placeholder={t('auth.register_username_placeholder')}
                   autoComplete="username"
+                />
+              </div>
+
+              <div className="grid gap-1.5">
+                <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)]/50 py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-soft)]"
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                />
+              </div>
+
+              <div className="grid gap-1.5">
+                <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">
+                  Image URL
+                </label>
+                <input
+                  type="url"
+                  required
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)]/50 py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-soft)]"
+                  placeholder="https://example.com/avatar.jpg"
                 />
               </div>
 
