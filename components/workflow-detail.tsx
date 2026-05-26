@@ -24,11 +24,13 @@ function DownloadFormModal({
   onClose,
   flowTitle,
   ownerEmail,
+  workflowId,
 }: {
   isOpen: boolean;
   onClose: () => void;
   flowTitle: string;
   ownerEmail?: string;
+  workflowId: string;
 }) {
   const { t } = useI18n();
   const [formState, setFormState] = useState<'idle' | 'submitting' | 'success'>('idle');
@@ -36,10 +38,24 @@ function DownloadFormModal({
   const [email, setEmail] = useState('');
   const [reason, setReason] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormState('submitting');
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/workflows/download', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          workflowId,
+          requesterName: name,
+          requesterEmail: email,
+          ownerEmail,
+          reason,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed');
+
       setFormState('success');
       setTimeout(() => {
         onClose();
@@ -48,7 +64,10 @@ function DownloadFormModal({
         setEmail('');
         setReason('');
       }, 1500);
-    }, 1000);
+    } catch {
+      setFormState('idle');
+      alert('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
+    }
   };
 
   if (typeof document === 'undefined') return null;
@@ -491,7 +510,13 @@ function DownloadFormModal({
         </section>
 
         {/* Form Modals */}
-        <DownloadFormModal isOpen={showDownloadForm} onClose={() => setShowDownloadForm(false)} flowTitle={workflow.title} ownerEmail={ownerEmail} />
+        <DownloadFormModal
+          isOpen={showDownloadForm}
+          onClose={() => setShowDownloadForm(false)}
+          flowTitle={workflow.title}
+          ownerEmail={ownerEmail}
+          workflowId={workflow.id}
+        />
         <SpeakerFormModal isOpen={showSpeakerForm} onClose={() => setShowSpeakerForm(false)} flowTitle={workflow.title} />
       </>
       );

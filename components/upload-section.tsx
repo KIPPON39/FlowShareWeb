@@ -312,6 +312,7 @@ export function UploadSection() {
   const [newStep, setNewStep] = useState({ title: '', nodeName: '' });
   const [newKey, setNewKey] = useState('');
   const [creatorEmail, setCreatorEmail] = useState('');
+  const [creatorImageUrl, setCreatorImageUrl] = useState('');
   const [contributors, setContributors] = useState<{ id: string; name: string; email: string }[]>([]);
   const [newEmail, setNewEmail] = useState('');
   const [submitState, setSubmitState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -359,6 +360,27 @@ export function UploadSection() {
   useEffect(() => {
     const status = getWeeklyQuotaStatus();
     setWeeklyQuota({ remaining: status.remaining, limit: status.limit });
+  }, []);
+
+  useEffect(() => {
+    const loadSessionUser = async () => {
+      try {
+        const response = await fetch('/api/auth/session', { method: 'GET' });
+        if (!response.ok) return;
+        const data = await response.json();
+        const user = data?.user;
+        if (!user) return;
+
+        const sessionEmail = String(user.email || '').trim();
+        const sessionImageUrl = String(user.imageUrl || '').trim();
+        if (sessionEmail) setCreatorEmail(sessionEmail);
+        if (sessionImageUrl) setCreatorImageUrl(sessionImageUrl);
+      } catch {
+        // ignore session preload failure and keep manual input path
+      }
+    };
+
+    loadSessionUser();
   }, []);
 
   const getSessionId = () => {
@@ -725,6 +747,7 @@ export function UploadSection() {
             {
               name: nameFromEmail(creatorEmail),
               email: creatorEmail,
+              imageUrl: creatorImageUrl,
               role: 'creator',
             },
             ...finalContributors.map((contributor) => ({
@@ -1036,8 +1059,17 @@ export function UploadSection() {
               <div className="flex flex-wrap gap-2 mb-4">
                 {creatorEmail && (
                   <div className="flex items-center gap-2 rounded-xl bg-[var(--accent-soft)] pl-3 pr-3 py-2 border border-[var(--accent)]/20">
-                    <div className="h-6 w-6 rounded-full bg-[var(--accent)] flex items-center justify-center text-[0.6rem] font-bold text-white">
-                      {nameFromEmail(creatorEmail).charAt(0).toUpperCase()}
+                    <div className="h-6 w-6 rounded-full bg-[var(--accent)] flex items-center justify-center text-[0.6rem] font-bold text-white overflow-hidden">
+                      {creatorImageUrl ? (
+                        <img
+                          src={creatorImageUrl}
+                          alt={nameFromEmail(creatorEmail)}
+                          className="h-full w-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        nameFromEmail(creatorEmail).charAt(0).toUpperCase()
+                      )}
                     </div>
                     <span className="text-xs font-bold text-[var(--accent)]">{nameFromEmail(creatorEmail)}</span>
                     <span className="rounded-md bg-[var(--surface)] px-2 py-0.5 text-[0.55rem] font-black uppercase tracking-widest text-[var(--accent)]">{t('upload.creator')}</span>
@@ -1272,13 +1304,22 @@ export function UploadSection() {
                       style={{ zIndex: contributors.length + 1 }}
                       title={`${nameFromEmail(creatorEmail)} (Creator)`}
                     >
-                      <Image
-                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${nameFromEmail(creatorEmail)}`}
-                        alt={nameFromEmail(creatorEmail)}
-                        width={32}
-                        height={32}
-                        referrerPolicy="no-referrer"
-                      />
+                      {creatorImageUrl ? (
+                        <img
+                          src={creatorImageUrl}
+                          alt={nameFromEmail(creatorEmail)}
+                          className="h-full w-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <Image
+                          src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${nameFromEmail(creatorEmail)}`}
+                          alt={nameFromEmail(creatorEmail)}
+                          width={32}
+                          height={32}
+                          referrerPolicy="no-referrer"
+                        />
+                      )}
                     </div>
                   )}
                   {contributors.map((c, i) => (

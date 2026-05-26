@@ -8,7 +8,16 @@ export async function GET() {
       return NextResponse.json({ user: null }, { status: 200 });
     }
     
-    return NextResponse.json({ user: { username: session.username } }, { status: 200 });
+    return NextResponse.json(
+      {
+        user: {
+          username: session.username,
+          email: session.email || '',
+          imageUrl: session.imageUrl || '',
+        },
+      },
+      { status: 200 }
+    );
   } catch (error) {
     return NextResponse.json({ user: null }, { status: 200 });
   }
