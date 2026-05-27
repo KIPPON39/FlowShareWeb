@@ -20,6 +20,7 @@ interface WorkflowCardProps {
   views?: number;
   downloads?: number;
   updatedAt?: string;
+  createdAt?: string;
 }
 
 /* ─── Download Flow Form Modal ─── */
@@ -310,7 +311,7 @@ function SpeakerFormModal({ isOpen, onClose, flowTitle }: { isOpen: boolean; onC
   );
 }
 
-export function WorkflowCard({ id, title, description, tags, keys, creators, nodes = 4, views, downloads, updatedAt }: WorkflowCardProps) {
+export function WorkflowCard({ id, title, description, tags, keys, creators, nodes = 4, views, downloads, updatedAt, createdAt }: WorkflowCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const { t } = useI18n();
   const router = useRouter();
@@ -450,10 +451,10 @@ export function WorkflowCard({ id, title, description, tags, keys, creators, nod
 
               <div className="flex flex-wrap items-center gap-2 text-[0.7rem] text-[var(--muted-soft)] font-medium mt-0.5 mb-1">
                 <span>By {creators[0]?.name || 'Community'}</span>
-                {updatedAt && (
+                {(createdAt || updatedAt) && (
                   <>
                     <span className="w-0.5 h-0.5 rounded-full bg-[var(--muted-light)]" />
-                    <span>Updated {new Date(updatedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                    <span>{new Date(createdAt || updatedAt!).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
                   </>
                 )}
                 {downloads !== undefined && (
