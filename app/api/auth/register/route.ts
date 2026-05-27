@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createSession } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 export async function POST(request: Request) {
   try {
@@ -38,8 +39,8 @@ export async function POST(request: Request) {
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
-    const randomStr = Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0').toUpperCase();
-    const userid = `FS-USR-${year}${month}${day}-${randomStr}`; // e.g. FS-USR-20260527-A1B2C3
+    const randomHex = crypto.randomBytes(4).toString('hex').toUpperCase(); // 8 chars (over 4.2 billion combinations per day)
+    const userid = `FS-USR-${year}${month}${day}-${randomHex}`; // e.g. FS-USR-20260527-A1B2C3D4
 
     const n8nResponse = await fetch(registerWebhookUrl, {
       method: 'POST',

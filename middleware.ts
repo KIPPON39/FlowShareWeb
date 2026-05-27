@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 import { decrypt } from '@/lib/auth';
 
 // Paths that require authentication
-const protectedPaths = ['/upload', '/workflow'];
+const protectedPaths = ['/upload'];
 // Paths that are strictly for unauthenticated users
 const authPaths = ['/login', '/register'];
 

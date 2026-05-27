@@ -8,10 +8,9 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { type WorkflowTemplate, CATEGORY_MAPPINGS } from '@/lib/workflows';
 import { useI18n } from '@/lib/i18n';
 import Link from 'next/link';
-import { Zap, Users, Shield, Rocket, Code2, ArrowRight, ArrowUpRight, FileJson, Cpu, Database, Globe, ChevronLeft, ChevronRight, Download, Clock, TrendingUp } from 'lucide-react';
+import { Zap, Users, Shield, Rocket, Code2, ArrowRight, ArrowUpRight, FileJson, Cpu, Database, Globe, ChevronLeft, ChevronRight, Download, Clock, TrendingUp, Eye, Mic, Mail, UserPlus } from 'lucide-react';
 import Image from 'next/image';
-
-
+import { motion } from 'framer-motion';
 
 /* ─── Scroll reveal hook ─── */
 function useReveal() {
@@ -497,8 +496,8 @@ export default function Home() {
                   <FileJson size={24} />
                 </div>
                 <div className="text-center bg-[var(--surface)] px-1">
-                  <div className="text-[0.82rem] font-semibold text-[var(--text)]">1. Upload JSON</div>
-                  <div className="text-[0.65rem] text-[var(--muted)]">From n8n local</div>
+                  <div className="text-[0.82rem] font-semibold text-[var(--text)]">{lang === 'th' ? '1. การนำเข้าข้อมูล' : '1. Data Import'}</div>
+                  <div className="text-[0.65rem] text-[var(--muted)]">{lang === 'th' ? 'อัปโหลดไฟล์ JSON จาก n8n' : 'Import JSON from n8n'}</div>
                 </div>
               </div>
 
@@ -510,8 +509,8 @@ export default function Home() {
                   <Cpu size={24} />
                 </div>
                 <div className="text-center bg-[var(--surface)] px-1">
-                  <div className="text-[0.82rem] font-semibold text-[var(--text)]">2. Auto-Extract</div>
-                  <div className="text-[0.65rem] text-[var(--muted)]">Parse Nodes & Creds</div>
+                  <div className="text-[0.82rem] font-semibold text-[var(--text)]">{lang === 'th' ? '2. ประมวลผลอัตโนมัติ' : '2. Data Extraction'}</div>
+                  <div className="text-[0.65rem] text-[var(--muted)]">{lang === 'th' ? 'สกัดข้อมูลโหนดและสิทธิ์' : 'Parse Nodes & Access'}</div>
                 </div>
               </div>
 
@@ -523,8 +522,8 @@ export default function Home() {
                   <Database size={24} />
                 </div>
                 <div className="text-center bg-[var(--surface)] px-1">
-                  <div className="text-[0.82rem] font-semibold text-[var(--text)]">3. Backend Sync</div>
-                  <div className="text-[0.65rem] text-[var(--muted)]">Google Sheets DB</div>
+                  <div className="text-[0.82rem] font-semibold text-[var(--text)]">{lang === 'th' ? '3. จัดเก็บส่วนกลาง' : '3. Central Storage'}</div>
+                  <div className="text-[0.65rem] text-[var(--muted)]">{lang === 'th' ? 'บันทึกลงฐานข้อมูลองค์กร' : 'Save to Central DB'}</div>
                 </div>
               </div>
 
@@ -536,41 +535,128 @@ export default function Home() {
                   <Globe size={24} />
                 </div>
                 <div className="text-center bg-[var(--surface)] px-1">
-                  <div className="text-[0.82rem] font-semibold text-[var(--text)]">4. FlowShare</div>
-                  <div className="text-[0.65rem] text-[var(--muted)]">Ready to Deploy</div>
+                  <div className="text-[0.82rem] font-semibold text-[var(--text)]">{lang === 'th' ? '4. พร้อมให้บริการ' : '4. Service Ready'}</div>
+                  <div className="text-[0.65rem] text-[var(--muted)]">{lang === 'th' ? 'ดาวน์โหลดและใช้งานได้ทันที' : 'Available for Deployment'}</div>
                 </div>
               </div>
             </div>
           </div>
         </section>
+        {/* ═══════════════ Creative Bento Info Section ═══════════════ */}
+        <section className="mt-20 sm:mt-32 mb-10 overflow-hidden">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[var(--text)]">
+              {lang === 'th' ? 'ขั้นตอนการทำงานของ FlowShare' : 'How FlowShare Works'}
+            </h2>
+            <p className="mt-4 mx-auto max-w-2xl text-[1rem] text-[var(--muted)] leading-relaxed">
+              {lang === 'th' 
+                ? 'กระบวนการที่ออกแบบมาเพื่อลดความซับซ้อน ตั้งแต่การค้นหาไปจนถึงการนำไปใช้งานจริง' 
+                : 'A streamlined process designed to simplify everything from discovery to deployment.'}
+            </p>
+          </motion.div>
 
-        {/* ═══════════════ CTA Section ═══════════════ */}
-        <section className="mt-20 sm:mt-28 relative">
-          <div ref={ctaRef} className="reveal relative">
-            {/* Decorative Blobs */}
-            <div className="absolute -left-12 -top-12 h-64 w-64 rounded-full bg-[var(--accent-soft)] blur-[80px] opacity-70 dark:bg-[var(--accent-glow)] pointer-events-none mix-blend-multiply dark:mix-blend-screen" />
-            <div className="absolute -right-12 bottom-0 h-64 w-64 rounded-full bg-[var(--accent-soft)] blur-[80px] opacity-70 dark:bg-[var(--accent-glow)] pointer-events-none mix-blend-multiply dark:mix-blend-screen" />
-
-            <div className="cta-glow rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-6 sm:px-12 py-12 sm:py-16 text-center relative z-10">
-              <div className="relative mx-auto mb-8 flex h-20 w-20 items-center justify-center">
-                <div className="absolute inset-0 rounded-full border border-[var(--accent)]/20 animate-ping [animation-duration:3s]" />
-                <div className="absolute inset-2 rounded-full border border-[var(--accent)]/30" />
-                <div className="absolute inset-4 rounded-full border border-[var(--accent)]/40" />
-                <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,var(--accent),#d9563c)] text-white shadow-xl shadow-[var(--accent-glow)] ring-4 ring-[var(--surface)]">
-                  <Zap size={28} fill="currentColor" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 auto-rows-[280px]">
+            {/* Step 1 */}
+            <motion.div 
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="md:col-span-2 relative overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-8 group hover:border-[var(--accent)]/40 transition-all duration-300 hover:shadow-lg"
+            >
+              <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all duration-500" />
+              <div className="relative z-10 h-full flex flex-col justify-end">
+                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-500 group-hover:scale-110 transition-transform">
+                  <Eye size={24} />
                 </div>
+                <h3 className="text-xl font-bold text-[var(--text)] mb-2">
+                  {lang === 'th' ? '1. สำรวจและเรียนรู้ Workflow' : '1. Explore and Learn Workflows'}
+                </h3>
+                <p className="text-[0.95rem] text-[var(--muted-strong)] max-w-md leading-relaxed font-medium">
+                  {lang === 'th'
+                    ? 'ศึกษาโครงสร้างการทำงานและ Pipeline ของโฟลวที่ถูกสร้างโดยบุคลากรในองค์กร เพื่อนำมาประยุกต์ใช้กับงานของคุณ (ข้อมูลโครงสร้างเชิงลึกสงวนสิทธิ์เฉพาะผู้ดูแลระบบ)'
+                    : 'Study the structure and pipeline of flows created by personnel in the organization. (Deep structural data is reserved for administrators).'}
+                </p>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--text)]">{t('cta.title')}</h2>
-              <p className="mt-3 mx-auto max-w-md text-[0.9rem] text-[var(--muted)] leading-relaxed">{t('cta.desc')}</p>
-              <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-                <Link
-                  href="/upload"
-                  className="futuristic-hover flex items-center gap-2 rounded-xl bg-[var(--accent)] px-6 py-3 text-[0.95rem] font-semibold text-white transition-all duration-200 hover:opacity-90 active:scale-[0.97] shadow-md shadow-[var(--accent-glow)]"
-                >
-                  {t('cta.button')} <ArrowRight size={16} />
-                </Link>
+            </motion.div>
+
+            {/* Step 2 */}
+            <motion.div 
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="relative overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface-alt)] p-8 group hover:border-[var(--accent)]/40 transition-all duration-300 hover:shadow-lg"
+            >
+              <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-emerald-500/5 to-transparent" />
+              <div className="relative z-10 h-full flex flex-col justify-end">
+                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-500 group-hover:scale-110 transition-transform">
+                  <Download size={24} />
+                </div>
+                <h3 className="text-lg font-bold text-[var(--text)] mb-2">
+                  {lang === 'th' ? '2. ส่งคำขอดาวน์โหลด' : '2. Submit Download Request'}
+                </h3>
+                <p className="text-[0.85rem] text-[var(--muted-strong)] leading-relaxed">
+                  {lang === 'th'
+                    ? 'เมื่อพบโฟลวที่เหมาะสม สามารถส่งคำขอดาวน์โหลดผ่านระบบได้ทันที โดยระบุวัตถุประสงค์ ระบบจะดำเนินการแจ้งเตือนไปยังผู้สร้างอัตโนมัติ'
+                    : 'When you find a suitable flow, instantly submit a download request through the system. The creator will be automatically notified.'}
+                </p>
               </div>
-            </div>
+            </motion.div>
+
+            {/* Step 3 */}
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="relative overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface-alt)] p-8 group hover:border-[var(--accent)]/40 transition-all duration-300 hover:shadow-lg"
+            >
+              <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_top_right,var(--accent-soft),transparent_70%)] opacity-50" />
+              <div className="relative z-10 h-full flex flex-col justify-end">
+                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 group-hover:scale-110 transition-transform">
+                  <Mic size={24} />
+                </div>
+                <h3 className="text-lg font-bold text-[var(--text)] mb-2">
+                  {lang === 'th' ? '3. เชิญเป็นวิทยากร' : '3. Invite as a Speaker'}
+                </h3>
+                <p className="text-[0.85rem] text-[var(--muted-strong)] leading-relaxed">
+                  {lang === 'th'
+                    ? 'หากต้องการเชิญผู้เชี่ยวชาญเจ้าของโฟลวมาบรรยายให้แก่ทีมของคุณ ระบบสามารถสร้างและส่งเอกสารคำเชิญได้อย่างเป็นทางการ'
+                    : 'If you wish to invite the expert creator to lecture your team, the system will generate and send a formal invitation document.'}
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Step 4 */}
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="md:col-span-2 relative overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-8 group hover:border-[var(--accent)]/40 transition-all duration-300 hover:shadow-lg"
+            >
+              <div className="absolute bottom-0 right-0 -mr-10 -mb-10 w-48 h-48 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition-all duration-500" />
+              <div className="relative z-10 h-full flex flex-col justify-end">
+                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-500/10 text-purple-500 group-hover:scale-110 transition-transform">
+                  <Mail size={24} />
+                </div>
+                <h3 className="text-xl font-bold text-[var(--text)] mb-2">
+                  {lang === 'th' ? '4. รอรับการอนุมัติทางอีเมล' : '4. Await Email Approval'}
+                </h3>
+                <p className="text-[0.95rem] text-[var(--muted-strong)] max-w-md leading-relaxed font-medium">
+                  {lang === 'th'
+                    ? 'หลังจากส่งคำขอ ระบบจะติดตามสถานะให้โดยอัตโนมัติ เมื่อได้รับการอนุมัติ ไฟล์ JSON หรือเอกสารยืนยันจะถูกจัดส่งตรงไปยังอีเมลของคุณทันที'
+                    : 'After submission, the system tracks the status automatically. Upon approval, the JSON file or confirmation is delivered directly to your email.'}
+                </p>
+              </div>
+            </motion.div>
           </div>
         </section>
       </div>

@@ -137,7 +137,7 @@ export function Hero({ workflows = [], isLoading = false }: HeroProps) {
               </>
             ) : (
               <>
-                {t('hero.title.1')} <span className="text-[var(--accent)]">{t('hero.title.2')}</span>{' '}
+                {t('hero.title.1')} <span className="hero-gradient-text">{t('hero.title.2')}</span>{' '}
                 <br className="hidden sm:inline" />
                 {t('hero.title.3')}
               </>
@@ -145,8 +145,8 @@ export function Hero({ workflows = [], isLoading = false }: HeroProps) {
           </h1>
           <p className="mx-auto max-w-xl text-[0.95rem] sm:text-base text-[var(--hero-desc)] leading-relaxed px-2">
             {lang === 'th'
-              ? 'เริ่มต้น flow ถัดไปของคุณด้วยเทมเพลตสำเร็จรูปจากชุมชน เชื่อถือได้ ปลอดภัย พร้อมใช้งานในทุกสแต็ค'
-              : 'Jumpstart your next flow with pre-built templates from the community. Reliable, secure, and ready to deploy in any stack.'}
+              ? 'เริ่มต้นการสร้างระบบอัตโนมัติของคุณด้วยเทมเพลตที่ได้รับการตรวจสอบแล้วจากส่วนกลาง มั่นใจในความปลอดภัยและพร้อมใช้งานทันทีสำหรับบุคลากรในองค์กร'
+              : 'Jumpstart your automation with verified templates from the central repository. Secure, reliable, and ready to deploy for your organization.'}
           </p>
         </div>
 
