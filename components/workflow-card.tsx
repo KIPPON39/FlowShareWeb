@@ -447,7 +447,7 @@ export function WorkflowCard({ id, title, description, tags, keys, creators, nod
 
             {/* Title & description — BIGGER title */}
             <div className="grid gap-1.5">
-              <h3 className="text-xl font-bold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)] transition-colors duration-200 line-clamp-2 leading-snug">{title}</h3>
+              <h3 className="text-xl font-bold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)] transition-colors duration-200 line-clamp-2 leading-snug min-h-[3rem]">{title}</h3>
 
               <div className="flex flex-wrap items-center gap-2 text-[0.7rem] text-[var(--muted-soft)] font-medium mt-0.5 mb-1">
                 <span>By {creators[0]?.name || 'Community'}</span>
@@ -465,7 +465,7 @@ export function WorkflowCard({ id, title, description, tags, keys, creators, nod
                 )}
               </div>
 
-              <p className="text-[0.82rem] text-[var(--muted)] line-clamp-2 leading-relaxed">{description}</p>
+              <p className="text-[0.82rem] text-[var(--muted)] line-clamp-3 leading-relaxed min-h-[3.6rem]">{description}</p>
             </div>
           </div>
 

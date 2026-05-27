@@ -141,6 +141,21 @@ export async function POST(request: Request) {
     // 1. พยายามเรียก n8n generator webhook
     const n8nGeneratorUrl = process.env.N8N_GENERATOR_WEBHOOK_URL || 'http://localhost:5678/webhook/generate-description';
 
+    function cleanDescription(desc: string, currentTopic: string) {
+        if (!desc || !currentTopic) return desc;
+        const escapedTopic = currentTopic.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const pattern = new RegExp(
+            `(?:ระบบอัตโนมัติ\\s*n8n|ระบบอัตโนมัติ|Workflow\\s*นี้|Workflow|The n8n automation system|This workflow|The workflow)?\\s*["']?${escapedTopic}["']?\\s*(?:ถูกออกแบบมาเพื่อ|ออกแบบมาเพื่อ|มีจุดประสงค์เพื่อ|ช่วยให้|ช่วย|คือ|เป็น|is designed to|is created to|helps to|is)?`, 
+            'gi'
+        );
+        let cleaned = desc.replace(pattern, '').trim();
+        cleaned = cleaned.replace(/^[\s,;:-]+/, ''); // Remove leading punctuation
+        if (cleaned.length > 0) {
+            cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+        }
+        return cleaned;
+    }
+
     try {
       const n8nResponse = await fetch(n8nGeneratorUrl, {
         method: 'POST',
@@ -155,6 +170,7 @@ export async function POST(request: Request) {
           result.howToUse.some((step: string) => step.includes('ไม่สามารถ parse') || step.includes('กรุณาลองใหม่'));
         
         if (!hasParseError && result.description && result.description.length >= 200) {
+          result.description = cleanDescription(result.description, topic);
           return NextResponse.json(result);
         }
         console.warn('n8n returned a parse error, an incomplete response, or an empty description. Falling back to direct Gemini API.');
@@ -187,7 +203,8 @@ ${context || 'ไม่ได้ระบุ'}
 กรุณาสร้างเนื้อหาทั้งหมดเป็น **ภาษาไทย** โดยมีข้อกำหนดดังนี้อย่างเคร่งครัด:
 1. **คีย์ "description" ต้องมีความยาวอย่างน้อย 200-500 คำ** (อธิบายกระบวนการทำงานแบบละเอียด ประโยชน์ ผู้ใช้ที่เหมาะสม ปัญหาที่แก้ไขได้ และตัวอย่างสถานการณ์การใช้งาน — ห้ามย่อกระชับเกินไป ต้องให้ข้อมูลเชิงลึกที่เป็นประโยชน์)
 2. **ห้ามแปลชื่อคีย์ใน JSON เด็ดขาด!** ต้องใช้คีย์ภาษาอังกฤษ "description" และ "howToUse" ตามโครงสร้าง JSON ด้านล่างเท่านั้น
-3. ผลลัพธ์ต้องตอบกลับเฉพาะ JSON ที่ถูกต้องสมบูรณ์แบบเท่านั้น ห้ามใส่ markdown block (เช่น \`\`\`json) และไม่มีข้อความเกริ่นนำหรือท้ายเรื่องใดๆ ทั้งสิ้น
+3. **ห้ามกล่าวถึงหรือทวนชื่อ Workflow ในเนื้อหาคำอธิบายเด็ดขาด** (เช่น ห้ามพูดว่า "ระบบอัตโนมัติ n8n [ชื่อโฟลว] ถูกออกแบบมา...") ให้เริ่มอธิบายประเด็นและเนื้อหาสำคัญได้เลย
+4. ผลลัพธ์ต้องตอบกลับเฉพาะ JSON ที่ถูกต้องสมบูรณ์แบบเท่านั้น ห้ามใส่ markdown block (เช่น \`\`\`json) และไม่มีข้อความเกริ่นนำหรือท้ายเรื่องใดๆ ทั้งสิ้น
 
 ## โครงสร้าง JSON ที่คุณต้องตอบกลับ:
 {
@@ -203,7 +220,8 @@ ${context || 'Not specified'}
 Generate ALL content in **English** following this structure strictly:
 1. **The "description" key MUST be 200-500 words long** (detailed, comprehensive, explaining the workflow process, who it's for, the problems it solves, use-case scenarios, and the value it brings — do NOT be too brief).
 2. The response MUST be valid JSON using the English keys: "description" and "howToUse".
-3. Return ONLY valid JSON. No conversational text, no markdown wrappers (like \`\`\`json), just raw JSON.
+3. **Do NOT mention or repeat the workflow title in the description.** Start directly with explaining the concept, what it does, and how it works.
+4. Return ONLY valid JSON. No conversational text, no markdown wrappers (like \`\`\`json), just raw JSON.
 
 ## JSON structure to return:
 {
@@ -250,7 +268,7 @@ Generate ALL content in **English** following this structure strictly:
 
     return NextResponse.json({
       success: true,
-      description: parsed.description || '',
+      description: cleanDescription(parsed.description || '', topic),
       howToUse: parsed.howToUse || [],
       quota: {
         used: 1,
