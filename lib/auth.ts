@@ -32,7 +32,13 @@ export async function createSession(
   role?: string
 ) {
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-  const session = await encrypt({ userId, username, email, imageUrl, role, expiresAt });
+
+  // Prevent oversized cookies: skip imageUrl if it's a base64 data URI or too long.
+  // Cookies have a ~4KB limit; large imageUrls in the JWT would exceed this,
+  // causing the browser to silently drop the cookie.
+  const safeImageUrl = (imageUrl && imageUrl.length < 500) ? imageUrl : '';
+
+  const session = await encrypt({ userId, username, email, imageUrl: safeImageUrl, role, expiresAt });
   
   const cookieStore = await cookies();
 

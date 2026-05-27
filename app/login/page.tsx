@@ -37,8 +37,10 @@ export default function LoginPage() {
         throw new Error(data.error || 'Failed to login');
       }
 
-      router.push(redirect);
-      router.refresh();
+      // Use full page reload to ensure the session cookie is sent with the next request.
+      // Validate redirect to prevent navigating to broken URLs like /workflow/undefined.
+      const safeRedirect = redirect.includes('undefined') ? '/flows' : redirect;
+      window.location.href = safeRedirect;
     } catch (err: any) {
       setError(err.message);
     } finally {

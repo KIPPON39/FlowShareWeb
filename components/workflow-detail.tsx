@@ -262,6 +262,13 @@ function DownloadFormModal({
             const found = allWorkflows.find(wf => wf.id === params.id);
             setWorkflow(found || null);
 
+            // Increment view count in the background if the workflow is found
+            if (found && found.id) {
+              fetch(`/api/workflows/${found.id}/view`, { method: 'POST' }).catch(err => 
+                console.error('Failed to increment view:', err)
+              );
+            }
+
             // Load Session for Role Check
             const sessionRes = await fetch('/api/auth/session');
             const sessionData = await sessionRes.json();
