@@ -1,6 +1,6 @@
 'use client';
 
-import { Upload, Send, Plus, X, Bot, Database, Terminal, CloudUpload, Lightbulb, UserPlus, Tag, ChevronDown, GripVertical, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
+import { Upload, Send, Plus, X, Bot, Database, Terminal, CloudUpload, Lightbulb, UserPlus, Tag, ChevronDown, GripVertical, CheckCircle2, XCircle, AlertTriangle, Lock } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
@@ -1063,7 +1063,7 @@ export function UploadSection() {
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-[var(--text)]">{creatorUsername}</span>
                       <span className="text-[0.65rem] text-[var(--muted)]">({creatorEmail})</span>
-                      <span className="rounded-md bg-emerald-500/10 px-1.5 py-0.5 text-[0.55rem] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 ml-auto">🔒 {lang === 'th' ? 'ล็อก' : 'Locked'}</span>
+                      <span className="rounded-md bg-emerald-500/10 px-1.5 py-0.5 text-[0.55rem] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 ml-auto flex items-center gap-1"><Lock size={10} /> {lang === 'th' ? 'ล็อก' : 'Locked'}</span>
                     </div>
                   ) : (
                     <input

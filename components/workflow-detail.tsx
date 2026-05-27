@@ -9,6 +9,7 @@ import {
   Tag,
   X,
   Check,
+  Lock,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
@@ -467,13 +468,22 @@ function DownloadFormModal({
                       {creators.map((creator, i) => (
                         <div key={i} className="flex items-center gap-3">
                           <div className="h-9 w-9 overflow-hidden rounded-full border-2 border-[var(--surface)] bg-[var(--surface-alt)] shadow-sm">
-                            <Image
-                              src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${creator.name}`}
-                              alt={creator.name}
-                              width={36}
-                              height={36}
-                              referrerPolicy="no-referrer"
-                            />
+                            {creator.imageUrl || creator.avatar ? (
+                              <img
+                                src={creator.imageUrl || creator.avatar}
+                                alt={creator.name}
+                                className="h-full w-full object-cover"
+                                referrerPolicy="no-referrer"
+                              />
+                            ) : (
+                              <Image
+                                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${creator.name}`}
+                                alt={creator.name}
+                                width={36}
+                                height={36}
+                                referrerPolicy="no-referrer"
+                              />
+                            )}
                           </div>
                           <div className="flex flex-col">
                             <span className="text-xs font-bold text-[var(--text)] tracking-tight leading-tight">{creator.name}</span>
@@ -517,8 +527,8 @@ function DownloadFormModal({
                           </div>
                         ) : (
                           <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface)] p-10 text-center shadow-inner">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--surface-alt)] border border-[var(--border)] mb-3 shadow-sm">
-                              <span className="text-[1.2rem]">🔒</span>
+                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--surface-alt)] border border-[var(--border)] mb-3 shadow-sm text-[var(--muted-strong)]">
+                              <Lock size={20} />
                             </div>
                             <h4 className="text-[0.9rem] font-bold text-[var(--text)]">Access Restricted</h4>
                             <p className="mt-1 text-[0.75rem] text-[var(--muted)]">Only Admins can view the raw JSON content.</p>
