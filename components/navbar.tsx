@@ -13,7 +13,7 @@ export function Navbar() {
   const router = useRouter();
   const { t } = useI18n();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [user, setUser] = useState<{ username: string; email?: string; imageUrl?: string } | null>(null);
+  const [user, setUser] = useState<{ username: string; email?: string; imageUrl?: string; role?: string } | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
 
   useEffect(() => {
@@ -40,8 +40,11 @@ export function Navbar() {
   const navLinks = [
     { href: '/', label: t('nav.explore'), exact: true },
     { href: '/flows', label: t('nav.flows'), exact: true },
-    { href: '/upload', label: t('nav.create'), exact: true },
   ];
+
+  if (user?.role?.toLowerCase() === 'admin') {
+    navLinks.push({ href: '/upload', label: t('nav.create'), exact: true });
+  }
 
   const isActive = (href: string, exact: boolean) => {
     if (exact) return pathname === href;

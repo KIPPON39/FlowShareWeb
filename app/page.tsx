@@ -8,7 +8,8 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { type WorkflowTemplate, CATEGORY_MAPPINGS } from '@/lib/workflows';
 import { useI18n } from '@/lib/i18n';
 import Link from 'next/link';
-import { Zap, Users, Shield, Rocket, Code2, ArrowRight, ArrowUpRight, FileJson, Cpu, Database, Globe, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Zap, Users, Shield, Rocket, Code2, ArrowRight, ArrowUpRight, FileJson, Cpu, Database, Globe, ChevronLeft, ChevronRight, Download, Clock, TrendingUp } from 'lucide-react';
+import Image from 'next/image';
 
 
 
@@ -133,6 +134,28 @@ export default function Home() {
   // Derive real stats from workflows
   const uniqueCreators = new Set(workflows.flatMap(wf => wf.creators?.map(c => c.name) || [])).size;
   const uniqueTags = new Set(workflows.flatMap(wf => wf.tags || [])).size;
+  const totalDownloads = workflows.reduce((sum, wf) => sum + (wf.downloads || 0), 0);
+  const totalViews = workflows.reduce((sum, wf) => sum + (wf.views || 0), 0);
+
+  // Top creators: group by creator name, count flows
+  const creatorMap = new Map<string, { name: string; imageUrl?: string; flowCount: number }>();
+  workflows.forEach(wf => {
+    const c = wf.creators?.[0];
+    if (!c) return;
+    const existing = creatorMap.get(c.name);
+    if (existing) {
+      existing.flowCount++;
+    } else {
+      creatorMap.set(c.name, { name: c.name, imageUrl: (c as any).imageUrl, flowCount: 1 });
+    }
+  });
+  const topCreators = Array.from(creatorMap.values()).sort((a, b) => b.flowCount - a.flowCount).slice(0, 5);
+
+  // Recent workflows (latest 5 by createdAt)
+  const recentWorkflows = [...workflows]
+    .filter(wf => wf.createdAt)
+    .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime())
+    .slice(0, 5);
 
   useEffect(() => {
     setVisibleCount(4);
@@ -307,7 +330,7 @@ export default function Home() {
         {/* ═══════════════ Stats Bar ═══════════════ */}
         <div ref={statsRef} className="reveal mt-20 sm:mt-28">
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] py-3 sm:py-5">
-            <div className="grid grid-cols-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4">
               <div className="stat-item">
                 <span className="block text-xl sm:text-3xl font-bold text-[var(--text)] tabular-nums">
                   {workflows.length}
@@ -326,15 +349,120 @@ export default function Home() {
               </div>
               <div className="stat-item">
                 <span className="block text-xl sm:text-3xl font-bold text-[var(--text)] tabular-nums">
-                  {uniqueTags}
+                  {totalDownloads.toLocaleString()}
                 </span>
                 <span className="text-[0.7rem] sm:text-xs text-[var(--muted)] font-medium mt-0.5 block">
-                  {lang === 'th' ? 'หมวดหมู่' : 'Categories'}
+                  {lang === 'th' ? 'ดาวน์โหลดรวม' : 'Total Downloads'}
+                </span>
+              </div>
+              <div className="stat-item">
+                <span className="block text-xl sm:text-3xl font-bold text-[var(--text)] tabular-nums">
+                  {totalViews.toLocaleString()}
+                </span>
+                <span className="text-[0.7rem] sm:text-xs text-[var(--muted)] font-medium mt-0.5 block">
+                  {lang === 'th' ? 'ยอดดูรวม' : 'Total Views'}
                 </span>
               </div>
             </div>
           </div>
         </div>
+
+        {/* ═══════════════ Top Creators Section ═══════════════ */}
+        {topCreators.length > 0 && (
+          <section className="mt-16 sm:mt-24">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--text)]">
+                {lang === 'th' ? 'ผู้สร้างยอดนิยม' : 'Top Creators'}
+              </h2>
+              <p className="mt-2 text-[0.85rem] text-[var(--muted)]">
+                {lang === 'th' ? 'สมาชิกที่มีส่วนร่วมมากที่สุดในชุมชน' : 'Most active contributors in the community'}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
+              {topCreators.map((creator, i) => (
+                <div
+                  key={i}
+                  className="flex flex-col items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-6 min-w-[140px] transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-[var(--accent)]/30"
+                >
+                  <div className="relative">
+                    <div className="h-14 w-14 rounded-full bg-gradient-to-br from-[#f4d7d0] to-[#e5a79a] border-2 border-[var(--surface)] overflow-hidden shadow-md">
+                      {creator.imageUrl ? (
+                        <img src={creator.imageUrl} alt={creator.name} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                      ) : (
+                        <Image
+                          src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${creator.name}`}
+                          alt={creator.name}
+                          width={56}
+                          height={56}
+                          className="h-full w-full object-cover"
+                        />
+                      )}
+                    </div>
+                    {i === 0 && (
+                      <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[0.55rem] font-black text-white shadow-sm">🏆</span>
+                    )}
+                  </div>
+                  <div className="text-center">
+                    <div className="text-[0.85rem] font-semibold text-[var(--text)] truncate max-w-[120px]">{creator.name}</div>
+                    <div className="text-[0.7rem] text-[var(--accent)] font-semibold mt-0.5">
+                      {creator.flowCount} {lang === 'th' ? 'Flows' : 'Flows'}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* ═══════════════ Recent Activity Section ═══════════════ */}
+        {recentWorkflows.length > 0 && (
+          <section className="mt-16 sm:mt-24">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--text)]">
+                {lang === 'th' ? 'เพิ่มล่าสุด' : 'Recently Added'}
+              </h2>
+              <p className="mt-2 text-[0.85rem] text-[var(--muted)]">
+                {lang === 'th' ? 'Workflow ที่เพิ่มเข้ามาล่าสุดในชุมชน' : 'Latest workflows shared by the community'}
+              </p>
+            </div>
+            <div className="grid gap-3">
+              {recentWorkflows.map((wf, i) => (
+                <Link
+                  key={wf.id}
+                  href={`/workflow/${wf.id}`}
+                  className="group flex items-center gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 transition-all duration-200 hover:border-[var(--accent)]/30 hover:shadow-md hover:-translate-y-0.5"
+                >
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-[var(--accent-soft)] text-[var(--accent)] text-[0.75rem] font-black">
+                    {String(i + 1).padStart(2, '0')}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[0.9rem] font-semibold text-[var(--text)] group-hover:text-[var(--accent)] transition-colors truncate">{wf.title}</div>
+                    <div className="flex items-center gap-3 mt-1 text-[0.7rem] text-[var(--muted)]">
+                      <span className="flex items-center gap-1"><Users size={10} /> {wf.creators?.[0]?.name || 'Unknown'}</span>
+                      {wf.createdAt && (
+                        <span className="flex items-center gap-1">
+                          <Clock size={10} />
+                          {new Date(wf.createdAt).toLocaleDateString(lang === 'th' ? 'th-TH' : 'en-US', { month: 'short', day: 'numeric' })}
+                        </span>
+                      )}
+                      {(wf.downloads ?? 0) > 0 && (
+                        <span className="flex items-center gap-1"><Download size={10} /> {wf.downloads}</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="hidden sm:flex flex-wrap gap-1.5 max-w-[200px]">
+                    {wf.tags?.slice(0, 2).map((tag, j) => (
+                      <span key={j} className="inline-flex px-2 py-0.5 rounded-full text-[0.6rem] font-semibold uppercase tracking-wide bg-[var(--tag-alt-bg)] text-[var(--tag-alt-text)] border border-[var(--border)]">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <ArrowRight size={14} className="text-[var(--muted-light)] group-hover:text-[var(--accent)] transition-colors flex-shrink-0" />
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* ═══════════════ Features Section ═══════════════ */}
         <section className="mt-20 sm:mt-28">

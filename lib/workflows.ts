@@ -2,6 +2,7 @@ export interface WorkflowContributor {
   name: string;
   email?: string;
   avatar?: string;
+  imageUrl?: string;
 }
 
 export interface WorkflowStep {
@@ -253,6 +254,19 @@ export function slugifyWorkflowTitle(title: string) {
     .replace(/(^-|-$)+/g, '');
 
   return slug || `workflow-${Date.now()}`;
+}
+
+/**
+ * Generate a unique Flow ID: FW-YYMMDD-XXXX
+ * e.g. FW-260527-4837
+ */
+export function generateFlowId(): string {
+  const now = new Date();
+  const yy = String(now.getFullYear()).slice(-2);
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  const rand = String(Math.floor(1000 + Math.random() * 9000));
+  return `FW-${yy}${mm}${dd}-${rand}`;
 }
 
 export function normalizeList(value: unknown): string[] {

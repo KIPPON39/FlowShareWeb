@@ -28,10 +28,11 @@ export async function createSession(
   userId: string,
   username: string,
   email?: string,
-  imageUrl?: string
+  imageUrl?: string,
+  role?: string
 ) {
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-  const session = await encrypt({ userId, username, email, imageUrl, expiresAt });
+  const session = await encrypt({ userId, username, email, imageUrl, role, expiresAt });
   
   const cookieStore = await cookies();
 

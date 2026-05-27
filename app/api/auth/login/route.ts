@@ -35,12 +35,11 @@ function pickFirstString(user: Record<string, unknown>, keys: string[]) {
 
 export async function POST(request: Request) {
   try {
-    const loginWebhookUrl =
-      process.env.N8N_AUTH_LOGIN_WEBHOOK_URL || process.env.N8N_WEBHOOK_LOGIN_URL;
+    const loginWebhookUrl = process.env.N8N_WEBHOOK_LOGIN_URL;
 
     if (!loginWebhookUrl) {
       return NextResponse.json(
-        { error: 'Missing N8N_AUTH_LOGIN_WEBHOOK_URL (or N8N_WEBHOOK_LOGIN_URL) in .env' },
+        { error: 'Missing N8N_WEBHOOK_LOGIN_URL in .env' },
         { status: 503 }
       );
     }
@@ -78,7 +77,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const user = (data.user || data) as Record<string, unknown>;
+    let user = (data.user || data) as Record<string, unknown>;
+    if (Array.isArray(user) && user.length > 0) {
+      user = user[0];
+    }
+    
     if (!user) {
       return NextResponse.json({ error: 'Invalid username or password' }, { status: 401 });
     }
@@ -103,8 +106,10 @@ export async function POST(request: Request) {
       'profileImage',
       'avatar',
     ]);
+    const rawRole = pickFirstString(user, ['role', 'Role', 'userRole']) || 'User';
+    const userRole = rawRole.replace(/[^a-zA-Z]/g, '');
 
-    await createSession(username, username, userEmail, userImageUrl);
+    await createSession(username, username, userEmail, userImageUrl, userRole);
 
     return NextResponse.json({ success: true, message: 'Logged in successfully' }, { status: 200 });
   } catch (error) {

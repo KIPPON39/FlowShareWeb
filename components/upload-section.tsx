@@ -313,8 +313,13 @@ export function UploadSection() {
   const [newKey, setNewKey] = useState('');
   const [creatorEmail, setCreatorEmail] = useState('');
   const [creatorImageUrl, setCreatorImageUrl] = useState('');
-  const [contributors, setContributors] = useState<{ id: string; name: string; email: string }[]>([]);
+  const [creatorUsername, setCreatorUsername] = useState('');
+  const [contributors, setContributors] = useState<{ id: string; name: string; email: string; imageUrl?: string }[]>([]);
   const [newEmail, setNewEmail] = useState('');
+  const [contributorQuery, setContributorQuery] = useState('');
+  const [contributorResults, setContributorResults] = useState<{ username: string; email: string; imageUrl: string }[]>([]);
+  const [isSearchingUsers, setIsSearchingUsers] = useState(false);
+  const [showContributorDropdown, setShowContributorDropdown] = useState(false);
   const [submitState, setSubmitState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [statusMessage, setStatusMessage] = useState('');
   const [rawJson, setRawJson] = useState<unknown>(null);
@@ -325,36 +330,13 @@ export function UploadSection() {
   // States สำหรับระบบตรวจสอบไฟล์แบบเรียลไทม์ และระบบเจนคำอธิบายอัตโนมัติด้วย AI
   const [isGeneratingDesc, setIsGeneratingDesc] = useState(false);
   const [geminiQuotaInfo, setGeminiQuotaInfo] = useState<{ used: number; limit: number; remaining: number } | null>(null);
-  const [weeklyQuota, setWeeklyQuota] = useState<{ remaining: number; limit: number }>({ remaining: 5, limit: 5 });
+  const [weeklyQuota, setWeeklyQuota] = useState<{ remaining: number; limit: number }>({ remaining: 999, limit: 999 });
   const [isValidatingFile, setIsValidatingFile] = useState(false);
   const [fileValidationStatus, setFileValidationStatus] = useState<'idle' | 'checking' | 'passed' | 'failed'>('idle');
   const [credentialWarnings, setCredentialWarnings] = useState<string[]>([]);
 
   const getWeeklyQuotaStatus = () => {
-    if (typeof window === 'undefined') return { remaining: 5, limit: 5, timestamps: [] as number[] };
-    const quotaData = localStorage.getItem('flowshare_weekly_quota');
-    const now = Date.now();
-    const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
-    
-    if (!quotaData) {
-      return { remaining: 5, limit: 5, timestamps: [] as number[] };
-    }
-    
-    try {
-      const parsed = JSON.parse(quotaData);
-      if (Array.isArray(parsed)) {
-        const activeTimestamps = parsed.filter((ts: number) => now - ts < oneWeekMs);
-        localStorage.setItem('flowshare_weekly_quota', JSON.stringify(activeTimestamps));
-        return {
-          remaining: Math.max(0, 5 - activeTimestamps.length),
-          limit: 5,
-          timestamps: activeTimestamps
-        };
-      }
-    } catch (e) {
-      console.error('Error parsing weekly quota data', e);
-    }
-    return { remaining: 5, limit: 5, timestamps: [] as number[] };
+    return { remaining: 999, limit: 999, timestamps: [] as number[] };
   };
 
   useEffect(() => {
@@ -371,8 +353,10 @@ export function UploadSection() {
         const user = data?.user;
         if (!user) return;
 
+        const sessionUsername = String(user.username || '').trim();
         const sessionEmail = String(user.email || '').trim();
         const sessionImageUrl = String(user.imageUrl || '').trim();
+        if (sessionUsername) setCreatorUsername(sessionUsername);
         if (sessionEmail) setCreatorEmail(sessionEmail);
         if (sessionImageUrl) setCreatorImageUrl(sessionImageUrl);
       } catch {
@@ -382,6 +366,32 @@ export function UploadSection() {
 
     loadSessionUser();
   }, []);
+
+  // Debounced contributor search
+  useEffect(() => {
+    if (!contributorQuery || contributorQuery.length < 2) {
+      setContributorResults([]);
+      setShowContributorDropdown(false);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setIsSearchingUsers(true);
+      try {
+        const res = await fetch(`/api/auth/search-users?q=${encodeURIComponent(contributorQuery)}`);
+        const data = await res.json();
+        // Filter out already-added contributors
+        const existing = new Set(contributors.map(c => c.name.toLowerCase()));
+        const filtered = (data.users || []).filter((u: any) => !existing.has(u.username.toLowerCase()));
+        setContributorResults(filtered);
+        setShowContributorDropdown(filtered.length > 0);
+      } catch {
+        setContributorResults([]);
+      } finally {
+        setIsSearchingUsers(false);
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [contributorQuery, contributors]);
 
   const getSessionId = () => {
     if (typeof window === 'undefined') return 'server-session';
@@ -396,16 +406,6 @@ export function UploadSection() {
   const handleGenerateDescription = async () => {
     if (!rawJson) {
       setStatusMessage(lang === 'th' ? 'กรุณาอัพโหลดไฟล์ JSON ก่อนเพื่อใช้ AI ช่วยสรุป' : 'Please upload a JSON file first to use AI.');
-      return;
-    }
-
-    const currentQuota = getWeeklyQuotaStatus();
-    if (currentQuota.remaining <= 0) {
-      setStatusMessage(
-        lang === 'th'
-          ? 'ขออภัย คุณใช้งาน AI ครบโควต้า 5 ครั้งสำหรับสัปดาห์นี้แล้ว โปรดลองอีกครั้งในสัปดาห์ถัดไป'
-          : 'Sorry, you have exhausted your limit of 5 generations for this week. Please try again next week.'
-      );
       return;
     }
 
@@ -518,17 +518,11 @@ export function UploadSection() {
         setGeminiQuotaInfo(data.quota);
       }
 
-      // บันทึกการใช้งานโควต้ารายสัปดาห์ใน localStorage
-      const status = getWeeklyQuotaStatus();
-      const updatedTimestamps = [...status.timestamps, Date.now()];
-      localStorage.setItem('flowshare_weekly_quota', JSON.stringify(updatedTimestamps));
-      setWeeklyQuota({ remaining: Math.max(0, 5 - updatedTimestamps.length), limit: 5 });
-
       setSubmitState('idle');
       setStatusMessage(
         lang === 'th'
-          ? `⟡ AI สร้างคำอธิบายสำเร็จแล้ว (โควต้าสัปดาห์นี้เหลือ ${Math.max(0, 5 - updatedTimestamps.length)}/5 ครั้ง)`
-          : `⟡ AI generated description successfully (Weekly quota: ${Math.max(0, 5 - updatedTimestamps.length)}/5 remaining)`
+          ? `⟡ AI สร้างคำอธิบายสำเร็จแล้ว`
+          : `⟡ AI generated description successfully`
       );
     } catch (err) {
       setSubmitState('error');
@@ -694,6 +688,19 @@ export function UploadSection() {
     }
   };
 
+  const addContributorFromSearch = (user: { username: string; email: string; imageUrl: string }) => {
+    if (contributors.some(c => c.name.toLowerCase() === user.username.toLowerCase())) return;
+    setContributors([...contributors, {
+      id: Math.random().toString(),
+      name: user.username,
+      email: user.email,
+      imageUrl: user.imageUrl,
+    }]);
+    setContributorQuery('');
+    setContributorResults([]);
+    setShowContributorDropdown(false);
+  };
+
   const removeContributor = (id: string) => {
     setContributors(contributors.filter(c => c.id !== id));
   };
@@ -745,7 +752,7 @@ export function UploadSection() {
           keys: keys.map((key) => key.name),
           creators: [
             {
-              name: nameFromEmail(creatorEmail),
+              name: creatorUsername || nameFromEmail(creatorEmail),
               email: creatorEmail,
               imageUrl: creatorImageUrl,
               role: 'creator',
@@ -892,26 +899,44 @@ export function UploadSection() {
                   )}
                 </div>
               ) : (
-                <label
-                  id="upload-json"
-                  className={`futuristic-hover upload-zone block rounded-xl border-2 border-dashed ${isJsonMissing ? 'border-red-500/50 bg-red-500/5 hover:border-red-500' : 'border-[var(--border-strong)] bg-[var(--surface-alt)]/20 hover:border-[var(--accent)]'} p-8 text-center transition-all group cursor-pointer`}
-                >
-                  <input
-                    type="file"
-                    accept="application/json,.json"
-                    className="hidden"
-                    onChange={(event) => handleJsonFile(event.target.files?.[0])}
-                  />
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)] group-hover:scale-105 transition-transform shadow-sm">
-                    <Upload size={20} />
-                  </div>
-                  <div className="mt-4 text-base font-medium">
-                    {t('upload.drop_json')} <span className="text-[var(--accent)]">{t('upload.browse')}</span>
-                  </div>
-                  <p className="mt-1.5 text-[0.8rem] text-[var(--muted)]">
-                    {t('upload.auto_extract')}
-                  </p>
-                </label>
+                <div className="grid gap-3">
+                  <label
+                    id="upload-json"
+                    className={`futuristic-hover upload-zone block rounded-xl border-2 border-dashed ${isJsonMissing ? 'border-red-500/50 bg-red-500/5 hover:border-red-500' : 'border-[var(--border-strong)] bg-[var(--surface-alt)]/20 hover:border-[var(--accent)]'} p-8 text-center transition-all group cursor-pointer ${isValidatingFile ? 'opacity-50 pointer-events-none' : ''}`}
+                  >
+                    <input
+                      type="file"
+                      accept="application/json,.json"
+                      className="hidden"
+                      onChange={(event) => handleJsonFile(event.target.files?.[0])}
+                      disabled={isValidatingFile}
+                    />
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent)] group-hover:scale-105 transition-transform shadow-sm">
+                      <Upload size={20} />
+                    </div>
+                    <div className="mt-4 text-base font-medium">
+                      {t('upload.drop_json')} <span className="text-[var(--accent)]">{t('upload.browse')}</span>
+                    </div>
+                    <p className="mt-1.5 text-[0.8rem] text-[var(--muted)]">
+                      {t('upload.auto_extract')}
+                    </p>
+                  </label>
+
+                  {/* Validation Status for Failed/Checking states when file isn't loaded yet */}
+                  {(fileValidationStatus === 'checking' || fileValidationStatus === 'failed') && (
+                    <div className={`flex items-start gap-2.5 rounded-lg px-4 py-3 text-[0.75rem] font-semibold ${
+                      fileValidationStatus === 'checking'
+                        ? 'bg-[var(--surface-alt)] text-[var(--muted)] border border-[var(--border)]'
+                        : 'bg-red-500/10 text-red-500 border border-red-500/20'
+                    }`}>
+                      {fileValidationStatus === 'checking' ? (
+                        <><span className="inline-block animate-spin mt-0.5">⟡</span> <span>{statusMessage || (lang === 'th' ? 'กำลังตรวจสอบ...' : 'Validating...')}</span></>
+                      ) : (
+                        <><XCircle size={16} className="mt-0.5 flex-shrink-0" /> <span className="leading-relaxed">{statusMessage || (lang === 'th' ? 'ตรวจสอบไม่ผ่าน' : 'Validation failed')}</span></>
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
 
               <div className="grid gap-4">
@@ -978,23 +1003,11 @@ export function UploadSection() {
                           <span className="inline-block animate-spin">⟡</span>
                           {lang === 'th' ? 'AI กำลังวิเคราะห์โหนดและเขียนสรุป...' : 'AI analyzing nodes & writing summary...'}
                         </span>
-                        <span className="text-[0.6rem] font-medium text-[var(--muted)] animate-pulse">
-                          {lang === 'th' ? `โควต้า ${weeklyQuota.remaining}/${weeklyQuota.limit}` : `Quota ${weeklyQuota.remaining}/${weeklyQuota.limit}`}
-                        </span>
                       </div>
                     </div>
                   )}
                 </div>
-                {/* Quota indicator shown ALWAYS from the beginning */}
-                {!isGeneratingDesc && (
-                  <div className="flex items-center justify-end gap-2 -mt-2">
-                    <span className={`text-[0.62rem] font-medium ${weeklyQuota.remaining === 0 ? 'text-red-500 font-semibold animate-pulse' : 'text-[var(--muted-soft)]'}`}>
-                      {lang === 'th'
-                        ? `⟡ โควต้าช่วยสรุปโดย AI: เหลือ ${weeklyQuota.remaining}/${weeklyQuota.limit} ครั้งในสัปดาห์นี้`
-                        : `⟡ AI Summary Quota: ${weeklyQuota.remaining}/${weeklyQuota.limit} remaining this week`}
-                    </span>
-                  </div>
-                )}
+
                 {hasAttemptedSubmit && !description && (
                   <span className="text-red-500 text-[0.72rem] font-semibold mt-[-10px] pl-1">* {lang === 'th' ? 'กรุณากรอกรายละเอียด' : 'Description is required'}</span>
                 )}
@@ -1039,21 +1052,32 @@ export function UploadSection() {
             </summary>
 
             <div className="grid gap-3">
+              {/* Creator (locked from session) */}
               <div
                 id="upload-email"
-                className={`flex items-center gap-3 rounded-2xl border-2 border-dotted ${isEmailMissing ? 'border-red-500/50 bg-red-500/5 focus-within:border-red-500' : 'border-[var(--border)] bg-[var(--surface-alt)]/20 focus-within:border-[var(--accent)]'} px-5 py-4 transition-all`}
+                className={`flex items-center gap-3 rounded-2xl border-2 ${creatorUsername ? 'border-emerald-500/30 bg-emerald-500/5' : isEmailMissing ? 'border-red-500/50 bg-red-500/5' : 'border-[var(--border)] bg-[var(--surface-alt)]/20'} px-5 py-4 transition-all`}
               >
-                <UserPlus size={18} className={isEmailMissing ? 'text-red-500' : 'text-[var(--muted)]'} />
-                <input
-                  value={creatorEmail}
-                  onChange={(e) => setCreatorEmail(e.target.value)}
-                  className="flex-1 bg-transparent text-sm font-bold opacity-80 outline-hidden placeholder:text-[var(--muted-soft)] text-[var(--text)]"
-                  placeholder={t('upload.creator_email')}
-                  type="email"
-                />
+                <UserPlus size={18} className={creatorUsername ? 'text-emerald-500' : isEmailMissing ? 'text-red-500' : 'text-[var(--muted)]'} />
+                <div className="flex-1 min-w-0">
+                  {creatorUsername ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-[var(--text)]">{creatorUsername}</span>
+                      <span className="text-[0.65rem] text-[var(--muted)]">({creatorEmail})</span>
+                      <span className="rounded-md bg-emerald-500/10 px-1.5 py-0.5 text-[0.55rem] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 ml-auto">🔒 {lang === 'th' ? 'ล็อก' : 'Locked'}</span>
+                    </div>
+                  ) : (
+                    <input
+                      value={creatorEmail}
+                      onChange={(e) => setCreatorEmail(e.target.value)}
+                      className="w-full bg-transparent text-sm font-bold opacity-80 outline-hidden placeholder:text-[var(--muted-soft)] text-[var(--text)]"
+                      placeholder={t('upload.creator_email')}
+                      type="email"
+                    />
+                  )}
+                </div>
               </div>
               {isEmailMissing && (
-                <span className="text-red-500 text-[0.72rem] font-semibold mt-[-4px] pl-1">* {lang === 'th' ? 'กรุณากรอกอีเมลผู้สร้างให้ถูกต้อง' : 'Valid creator email is required'}</span>
+                <span className="text-red-500 text-[0.72rem] font-semibold mt-[-4px] pl-1">* {lang === 'th' ? 'กรุณาเข้าสู่ระบบก่อนอัพโหลด' : 'Please log in before uploading'}</span>
               )}
 
               <div className="flex flex-wrap gap-2 mb-4">
@@ -1063,22 +1087,26 @@ export function UploadSection() {
                       {creatorImageUrl ? (
                         <img
                           src={creatorImageUrl}
-                          alt={nameFromEmail(creatorEmail)}
+                          alt={creatorUsername || nameFromEmail(creatorEmail)}
                           className="h-full w-full object-cover"
                           referrerPolicy="no-referrer"
                         />
                       ) : (
-                        nameFromEmail(creatorEmail).charAt(0).toUpperCase()
+                        (creatorUsername || nameFromEmail(creatorEmail)).charAt(0).toUpperCase()
                       )}
                     </div>
-                    <span className="text-xs font-bold text-[var(--accent)]">{nameFromEmail(creatorEmail)}</span>
+                    <span className="text-xs font-bold text-[var(--accent)]">{creatorUsername || nameFromEmail(creatorEmail)}</span>
                     <span className="rounded-md bg-[var(--surface)] px-2 py-0.5 text-[0.55rem] font-black uppercase tracking-widest text-[var(--accent)]">{t('upload.creator')}</span>
                   </div>
                 )}
                 {contributors.map((c) => (
                   <div key={c.id} className="flex items-center gap-2 rounded-xl bg-[var(--surface-alt)] pl-3 pr-2 py-2 border border-[var(--border)]">
-                    <div className="h-6 w-6 rounded-full bg-[var(--accent-soft)] flex items-center justify-center text-[0.6rem] font-bold text-[var(--accent)]">
-                      {c.name.charAt(0).toUpperCase()}
+                    <div className="h-6 w-6 rounded-full bg-[var(--accent-soft)] flex items-center justify-center text-[0.6rem] font-bold text-[var(--accent)] overflow-hidden">
+                      {c.imageUrl ? (
+                        <img src={c.imageUrl} alt={c.name} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                      ) : (
+                        c.name.charAt(0).toUpperCase()
+                      )}
                     </div>
                     <span className="text-xs font-bold text-[var(--text-subtle)]">{c.name}</span>
                     <span className="rounded-md bg-[var(--surface)] px-2 py-0.5 text-[0.55rem] font-black uppercase tracking-widest text-[var(--muted)]">{t('upload.contributor')}</span>
@@ -1089,18 +1117,54 @@ export function UploadSection() {
                 ))}
               </div>
 
-              <div className="flex items-center gap-3 rounded-2xl border-2 border-dotted border-[var(--border)] bg-[var(--surface-alt)]/20 px-5 py-4 focus-within:border-[var(--accent)] transition-all">
-                <UserPlus size={18} className="text-[var(--muted)]" />
-                <input
-                  value={newEmail}
-                  onChange={(e) => setNewEmail(e.target.value)}
-                  className="flex-1 bg-transparent text-sm font-bold opacity-60 outline-hidden placeholder:text-[var(--muted-soft)] text-[var(--text)]"
-                  placeholder={t('upload.invite')}
-                  onKeyDown={(e) => e.key === 'Enter' && addContributor()}
-                />
-                <button onClick={addContributor} className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] transition-all hover:bg-[var(--accent)] hover:text-white hover:border-[var(--accent)]">
-                  <Plus size={18} />
-                </button>
+              {/* Contributor Search */}
+              <div className="relative">
+                <div className="flex items-center gap-3 rounded-2xl border-2 border-dotted border-[var(--border)] bg-[var(--surface-alt)]/20 px-5 py-4 focus-within:border-[var(--accent)] transition-all">
+                  <UserPlus size={18} className="text-[var(--muted)]" />
+                  <input
+                    value={contributorQuery}
+                    onChange={(e) => setContributorQuery(e.target.value)}
+                    className="flex-1 bg-transparent text-sm font-bold opacity-60 outline-hidden placeholder:text-[var(--muted-soft)] text-[var(--text)]"
+                    placeholder={lang === 'th' ? 'ค้นหาผู้ร่วมทำด้วย username หรือ email...' : 'Search contributor by username or email...'}
+                    onFocus={() => { if (contributorResults.length > 0) setShowContributorDropdown(true); }}
+                  />
+                  {isSearchingUsers && (
+                    <span className="text-[var(--accent)] animate-spin text-sm">⟡</span>
+                  )}
+                </div>
+
+                {/* Search Results Dropdown */}
+                {showContributorDropdown && contributorResults.length > 0 && (
+                  <div className="absolute left-0 right-0 top-full mt-1 z-30 rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-xl overflow-hidden max-h-[200px] overflow-y-auto">
+                    {contributorResults.map((user, i) => (
+                      <button
+                        key={i}
+                        onClick={() => addContributorFromSearch(user)}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--accent-soft)] transition-colors border-b border-[var(--border)] last:border-b-0"
+                      >
+                        <div className="h-8 w-8 rounded-full bg-[var(--accent-soft)] flex items-center justify-center text-[0.65rem] font-bold text-[var(--accent)] overflow-hidden flex-shrink-0">
+                          {user.imageUrl ? (
+                            <img src={user.imageUrl} alt={user.username} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                          ) : (
+                            user.username.charAt(0).toUpperCase()
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-[0.82rem] font-semibold text-[var(--text)] truncate">{user.username}</div>
+                          <div className="text-[0.7rem] text-[var(--muted)] truncate">{user.email}</div>
+                        </div>
+                        <Plus size={14} className="ml-auto text-[var(--accent)] flex-shrink-0" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* No results message */}
+                {contributorQuery.length >= 2 && !isSearchingUsers && contributorResults.length === 0 && (
+                  <div className="absolute left-0 right-0 top-full mt-1 z-30 rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-xl px-4 py-3 text-center">
+                    <span className="text-[0.78rem] text-[var(--muted)]">{lang === 'th' ? 'ไม่พบผู้ใช้ในระบบ' : 'No users found in system'}</span>
+                  </div>
+                )}
               </div>
             </div>
           </details>

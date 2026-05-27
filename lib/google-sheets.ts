@@ -43,10 +43,10 @@ export async function getUserByUsername(username: string) {
     const auth = await getAuthClient();
     const sheets = google.sheets({ version: 'v4', auth });
     
-    // Read the sheet. Adjust range as necessary.
+    // Read the sheet. Adjust range to A:F to include Email, ImageUrl, and Role.
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: GOOGLE_SHEET_ID_USERS,
-      range: 'Sheet1!A:C',
+      range: 'Sheet1!A:F',
     });
 
     const rows = response.data.values;
@@ -60,6 +60,9 @@ export async function getUserByUsername(username: string) {
           username: row[0],
           passwordHash: row[1],
           createdAt: row[2],
+          email: row[3] || '',
+          imageUrl: row[4] || '',
+          role: row[5] || 'User',
         };
       }
     }
@@ -73,7 +76,7 @@ export async function getUserByUsername(username: string) {
 /**
  * Creates a new user in the Google Sheet.
  */
-export async function createUser(username: string, passwordHash: string) {
+export async function createUser(username: string, passwordHash: string, email: string = '', imageUrl: string = '', role: string = 'User') {
   if (!GOOGLE_SHEET_ID_USERS) {
     throw new Error('GOOGLE_SHEET_ID_USERS is not set.');
   }
@@ -85,14 +88,62 @@ export async function createUser(username: string, passwordHash: string) {
 
   await sheets.spreadsheets.values.append({
     spreadsheetId: GOOGLE_SHEET_ID_USERS,
-    range: 'Sheet1!A:C',
+    range: 'Sheet1!A:F',
     valueInputOption: 'USER_ENTERED',
     requestBody: {
       values: [
-        [username, passwordHash, createdAt],
+        [username, passwordHash, createdAt, email, imageUrl, role],
       ],
     },
   });
 
-  return { username, createdAt };
+  return { username, createdAt, email, imageUrl, role };
+}
+
+/**
+ * Search users by username or email (partial match).
+ * Reads columns A:F assuming: Username | PasswordHash | CreatedAt | Email | ImageUrl | Role
+ * (n8n register webhook saves email/imageUrl in additional columns)
+ */
+export async function searchUsers(query: string, limit = 10) {
+  if (!GOOGLE_SHEET_ID_USERS) {
+    console.warn('GOOGLE_SHEET_ID_USERS is not set.');
+    return [];
+  }
+
+  try {
+    const auth = await getAuthClient();
+    const sheets = google.sheets({ version: 'v4', auth });
+
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: GOOGLE_SHEET_ID_USERS,
+      range: 'Sheet1!A:F',
+    });
+
+    const rows = response.data.values;
+    if (!rows || rows.length <= 1) return [];
+
+    const q = query.toLowerCase().trim();
+    const results: { username: string; email: string; imageUrl: string }[] = [];
+
+    // Skip header row
+    for (let i = 1; i < rows.length && results.length < limit; i++) {
+      const row = rows[i];
+      const username = (row[0] || '').trim();
+      const email = (row[3] || '').trim();
+      const imageUrl = (row[4] || '').trim();
+
+      if (
+        username.toLowerCase().includes(q) ||
+        email.toLowerCase().includes(q)
+      ) {
+        results.push({ username, email, imageUrl });
+      }
+    }
+
+    return results;
+  } catch (error) {
+    console.error('Error searching users from Google Sheets:', error);
+    return [];
+  }
 }
