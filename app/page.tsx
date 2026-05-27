@@ -261,7 +261,7 @@ export default function Home() {
           {isLoading ? (
             <div className="flex gap-5 overflow-hidden">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="min-w-[82vw] sm:min-w-[380px] md:min-w-[400px] flex-shrink-0">
+                <div key={i} className="w-[82vw] max-w-[82vw] sm:w-[380px] sm:max-w-[380px] md:w-[400px] md:max-w-[400px] flex-shrink-0">
                   <WorkflowCardSkeleton />
                 </div>
               ))}
@@ -287,7 +287,7 @@ export default function Home() {
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 {filteredWorkflows.map((wf, i) => (
-                  <div key={i} className="min-w-[82vw] sm:min-w-[380px] md:min-w-[400px] flex-shrink-0 snap-start">
+                  <div key={i} className="w-[82vw] max-w-[82vw] sm:w-[380px] sm:max-w-[380px] md:w-[400px] md:max-w-[400px] flex-shrink-0 snap-start">
                     <WorkflowCard {...wf} />
                   </div>
                 ))}

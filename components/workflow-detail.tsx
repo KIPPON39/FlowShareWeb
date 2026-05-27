@@ -303,10 +303,8 @@ function DownloadFormModal({
       const keys = workflow.keys || [];
       const tags = workflow.tags || [];
       const creators = workflow.creators || [];
-      const description = workflow.description || '';
-
-  const shortBrief = description.length > 150 ? description.slice(0, 150) + '...' : description;
-  const hasLongBrief = description.length > 150;
+  const description = workflow.description || '';
+  const hasLongBrief = description.length > 150; // Just for showing the toggle button
 
       const displayedPipeline = showAllPipeline ? steps : steps.slice(0, 5);
       const displayedCreds = showAllCreds ? keys : keys.slice(0, 6);
@@ -369,9 +367,9 @@ function DownloadFormModal({
                   </div>
                   <motion.div
                     layout
-                    className="rounded-xl border border-[var(--border)] bg-[var(--surface-alt)]/30 p-5 leading-relaxed text-[0.9rem] text-[var(--text-subtle)] font-medium"
+                    className={`rounded-xl border border-[var(--border)] bg-[var(--surface-alt)]/30 p-5 leading-relaxed text-[0.9rem] text-[var(--text-subtle)] font-medium ${!isBriefExpanded && hasLongBrief ? 'line-clamp-2' : ''}`}
                   >
-                    {isBriefExpanded || !hasLongBrief ? description : shortBrief}
+                    {description}
                   </motion.div>
                 </section>
 
