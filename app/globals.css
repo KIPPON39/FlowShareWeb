@@ -199,20 +199,16 @@
   /* ─── Navbar Brand Text (Matching Hero Gradient in Light Mode) ─── */
   .navbar-brand-text {
     background: linear-gradient(135deg,
-        #cbd5e1 0%,
-        #f1f5f9 15%,
-        #ffffff 30%,
-        #cbd5e1 45%,
-        #f8fafc 55%,
-        #ffffff 70%,
-        #cbd5e1 85%,
-        #f1f5f9 100%);
+        #1a0d08 0%,
+        #3d1f15 25%,
+        #1a0d08 50%,
+        #a73b24 75%,
+        #1a0d08 100%);
     background-size: 250% 250%;
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
-    animation: hero-shine 5s ease-in-out infinite;
-    filter: drop-shadow(0 1px 4px rgba(160, 170, 185, 0.25));
+    animation: hero-shine 6s ease-in-out infinite;
   }
 
   [data-theme="dark"] .navbar-brand-text {

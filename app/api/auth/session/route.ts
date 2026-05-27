@@ -14,6 +14,7 @@ export async function GET() {
           username: session.username,
           email: session.email || '',
           imageUrl: session.imageUrl || '',
+          role: session.role || 'User',
         },
       },
       { status: 200 }

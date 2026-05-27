@@ -4,6 +4,7 @@ import {
   normalizeList,
   slugifyWorkflowTitle,
   enrichWorkflowTags,
+  generateFlowId,
   type WorkflowTemplate,
 } from '@/lib/workflows';
 
@@ -67,53 +68,6 @@ function parseJsonCell<T>(value: string | undefined, fallback: T): T {
   }
 }
 
-function workflowsFromCsv(csv: string): WorkflowTemplate[] {
-  const rows = parseCsv(csv);
-  const [headers, ...records] = rows;
-  if (!headers?.length) return [];
-
-  const normalizedHeaders = headers.map((header) => header.trim().toLowerCase());
-
-  return records.reduce<WorkflowTemplate[]>((workflows, record) => {
-    const get = (name: string) => {
-      const index = normalizedHeaders.indexOf(name.toLowerCase());
-      return index >= 0 ? record[index]?.trim() : '';
-    };
-
-    const title = get('title');
-    if (!title) return workflows;
-
-    const keys = normalizeList(get('keys') || get('required_credentials'));
-    const tags = normalizeList(get('tags'));
-    const parsedCreators = parseJsonCell(get('creators'), normalizeList(get('creators')).map((name) => ({ name })));
-    const creators = Array.isArray(parsedCreators) ? parsedCreators : [];
-    const parsedSteps = parseJsonCell(get('steps'), []);
-    const steps = Array.isArray(parsedSteps) ? parsedSteps : [];
-
-    const rawTags = tags.length ? tags : ['Community'];
-    const enrichedTags = enrichWorkflowTags(title, get('description') || '', keys, rawTags);
-
-    workflows.push({
-      id: get('id') || slugifyWorkflowTitle(title),
-      title,
-      description: get('description') || 'No description provided yet.',
-      tags: enrichedTags,
-      keys,
-      creators: creators.length ? creators : [{ name: get('creator') || 'FlowShare Creator' }],
-      nodes: Number(get('nodes')) || steps.length || keys.length || 1,
-      views: Number(get('views')) || Math.floor(Math.random() * 500) + 10,
-      downloads: Number(get('downloads')) || Math.floor(Math.random() * 200),
-      updatedAt: get('updated_at') || new Date().toISOString(),
-      steps,
-      rawJson: parseJsonCell(get('raw_json'), null) ?? undefined,
-      jsonFileUrl: get('json_file_url') || '',
-      createdAt: get('created_at') || undefined,
-    });
-
-    return workflows;
-  }, []);
-}
-
 async function loadFromN8n() {
   const listWebhookUrl = process.env.N8N_LIST_WEBHOOK_URL;
   if (!listWebhookUrl) return null;
@@ -131,7 +85,20 @@ async function loadFromN8n() {
       return null;
     }
 
-    const data = await response.json();
+    const text = await response.text();
+    if (!text || text.trim() === '') {
+      console.warn(`n8n list webhook returned empty body`);
+      return null;
+    }
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      console.warn(`n8n list webhook returned invalid JSON:`, text.slice(0, 200));
+      return null;
+    }
+
     if (Array.isArray(data)) return data as WorkflowTemplate[];
     if (Array.isArray(data.workflows)) return data.workflows as WorkflowTemplate[];
     return null;
@@ -141,28 +108,9 @@ async function loadFromN8n() {
   }
 }
 
-async function loadFromGoogleSheetCsv() {
-  const csvUrl = process.env.GOOGLE_SHEETS_CSV_URL;
-  if (!csvUrl) return null;
-
-  try {
-    const response = await fetch(csvUrl, { cache: 'no-store' });
-    if (!response.ok) {
-      console.warn(`Google Sheet CSV returned ${response.status}`);
-      return null;
-    }
-
-    return workflowsFromCsv(await response.text());
-  } catch (err) {
-    console.warn(`Failed to fetch from Google Sheet CSV:`, err);
-    return null;
-  }
-}
-
 export async function GET() {
   try {
     const rawWorkflows = (await loadFromN8n())
-      ?? (await loadFromGoogleSheetCsv())
       ?? (shouldUseMockWorkflows() ? SAMPLE_WORKFLOWS : []);
 
     const workflows = rawWorkflows.map(wf => ({
@@ -212,7 +160,7 @@ export async function POST(request: Request) {
   const enrichedTags = enrichWorkflowTags(title, description, normalizeList(body.keys), rawTags);
 
   const workflow: WorkflowTemplate = {
-    id: body.id || slugifyWorkflowTitle(title),
+    id: generateFlowId(),
     title,
     description,
     tags: enrichedTags,

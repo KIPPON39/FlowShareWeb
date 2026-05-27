@@ -34,6 +34,12 @@ export async function POST(request: Request) {
 
     const passwordHash = await bcrypt.hash(password, 10);
     const createdAt = new Date().toISOString();
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const randomStr = Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0').toUpperCase();
+    const userid = `FS-USR-${year}${month}${day}-${randomStr}`; // e.g. FS-USR-20260527-A1B2C3
 
     const n8nResponse = await fetch(registerWebhookUrl, {
       method: 'POST',
@@ -42,6 +48,7 @@ export async function POST(request: Request) {
         ...(process.env.N8N_WEBHOOK_SECRET ? { 'x-flowshare-secret': process.env.N8N_WEBHOOK_SECRET } : {}),
       },
       body: JSON.stringify({
+        userid,
         username,
         email,
         passwordHash,
@@ -81,7 +88,7 @@ export async function POST(request: Request) {
       );
     }
 
-    await createSession(username, username, email, imageUrl);
+    await createSession(username, username, email, imageUrl, 'User');
 
     return NextResponse.json(
       {

@@ -248,17 +248,24 @@ function DownloadFormModal({
       const [isBriefExpanded, setIsBriefExpanded] = useState(false);
       const [showDownloadForm, setShowDownloadForm] = useState(false);
       const [showSpeakerForm, setShowSpeakerForm] = useState(false);
+      const [user, setUser] = useState<{ username: string; role?: string } | null>(null);
       const {t} = useI18n();
       const params = useParams();
 
   useEffect(() => {
-        async function loadWorkflow() {
+        async function loadData() {
           try {
+            // Load Workflow
             const response = await fetch('/api/workflows', { cache: 'no-store' });
             const data = await response.json();
             const allWorkflows: WorkflowTemplate[] = data.workflows || [];
             const found = allWorkflows.find(wf => wf.id === params.id);
             setWorkflow(found || null);
+
+            // Load Session for Role Check
+            const sessionRes = await fetch('/api/auth/session');
+            const sessionData = await sessionRes.json();
+            if (sessionData.user) setUser(sessionData.user);
           } catch {
             setWorkflow(null);
           } finally {
@@ -266,7 +273,7 @@ function DownloadFormModal({
           }
         }
 
-    loadWorkflow();
+    loadData();
   }, [params.id]);
 
       if (isLoading) return <DetailSkeleton />;
@@ -495,11 +502,21 @@ function DownloadFormModal({
                       transition={{ duration: 0.3 }}
                     >
                       <div className="p-6 pt-0 text-left">
-                        <div className="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 text-[0.8rem] text-[var(--muted-strong)] leading-relaxed shadow-inner max-h-[400px] overflow-y-auto custom-scrollbar">
-                          <pre className="font-mono text-[0.75rem]">
-                            {JSON.stringify(workflow.rawJson, null, 2)}
-                          </pre>
-                        </div>
+                        {user?.role?.toLowerCase() === 'admin' ? (
+                          <div className="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 text-[0.8rem] text-[var(--muted-strong)] leading-relaxed shadow-inner max-h-[400px] overflow-y-auto custom-scrollbar">
+                            <pre className="font-mono text-[0.75rem]">
+                              {JSON.stringify(workflow.rawJson, null, 2)}
+                            </pre>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface)] p-10 text-center shadow-inner">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--surface-alt)] border border-[var(--border)] mb-3 shadow-sm">
+                              <span className="text-[1.2rem]">🔒</span>
+                            </div>
+                            <h4 className="text-[0.9rem] font-bold text-[var(--text)]">Access Restricted</h4>
+                            <p className="mt-1 text-[0.75rem] text-[var(--muted)]">Only Admins can view the raw JSON content.</p>
+                          </div>
+                        )}
                       </div>
                     </motion.div>
                   )}

@@ -15,7 +15,7 @@ interface WorkflowCardProps {
   description: string;
   tags: string[];
   keys: string[];
-  creators: { name: string; email?: string; avatar?: string }[];
+  creators: { name: string; email?: string; avatar?: string; imageUrl?: string }[];
   nodes?: number;
   views?: number;
   downloads?: number;
@@ -381,14 +381,23 @@ export function WorkflowCard({ id, title, description, tags, keys, creators, nod
                       key={i}
                       className="h-6 w-6 rounded-full border-2 border-[var(--surface)] bg-linear-to-br from-[#f4d7d0] to-[#e5a79a] overflow-hidden"
                     >
-                      <Image
-                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${c.name}`}
-                        alt={c.name}
-                        width={24}
-                        height={24}
-                        className="h-full w-full object-cover"
-                        referrerPolicy="no-referrer"
-                      />
+                      {(c.imageUrl || c.avatar) ? (
+                        <img
+                          src={c.imageUrl || c.avatar}
+                          alt={c.name}
+                          className="h-full w-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <Image
+                          src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${c.name}`}
+                          alt={c.name}
+                          width={24}
+                          height={24}
+                          className="h-full w-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
+                      )}
                     </div>
                   ))}
                 </div>
@@ -406,14 +415,23 @@ export function WorkflowCard({ id, title, description, tags, keys, creators, nod
                     {creators.map((c, i) => (
                       <div key={i} className="flex items-center gap-2.5">
                         <div className="h-7 w-7 rounded-full bg-linear-to-br from-[#f4d7d0] to-[#e5a79a] border border-[var(--border)] overflow-hidden flex-shrink-0">
-                          <Image
-                            src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${c.name}`}
-                            alt={c.name}
-                            width={28}
-                            height={28}
-                            className="h-full w-full object-cover"
-                            referrerPolicy="no-referrer"
-                          />
+                          {(c.imageUrl || c.avatar) ? (
+                            <img
+                              src={c.imageUrl || c.avatar}
+                              alt={c.name}
+                              className="h-full w-full object-cover"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <Image
+                              src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${c.name}`}
+                              alt={c.name}
+                              width={28}
+                              height={28}
+                              className="h-full w-full object-cover"
+                              referrerPolicy="no-referrer"
+                            />
+                          )}
                         </div>
                         <div className="flex flex-col min-w-0">
                           <span className="text-[0.8rem] font-medium text-[var(--text)] truncate">{c.name}</span>
