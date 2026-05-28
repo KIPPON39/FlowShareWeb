@@ -34,8 +34,14 @@ export async function createDownloadRequest(request: Request) {
     return NextResponse.json({ error: 'A valid requester email is required.' }, { status: 400 });
   }
 
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const randomHex = crypto.randomUUID().split('-')[0].toUpperCase();
+
   const downloadRequest = {
-    requestId: crypto.randomUUID(),
+    requestId: `DR-${year}${month}${day}-${randomHex}`,
     workflowId,
     requesterName,   // เพิ่ม
     requesterEmail,
