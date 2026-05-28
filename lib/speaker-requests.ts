@@ -22,7 +22,9 @@ export async function createSpeakerRequest(request: Request) {
 
   const flowID = String(body.flowID || '').trim();
   const requesterName = String(body.requesterName || '').trim();
+  const requesterEmail = String(body.requesterEmail || '').trim();
   const recipient = String(body.recipient || '').trim();
+  const recipientEmail = String(body.recipientEmail || '').trim();
   const event_name = String(body.event_name || '').trim();
   const event_date = String(body.event_date || '').trim();
   const event_location = String(body.event_location || '').trim();
@@ -53,8 +55,10 @@ export async function createSpeakerRequest(request: Request) {
     skrequestID,
     flowID,
     requesterName,
+    requesterEmail,
     date,
     recipient,
+    recipientEmail,
     event_name,
     event_date,
     event_location,

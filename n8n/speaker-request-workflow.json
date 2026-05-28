@@ -1,0 +1,718 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "speaker-request",
+        "options": {},
+        "responseMode": "onReceived"
+      },
+      "id": "51f992e2-8c41-4a97-8f15-9a7311ea7798",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        2336,
+        1824
+      ],
+      "webhookId": "c4b123d4-abcd-4efg-8hij-klmn1234opqr"
+    },
+    {
+      "parameters": {
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "value": "1iYLFLS0SnJSpN4eyqBPqBv6BlB2QxMKTf6Wti2a5Fzs",
+          "mode": "id"
+        },
+        "name": "=หนังสือเชิญวิทยากร_{{ $json.body.recipient }}",
+        "options": {}
+      },
+      "id": "fe14d350-fb5d-41aa-9344-19d5f06dc01a",
+      "name": "Copy Template Document",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        3008,
+        1824
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "4ki8Gvx43CzyyWh0",
+          "name": "Google Drive Wisit"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $json.id }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "replaceAll",
+              "text": "[requesterName]",
+              "replaceText": "={{ $('Convert to Thai Numerals').first().json.body.requesterName }}",
+              "matchCase": true
+            },
+            {
+              "action": "replaceAll",
+              "text": "[date]",
+              "replaceText": "={{ $('Convert to Thai Numerals').first().json.body.date }}",
+              "matchCase": true
+            },
+            {
+              "action": "replaceAll",
+              "text": "[recipient]",
+              "replaceText": "={{ $('Convert to Thai Numerals').first().json.body.recipient }}",
+              "matchCase": true
+            },
+            {
+              "action": "replaceAll",
+              "text": "[event_name]",
+              "replaceText": "={{ $('Convert to Thai Numerals').first().json.body.event_name }}",
+              "matchCase": true
+            },
+            {
+              "action": "replaceAll",
+              "text": "[event_date]",
+              "replaceText": "={{ $('Convert to Thai Numerals').first().json.body.event_date }}",
+              "matchCase": true
+            },
+            {
+              "action": "replaceAll",
+              "text": "[event_location]",
+              "replaceText": "={{ $('Convert to Thai Numerals').first().json.body.event_location }}",
+              "matchCase": true
+            },
+            {
+              "action": "replaceAll",
+              "text": "[event_purpose]",
+              "replaceText": "={{ $('Convert to Thai Numerals').first().json.body.event_purpose }}",
+              "matchCase": true
+            },
+            {
+              "action": "replaceAll",
+              "text": "[speaker_name]",
+              "replaceText": "={{ $('Convert to Thai Numerals').first().json.body.speaker_name }}",
+              "matchCase": true
+            },
+            {
+              "action": "replaceAll",
+              "text": "[speaker_position]",
+              "replaceText": "={{ $('Convert to Thai Numerals').first().json.body.speaker_position }}",
+              "matchCase": true
+            },
+            {
+              "action": "replaceAll",
+              "text": "[session_type]",
+              "replaceText": "={{ $('Convert to Thai Numerals').first().json.body.session_type }}",
+              "matchCase": true
+            },
+            {
+              "action": "replaceAll",
+              "text": "[topic]",
+              "replaceText": "={{ $('Convert to Thai Numerals').first().json.body.topic }}",
+              "matchCase": true
+            },
+            {
+              "action": "replaceAll",
+              "text": "[lecture_date]",
+              "replaceText": "={{ $('Convert to Thai Numerals').first().json.body.lecture_date }}",
+              "matchCase": true
+            },
+            {
+              "action": "replaceAll",
+              "text": "[time_range]",
+              "replaceText": "={{ $('Convert to Thai Numerals').first().json.body.time_range }}",
+              "matchCase": true
+            },
+            {
+              "action": "replaceAll",
+              "text": "[signer_name]",
+              "replaceText": "={{ $('Convert to Thai Numerals').first().json.body.signer_name }}",
+              "matchCase": true
+            },
+            {
+              "action": "replaceAll",
+              "text": "[signer_position]",
+              "replaceText": "={{ $('Convert to Thai Numerals').first().json.body.signer_position }}",
+              "matchCase": true
+            }
+          ]
+        }
+      },
+      "id": "c538eb16-6848-4cb2-ae20-08070ed64fb2",
+      "name": "Update Copied Document",
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        3232,
+        1824
+      ],
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "Lu01gFqMOnEJowEx",
+          "name": "Google Docs account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1D2KkNgeW10RhVKhuBtqnwZbXUES2Tj69azfv0k86X2E",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 655489247,
+          "mode": "list",
+          "cachedResultName": "SpeakerRequests",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1D2KkNgeW10RhVKhuBtqnwZbXUES2Tj69azfv0k86X2E/edit#gid=655489247"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "skrequestID": "={{ $json.body.skrequestID }}",
+            "flowID": "={{ $json.body.flowID }}",
+            "requesterName": "={{ $json.body.requesterName }}",
+            "signer_position": "={{ $json.body.signer_position }}",
+            "signer_name": "={{ $json.body.signer_name }}",
+            "time_range": "={{ $json.body.time_range }}",
+            "lecture_date": "={{ $json.body.lecture_date }}",
+            "topic": "={{ $json.body.topic }}",
+            "session_type": "={{ $json.body.session_type }}",
+            "speaker_position": "={{ $json.body.speaker_position }}",
+            "speaker_name": "={{ $json.body.speaker_name }}",
+            "event_purpose": "={{ $json.body.event_purpose }}",
+            "event_location": "={{ $json.body.event_location }}",
+            "event_date": "={{ $json.body.event_date }}",
+            "event_name": "={{ $json.body.event_name }}",
+            "recipient": "={{ $json.body.recipient }}",
+            "date": "={{ $json.body.date }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "skrequestID",
+              "displayName": "skrequestID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "flowID",
+              "displayName": "flowID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "requesterName",
+              "displayName": "requesterName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "requesterPhone",
+              "displayName": "requesterPhone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "doc_number",
+              "displayName": "doc_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "recipient",
+              "displayName": "recipient",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "event_name",
+              "displayName": "event_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "event_date",
+              "displayName": "event_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "event_location",
+              "displayName": "event_location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "event_purpose",
+              "displayName": "event_purpose",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "speaker_name",
+              "displayName": "speaker_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "speaker_position",
+              "displayName": "speaker_position",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "session_type",
+              "displayName": "session_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "topic",
+              "displayName": "topic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "lecture_date",
+              "displayName": "lecture_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "time_range",
+              "displayName": "time_range",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "signer_name",
+              "displayName": "signer_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "signer_position",
+              "displayName": "signer_position",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "c31cac39-eb14-4670-8487-c0738727a922",
+      "name": "Save to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        2560,
+        1824
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "vVzNslY5s3iST38a",
+          "name": "Google Sheets account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.documentId }}",
+          "mode": "id"
+        },
+        "options": {
+          "binaryPropertyName": "data",
+          "conversion": "application/pdf"
+        }
+      },
+      "id": "3d5430f5-2766-4ea0-b45c-0616d8c5cf64",
+      "name": "Export as PDF",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        3456,
+        1728
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "4ki8Gvx43CzyyWh0",
+          "name": "Google Drive Wisit"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.documentId }}",
+          "mode": "id"
+        },
+        "options": {
+          "binaryPropertyName": "data2",
+          "conversion": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        }
+      },
+      "id": "25550ede-431c-4247-bc8d-07c48dfa50e9",
+      "name": "Export as DOCX",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        3456,
+        1920
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "4ki8Gvx43CzyyWh0",
+          "name": "Google Drive Wisit"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "documentId",
+              "field2": "documentId"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f786f400-2d6c-4f3e-8019-14769a3bc6b3",
+      "name": "Merge Files",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        3680,
+        1824
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const thaiNumerals = ['๐', '๑', '๒', '๓', '๔', '๕', '๖', '๗', '๘', '๙'];\nconst thaiMonths = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];\n\nfunction convertToThaiNumerals(text) {\n  if (text === null || text === undefined) return text;\n  return String(text).replace(/[0-9]/g, function(match) {\n    return thaiNumerals[parseInt(match)];\n  });\n}\n\nfunction formatThaiDate(dateString) {\n  if (!dateString || typeof dateString !== 'string' || !dateString.includes('-')) return dateString;\n  const parts = dateString.split('-');\n  if (parts.length === 3) {\n    const year = parseInt(parts[0]) + 543;\n    const month = parseInt(parts[1]) - 1;\n    const day = parseInt(parts[2]);\n    return `${day} ${thaiMonths[month]} ${year}`;\n  }\n  return dateString;\n}\n\nfor (let item of $input.all()) {\n  if (item.json && item.json.body) {\n    const body = item.json.body;\n    \n    const dateFields = ['date', 'event_date', 'lecture_date'];\n    for (const field of dateFields) {\n      if (body[field]) {\n        body[field] = formatThaiDate(body[field]);\n      }\n    }\n    \n    for (const key of Object.keys(body)) {\n      if (typeof body[key] === 'string') {\n        if (!['skrequestID', 'flowID', 'requesterEmail', 'recipientEmail', 'fileName'].includes(key)) {\n          body[key] = convertToThaiNumerals(body[key]);\n        }\n      }\n    }\n  }\n}\n\nreturn $input.all();"
+      },
+      "id": "960fe93a-2028-4e62-9860-84bc4838de0b",
+      "name": "Convert to Thai Numerals",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2784,
+        1824
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Convert to Thai Numerals').first().json.body.recipientEmail }}",
+        "subject": "=ขอเรียนเชิญเป็นวิทยากรบรรยาย - {{ $('Convert to Thai Numerals').first().json.body.event_name }}",
+        "message": "=เรื่อง: ขอความอนุเคราะห์บุคลากรเป็นวิทยากร\nเรียน: {{ $('Convert to Thai Numerals').first().json.body.speaker_name }}\n\n        ด้วย {{ $('Convert to Thai Numerals').first().json.body.requesterName }} มีกำหนดจัดโครงการ/กิจกรรม \"{{ $('Convert to Thai Numerals').first().json.body.event_name }}\" ในวันที่ {{ $('Convert to Thai Numerals').first().json.body.event_date }} ณ {{ $('Convert to Thai Numerals').first().json.body.event_location }}\n\n        ในการนี้ คณะผู้จัดงานพิจารณาแล้วเห็นว่าท่านเป็นผู้มีความรู้ ความสามารถ จึงใคร่ขอเรียนเชิญท่านเป็นวิทยากรบรรยายในหัวข้อ \"{{ $('Convert to Thai Numerals').first().json.body.topic }}\" ในวันที่ {{ $('Convert to Thai Numerals').first().json.body.lecture_date }} เวลา {{ $('Convert to Thai Numerals').first().json.body.time_range }} น.\n\n        รายละเอียดเพิ่มเติมสามารถตรวจสอบได้จากเอกสารหนังสือเชิญที่แนบมาพร้อมกับอีเมลฉบับนี้\n\n        จึงเรียนมาเพื่อโปรดพิจารณาให้ความอนุเคราะห์ และขอขอบพระคุณล่วงหน้ามา ณ โอกาสนี้\n\nขอแสดงความนับถือ\n\n( {{ $('Convert to Thai Numerals').first().json.body.signer_name }} )\n{{ $('Convert to Thai Numerals').first().json.body.signer_position }}",
+        "options": {
+          "appendAttribution": false,
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {
+                "property": "data"
+              }
+            ]
+          }
+        }
+      },
+      "id": "553a8601-8e9c-44eb-b9b5-c97f5f9fd387",
+      "name": "Send Email to Speaker",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        3904,
+        1728
+      ],
+      "webhookId": "2feec323-018b-45fc-a337-1500a1e4285d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Lveyf79d2cmP2l2F",
+          "name": "Gmail account Wisit"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Convert to Thai Numerals').first().json.body.requesterEmail }}",
+        "subject": "=สำเนาหนังสือเรียนเชิญวิทยากร - {{ $('Convert to Thai Numerals').first().json.body.event_name }}",
+        "message": "=เรื่อง: สำเนาหนังสือเรียนเชิญวิทยากร (จัดส่งเรียบร้อยแล้ว)\nเรียน: {{ $('Convert to Thai Numerals').first().json.body.requesterName }}\n\n        ระบบได้ดำเนินการจัดส่งหนังสือเรียนเชิญวิทยากรถึง {{ $('Convert to Thai Numerals').first().json.body.speaker_name }} เป็นที่เรียบร้อยแล้ว ตามรายละเอียดหัวข้อ \"{{ $('Convert to Thai Numerals').first().json.body.topic }}\"\n\n        ท่านสามารถดาวน์โหลดสำเนาเอกสารหนังสือเชิญ (รูปแบบ PDF และ Word) ได้จากไฟล์แนบในอีเมลฉบับนี้ เพื่อเก็บไว้เป็นหลักฐานการดำเนินงาน\n\n        จึงเรียนมาเพื่อโปรดทราบ\n\nระบบสร้างเอกสารอัตโนมัติ FlowShare",
+        "options": {
+          "appendAttribution": false,
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {
+                "property": "data"
+              },
+              {
+                "property": "data2"
+              }
+            ]
+          }
+        }
+      },
+      "id": "dbd88c01-9c7e-440a-bd47-beacd7e721b6",
+      "name": "Send Email to Requester",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        3904,
+        1920
+      ],
+      "webhookId": "89097e54-ea77-48c0-af36-093d7c4fddf6",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Lveyf79d2cmP2l2F",
+          "name": "Gmail account Wisit"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "deleteFile",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Update Copied Document').first().json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "c285ee3d-680b-47d9-9fcb-08bdf370670b",
+      "name": "Delete Temporary Doc",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        4128,
+        1920
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "4ki8Gvx43CzyyWh0",
+          "name": "Google Drive Wisit"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "for (let item of $input.all()) {\n  if (item.binary) {\n    if (item.binary.data && !item.binary.data.fileName.endsWith('.pdf')) {\n      item.binary.data.fileName += '.pdf';\n    }\n    if (item.binary.data2 && !item.binary.data2.fileName.endsWith('.docx')) {\n      item.binary.data2.fileName += '.docx';\n    }\n  }\n}\nreturn $input.all();"
+      },
+      "id": "e0b510c4-722a-4428-b021-98782d49aef5",
+      "name": "Rename File Extensions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3750,
+        1824
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Save to Google Sheets",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Convert to Thai Numerals",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copy Template Document": {
+      "main": [
+        [
+          {
+            "node": "Update Copied Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Copied Document": {
+      "main": [
+        [
+          {
+            "node": "Export as PDF",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Export as DOCX",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to Google Sheets": {
+      "main": [
+        []
+      ]
+    },
+    "Export as PDF": {
+      "main": [
+        [
+          {
+            "node": "Merge Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Export as DOCX": {
+      "main": [
+        [
+          {
+            "node": "Merge Files",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Files": {
+      "main": [
+        [
+          {
+            "node": "Rename File Extensions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to Thai Numerals": {
+      "main": [
+        [
+          {
+            "node": "Copy Template Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email to Requester": {
+      "main": [
+        [
+          {
+            "node": "Delete Temporary Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email to Speaker": {
+      "main": [
+        []
+      ]
+    },
+    "Rename File Extensions": {
+      "main": [
+        [
+          {
+            "node": "Send Email to Speaker",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Email to Requester",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "558852a4fe563df97873667aacb4cb6af44210dbec44dd945e431afab49c66cb"
+  }
+}
