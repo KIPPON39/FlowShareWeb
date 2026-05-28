@@ -23,8 +23,12 @@ export async function createDownloadRequest(request: Request) {
   const workflowId = String(body.workflowId || '').trim();
   const requesterEmail = String(body.requesterEmail || '').trim().toLowerCase();
   const ownerEmail = String(body.ownerEmail || '').trim().toLowerCase();
-  const requesterName = String(body.requesterName || '').trim();  // เพิ่ม
-  const reason = String(body.reason || '').trim();                // เพิ่ม
+  const requesterName = String(body.requesterName || '').trim();
+  const reason = String(body.reason || '').trim();
+  const flow_name = String(body.flow_name || '').trim();
+  const recipient = String(body.recipient || '').trim();
+  const signer_name = String(body.signer_name || '').trim();
+  const signer_position = String(body.signer_position || '').trim();
 
   if (!workflowId) {
     return NextResponse.json({ error: 'Workflow ID is required.' }, { status: 400 });
@@ -40,15 +44,23 @@ export async function createDownloadRequest(request: Request) {
   const day = String(now.getDate()).padStart(2, '0');
   const randomHex = crypto.randomUUID().split('-')[0].toUpperCase();
 
+  const timestampStr = new Date().toISOString();
+  const dateStr = timestampStr.split('T')[0];
+
   const downloadRequest = {
     dlrequestID: `DR-${year}${month}${day}-${randomHex}`,
-    workflowId,
-    requesterName,   // เพิ่ม
+    flowID: workflowId,
+    requesterName,
+    date: dateStr,
+    flow_name,
+    recipient,
+    purpose: reason,
+    signer_name,
+    signer_position,
     requesterEmail,
     ownerEmail,
-    reason,          // เพิ่ม
-    status: 'pending',
-    timestamp: new Date().toISOString(),
+    status: 'Pending',
+    timestamp: timestampStr,
   };
 
   try {
