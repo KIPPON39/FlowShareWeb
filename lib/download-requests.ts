@@ -41,7 +41,7 @@ export async function createDownloadRequest(request: Request) {
   const randomHex = crypto.randomUUID().split('-')[0].toUpperCase();
 
   const downloadRequest = {
-    requestId: `DR-${year}${month}${day}-${randomHex}`,
+    dlrequestID: `DR-${year}${month}${day}-${randomHex}`,
     workflowId,
     requesterName,   // เพิ่ม
     requesterEmail,
