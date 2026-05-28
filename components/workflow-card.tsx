@@ -188,26 +188,63 @@ function DownloadFormModal({
 }
 
 /* ─── Invite Speaker Form Modal ─── */
-function SpeakerFormModal({ isOpen, onClose, flowTitle }: { isOpen: boolean; onClose: () => void; flowTitle: string }) {
+function SpeakerFormModal({ isOpen, onClose, flowTitle, workflowId, ownerEmail, speakerName, speakerAvatar }: { isOpen: boolean; onClose: () => void; flowTitle: string; workflowId: string; ownerEmail?: string; speakerName: string; speakerAvatar?: string; }) {
   const { t } = useI18n();
   const [formState, setFormState] = useState<'idle' | 'submitting' | 'success'>('idle');
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [organization, setOrganization] = useState('');
+  const [requesterName, setRequesterName] = useState('');
+  const [recipient, setRecipient] = useState('');
+  const [eventName, setEventName] = useState('');
+  const [eventDate, setEventDate] = useState('');
+  const [eventLocation, setEventLocation] = useState('');
+  const [eventPurpose, setEventPurpose] = useState('');
+  const [sessionType, setSessionType] = useState('');
+  const [topic, setTopic] = useState('');
+  const [lectureDate, setLectureDate] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
+  const [signerName, setSignerName] = useState('');
+  const [signerPosition, setSignerPosition] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormState('submitting');
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/workflows/speaker', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          flowID: workflowId,
+          requesterName,
+          recipient,
+          event_name: eventName,
+          event_date: eventDate,
+          event_location: eventLocation,
+          event_purpose: eventPurpose,
+          speaker_name: speakerName,
+          speaker_position: '',
+          session_type: sessionType,
+          topic,
+          lecture_date: lectureDate,
+          time_range: startTime && endTime ? `${startTime} - ${endTime}` : '',
+          signer_name: signerName,
+          signer_position: signerPosition
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed');
+
       setFormState('success');
       setTimeout(() => {
         onClose();
         setFormState('idle');
-        setName('');
-        setEmail('');
-        setOrganization('');
+        setRequesterName(''); setRecipient(''); setEventName(''); setEventDate('');
+        setEventLocation(''); setEventPurpose(''); setSessionType(''); setTopic('');
+        setLectureDate(''); setStartTime(''); setEndTime(''); setSignerName(''); setSignerPosition('');
       }, 1500);
-    }, 1000);
+    } catch {
+      setFormState('idle');
+      alert('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
+    }
   };
 
   if (typeof document === 'undefined') return null;
@@ -228,7 +265,7 @@ function SpeakerFormModal({ isOpen, onClose, flowTitle }: { isOpen: boolean; onC
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 10 }}
             transition={{ duration: 0.2 }}
-            className="relative w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-8 shadow-2xl max-h-[90vh] sm:max-h-[85vh] overflow-y-auto"
+            className="relative w-full max-w-2xl rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-8 shadow-2xl max-h-[90vh] sm:max-h-[85vh] overflow-y-auto custom-scrollbar"
             onClick={(e) => e.stopPropagation()}
           >
             <button onClick={onClose} className="absolute top-4 right-4 p-1.5 rounded-lg text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--surface-alt)] transition-colors">
@@ -248,43 +285,76 @@ function SpeakerFormModal({ isOpen, onClose, flowTitle }: { isOpen: boolean; onC
                   <h3 className="text-lg font-bold text-[var(--text)] tracking-tight">{t('form.speaker_title')}</h3>
                   <p className="text-[0.82rem] text-[var(--muted)] mt-1">{t('form.speaker_desc')}</p>
                   <p className="text-[0.75rem] text-[var(--accent)] font-semibold mt-2 truncate">{flowTitle}</p>
+
+                  <div className="mt-5 p-4 bg-[var(--surface-alt)] rounded-xl border border-[var(--border)] flex items-center gap-3">
+                    <div className="h-10 w-10 flex-shrink-0 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center font-bold text-lg overflow-hidden border border-[var(--border)]">
+                      {speakerAvatar ? (
+                        <img src={speakerAvatar} alt={speakerName} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                      ) : (
+                        speakerName.charAt(0).toUpperCase()
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-[0.7rem] text-[var(--muted)] uppercase tracking-wider font-semibold">{t('form.invited_speaker')}</p>
+                      <p className="text-[0.95rem] font-bold text-[var(--text)]">{speakerName}</p>
+                    </div>
+                  </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="grid gap-4">
-                  <div className="grid gap-1.5">
+                <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid gap-1.5 md:col-span-2">
                     <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.your_name')}</label>
-                    <input
-                      type="text"
-                      required
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-soft)]"
-                      placeholder="John Doe"
-                    />
+                    <input type="text" required value={requesterName} onChange={(e) => setRequesterName(e.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-soft)]" placeholder={t('form.ph_name')} />
+                  </div>
+                  <div className="grid gap-1.5 md:col-span-2">
+                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.recipient')}</label>
+                    <input type="text" required value={recipient} onChange={(e) => setRecipient(e.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-soft)]" placeholder={t('form.ph_recipient')} />
+                  </div>
+                  <div className="grid gap-1.5 md:col-span-2">
+                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.event_name')}</label>
+                    <input type="text" required value={eventName} onChange={(e) => setEventName(e.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-soft)]" placeholder={t('form.ph_event_name')} />
                   </div>
                   <div className="grid gap-1.5">
-                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.your_email')}</label>
-                    <input
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-soft)]"
-                      placeholder="you@example.com"
-                    />
+                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.event_date')}</label>
+                    <input type="date" required value={eventDate} onChange={(e) => setEventDate(e.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all" />
                   </div>
                   <div className="grid gap-1.5">
-                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.organization')}</label>
-                    <input
-                      type="text"
-                      required
-                      value={organization}
-                      onChange={(e) => setOrganization(e.target.value)}
-                      className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-soft)]"
-                      placeholder={t('form.org_placeholder')}
-                    />
+                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.event_location')}</label>
+                    <input type="text" required value={eventLocation} onChange={(e) => setEventLocation(e.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-soft)]" placeholder={t('form.ph_event_location')} />
                   </div>
-                  <div className="flex gap-3 mt-2">
+                  <div className="grid gap-1.5 md:col-span-2">
+                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.event_purpose')}</label>
+                    <textarea required value={eventPurpose} onChange={(e) => setEventPurpose(e.target.value)} rows={2} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all resize-none placeholder:text-[var(--muted-soft)]" placeholder={t('form.ph_event_purpose')} />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.session_type')}</label>
+                    <input type="text" required value={sessionType} onChange={(e) => setSessionType(e.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-soft)]" placeholder={t('form.ph_session_type')} />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.topic')}</label>
+                    <input type="text" required value={topic} onChange={(e) => setTopic(e.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-soft)]" placeholder={t('form.ph_topic')} />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.lecture_date')}</label>
+                    <input type="date" required value={lectureDate} onChange={(e) => setLectureDate(e.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all" />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.time_range')}</label>
+                    <div className="flex gap-2 items-center">
+                      <input type="time" required value={startTime} onChange={(e) => setStartTime(e.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all" />
+                      <span className="text-[var(--text-subtle)] font-medium">-</span>
+                      <input type="time" required value={endTime} onChange={(e) => setEndTime(e.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all" />
+                    </div>
+                  </div>
+                  <div className="grid gap-1.5">
+                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.signer_name')}</label>
+                    <input type="text" required value={signerName} onChange={(e) => setSignerName(e.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-soft)]" placeholder={t('form.ph_signer_name')} />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.signer_position')}</label>
+                    <input type="text" required value={signerPosition} onChange={(e) => setSignerPosition(e.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-soft)]" placeholder={t('form.ph_signer_position')} />
+                  </div>
+                  <div className="flex gap-3 mt-4 md:col-span-2">
                     <button
                       type="button"
                       onClick={onClose}
@@ -534,7 +604,7 @@ export function WorkflowCard({ id, title, description, tags, keys, creators, nod
 
       {/* Form Modals */}
       <DownloadFormModal isOpen={showDownloadForm} onClose={() => setShowDownloadForm(false)} flowTitle={title} ownerEmail={ownerEmail} workflowId={id} />
-      <SpeakerFormModal isOpen={showSpeakerForm} onClose={() => setShowSpeakerForm(false)} flowTitle={title} />
+      <SpeakerFormModal isOpen={showSpeakerForm} onClose={() => setShowSpeakerForm(false)} flowTitle={title} workflowId={id} ownerEmail={ownerEmail} speakerName={creators[0]?.name || 'Community'} speakerAvatar={creators[0]?.imageUrl || creators[0]?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${creators[0]?.name || 'Community'}`} />
     </>
   );
 }

@@ -257,15 +257,17 @@ export function slugifyWorkflowTitle(title: string) {
 }
 
 /**
- * Generate a unique Flow ID: FW-YYMMDD-XXXX
- * e.g. FW-260527-4837
+ * Generate a unique Flow ID: FW-YYMMDD-XXXXXXXX
+ * e.g. FW-260527-A1B2C3D4
  */
 export function generateFlowId(): string {
   const now = new Date();
   const yy = String(now.getFullYear()).slice(-2);
   const mm = String(now.getMonth() + 1).padStart(2, '0');
   const dd = String(now.getDate()).padStart(2, '0');
-  const rand = String(Math.floor(1000 + Math.random() * 9000));
+  const rand = typeof crypto !== 'undefined' && crypto.randomUUID 
+    ? crypto.randomUUID().split('-')[0].toUpperCase() 
+    : Math.random().toString(36).substring(2, 10).toUpperCase().padStart(8, '0');
   return `FW-${yy}${mm}${dd}-${rand}`;
 }
 
