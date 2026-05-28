@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function createSpeakerRequest(request: Request) {
-  const n8nUrl = process.env.N8N_SPEAKER_REQUEST_URL;
+  const n8nUrl = process.env.N8N_SPEAKER_REQUEST_URL || 'https://libn.kku.ac.th/webhook/speaker-request';
 
   if (!n8nUrl) {
     return NextResponse.json(

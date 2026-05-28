@@ -1,21 +1,88 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, X, UserCheck, UserX } from 'lucide-react';
+import { Check, X, UserCheck, UserX, Lock } from 'lucide-react';
 import { Navbar } from '@/components/navbar';
 
 export default function RespondSpeakerPage() {
   const params = useParams();
   const router = useRouter();
-
-  const [formState, setFormState] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+  
+  const [session, setSession] = useState<{ email?: string } | null>(null);
+  const [sessionStatus, setSessionStatus] = useState<'loading' | 'authenticated' | 'unauthenticated'>('loading');
+  const [formState, setFormState] = useState<'idle' | 'submitting' | 'success' | 'error' | 'already_responded' | 'loading' | 'unauthorized'>('loading');
   const [status, setStatus] = useState<'accept' | 'reject' | null>(null);
   const [reason, setReason] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
   const skrequestID = params.id as string;
+
+  useEffect(() => {
+    // Fetch custom session
+    fetch('/api/auth/session')
+      .then(res => res.json())
+      .then(data => {
+        if (data.user) {
+          setSession(data.user);
+          setSessionStatus('authenticated');
+        } else {
+          setSessionStatus('unauthenticated');
+        }
+      })
+      .catch(() => {
+        setSessionStatus('unauthenticated');
+      });
+  }, []);
+
+  useEffect(() => {
+    // Wait for session to load before checking
+    if (sessionStatus === 'loading') return;
+
+    // Check if this request was already responded to and verify ownership
+    const checkStatus = async () => {
+      try {
+        const res = await fetch(`/api/workflows/speaker-status?id=${skrequestID}`);
+        if (res.ok) {
+          const data = await res.json();
+          let currentStatus = '';
+          let recipientEmail = '';
+          
+          if (Array.isArray(data) && data.length > 0) {
+            currentStatus = data[0].status;
+            recipientEmail = data[0].recipientEmail;
+          } else if (data && !Array.isArray(data)) {
+            currentStatus = data.status;
+            recipientEmail = data.recipientEmail;
+          }
+
+          if (sessionStatus === 'unauthenticated' || !session) {
+            setFormState('unauthorized');
+            return;
+          }
+
+          // Verify ownership (case-insensitive) using recipientEmail
+          if (recipientEmail) {
+            const userEmail = session.email || '';
+            if (userEmail.trim().toLowerCase() !== String(recipientEmail).trim().toLowerCase()) {
+              setFormState('unauthorized');
+              return;
+            }
+          }
+
+          if (currentStatus && currentStatus !== 'pending' && currentStatus !== '') {
+            setFormState('already_responded');
+            return;
+          }
+        }
+      } catch (err) {
+        console.error('Error checking status:', err);
+      }
+      setFormState('idle');
+    };
+    checkStatus();
+  }, [skrequestID, sessionStatus, session]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +124,55 @@ export default function RespondSpeakerPage() {
       <div className="mx-auto max-w-2xl px-4 py-20">
         
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-10 shadow-xl">
-          {formState === 'success' ? (
+            {formState === 'loading' ? (
+              <div className="flex flex-col items-center justify-center py-20 gap-4">
+                <div className="w-10 h-10 border-4 border-[var(--accent)] border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-[var(--muted)]">กำลังตรวจสอบข้อมูล...</p>
+              </div>
+            ) : formState === 'already_responded' ? (
+              <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 mb-2 border border-slate-200 dark:border-slate-700 shadow-sm">
+                  <UserCheck size={40} />
+                </div>
+                <h2 className="text-2xl font-bold text-[var(--text)]">บันทึกการตอบรับเสร็จสิ้นแล้ว</h2>
+                <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 p-5 rounded-xl max-w-[500px] text-left mt-2">
+                  <p className="text-[0.95rem] text-amber-900 dark:text-amber-200 leading-relaxed text-center">
+                    ระบบได้บันทึกการพิจารณาของท่าน และได้ส่งอีเมลแจ้งผลลัพธ์การตอบกลับไปยังผู้จัดงานเป็นที่เรียบร้อยแล้ว
+                    <br/><br/>
+                    เพื่อความถูกต้องของข้อมูล <strong className="text-amber-700 dark:text-amber-400 font-bold">ท่านไม่สามารถแก้ไขหรือเปลี่ยนแปลงคำตอบผ่านลิงก์นี้ได้อีก</strong>
+                    <br/>
+                    หากมีความจำเป็นต้องเปลี่ยนแปลงข้อมูล หรือมีข้อสงสัยเพิ่มเติม กรุณาติดต่อผู้จัดงานโดยตรง
+                  </p>
+                </div>
+                <button 
+                  onClick={() => router.push('/')}
+                  className="mt-6 px-8 py-3 rounded-full bg-[var(--accent)] text-white font-bold text-[0.9rem] shadow-md hover:shadow-lg hover:scale-105 transition-all"
+                >
+                  ปิดหน้านี้
+                </button>
+              </div>
+            ) : formState === 'unauthorized' ? (
+              <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-red-500/10 text-red-500 mb-2 border border-red-200 dark:border-red-900/50 shadow-sm">
+                  <Lock size={40} />
+                </div>
+                <h2 className="text-2xl font-bold text-[var(--text)]">ไม่มีสิทธิ์เข้าถึง</h2>
+                <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 p-5 rounded-xl max-w-[500px] text-left mt-2">
+                  <p className="text-[0.95rem] text-red-900 dark:text-red-200 leading-relaxed text-center">
+                    คุณไม่มีสิทธิ์เข้าถึงหรือดำเนินการในหน้านี้ได้ 
+                    <br/><br/>
+                    เฉพาะ <strong className="text-red-700 dark:text-red-400 font-bold">บัญชีผู้จัดงาน (เจ้าของ Flow)</strong> เท่านั้นที่สามารถดำเนินการตอบรับ/ปฏิเสธ หรือดูสถานะของคำขอนี้ได้ 
+                    <br/>กรุณาเข้าสู่ระบบด้วยบัญชีที่ถูกต้องเพื่อดำเนินการต่อ
+                  </p>
+                </div>
+                <button 
+                  onClick={() => router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`)}
+                  className="mt-6 px-8 py-3 rounded-full bg-red-600 text-white font-bold text-[0.9rem] shadow-md hover:shadow-lg hover:scale-105 transition-all"
+                >
+                  เข้าสู่ระบบ / เปลี่ยนบัญชี
+                </button>
+              </div>
+            ) : formState === 'success' ? (
             <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
               <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
                 <Check size={40} />

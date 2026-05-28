@@ -128,7 +128,7 @@ export default function Home() {
       wf.description.toLowerCase().includes(query) ||
       (wf.tags && wf.tags.some(tag => tag.toLowerCase().includes(query)))
     );
-  });
+  }).sort((a, b) => (b.views || 0) - (a.views || 0));
 
   // Derive real stats from workflows
   const uniqueCreators = new Set(workflows.flatMap(wf => wf.creators?.map(c => c.name) || [])).size;

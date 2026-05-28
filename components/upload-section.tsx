@@ -807,7 +807,38 @@ export function UploadSection() {
   };
 
   return (
-    <section id="upload" className="grid gap-8 my-8 sm:my-12 pb-28 lg:pb-12">
+    <section id="upload" className="grid gap-8 my-8 sm:my-12 pb-28 lg:pb-12 relative">
+      <AnimatePresence>
+        {submitState === 'saved' && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
+          >
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              className="bg-[var(--surface)] border border-[var(--border)] p-8 rounded-2xl shadow-2xl max-w-md w-full text-center flex flex-col items-center gap-4"
+            >
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500 mb-2">
+                <CheckCircle2 size={40} />
+              </div>
+              <h2 className="text-2xl font-bold text-[var(--text)]">สร้าง Flow สำเร็จ!</h2>
+              <p className="text-[0.95rem] text-[var(--muted)] leading-relaxed">
+                {statusMessage || t('upload.saved')}
+              </p>
+              <button 
+                onClick={() => window.location.href = '/'}
+                className="mt-6 px-8 py-3 w-full rounded-xl bg-[var(--accent)] text-white font-bold text-[0.9rem] shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all"
+              >
+                กลับไปหน้าหลัก
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Progress Bar */}
       <div className="grid gap-2">
         <div className="flex items-center justify-between text-xs font-bold text-[var(--muted-strong)]">
