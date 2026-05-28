@@ -9,7 +9,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const n8nUrl = process.env.N8N_SPEAKER_RESPONSE_WEBHOOK_URL || 'http://localhost:5678/webhook/speaker-response';
+    const n8nUrl = process.env.N8N_SPEAKER_RESPONSE_URL || 'https://libn.kku.ac.th/webhook/speaker-response';
 
     const response = await fetch(n8nUrl, {
       method: 'POST',
