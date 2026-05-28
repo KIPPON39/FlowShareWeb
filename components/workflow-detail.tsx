@@ -38,6 +38,9 @@ function DownloadFormModal({
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [reason, setReason] = useState('');
+  const [recipient, setRecipient] = useState('');
+  const [signerName, setSignerName] = useState('');
+  const [signerPosition, setSignerPosition] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,6 +55,10 @@ function DownloadFormModal({
           requesterEmail: email,
           ownerEmail,
           reason,
+          flow_name: flowTitle,
+          recipient,
+          signer_name: signerName,
+          signer_position: signerPosition,
         }),
       });
 
@@ -64,6 +71,9 @@ function DownloadFormModal({
         setName('');
         setEmail('');
         setReason('');
+        setRecipient('');
+        setSignerName('');
+        setSignerPosition('');
       }, 1500);
     } catch {
       setFormState('idle');
@@ -113,6 +123,18 @@ function DownloadFormModal({
                   <div className="grid gap-1.5">
                     <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.reason')}</label>
                     <textarea required value={reason} onChange={(e) => setReason(e.target.value)} rows={3} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all resize-none placeholder:text-[var(--muted-light)]" placeholder={t('form.reason_placeholder')} />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.recipient')}</label>
+                    <input type="text" required value={recipient} onChange={(e) => setRecipient(e.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-light)]" placeholder={t('form.ph_recipient')} />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.signer_name')}</label>
+                    <input type="text" required value={signerName} onChange={(e) => setSignerName(e.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-light)]" placeholder={t('form.ph_signer_name')} />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.signer_position')}</label>
+                    <input type="text" required value={signerPosition} onChange={(e) => setSignerPosition(e.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-light)]" placeholder={t('form.ph_signer_position')} />
                   </div>
                   <div className="flex gap-3 mt-2">
                     <button type="button" onClick={onClose} className="flex-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] py-2.5 text-[0.85rem] font-medium text-[var(--muted-strong)] hover:text-[var(--text)] hover:bg-[var(--surface-alt)] transition-all">{t('form.cancel')}</button>

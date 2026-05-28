@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const webhookUrl = process.env.N8N_VIEW_WEBHOOK_URL;
   
@@ -13,7 +13,7 @@ export async function POST(
     );
   }
 
-  const { id } = params;
+  const { id } = await params;
 
   if (!id) {
     return NextResponse.json({ error: 'Workflow ID is required' }, { status: 400 });
