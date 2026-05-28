@@ -10,7 +10,7 @@ let cachedAuth: any = null;
 
 async function getAuthClient() {
   if (cachedAuth) return cachedAuth;
-  
+
   if (!GOOGLE_SERVICE_ACCOUNT_EMAIL || !GOOGLE_PRIVATE_KEY) {
     throw new Error('Google Service Account credentials missing in .env');
   }
@@ -42,7 +42,7 @@ export async function getUserByUsername(username: string) {
   try {
     const auth = await getAuthClient();
     const sheets = google.sheets({ version: 'v4', auth });
-    
+
     // Read the sheet. Adjust range to A:F to include Email, ImageUrl, and Role.
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: GOOGLE_SHEET_ID_USERS,
