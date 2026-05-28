@@ -105,7 +105,7 @@ function extractNodeCredentials(nodes: JsonRecord[]) {
     const nodeType = String(node.type || '').toLowerCase();
     if (nodeType.includes('httprequest') || nodeType.includes('http request') || nodeType === 'n8n-nodes-base.httprequest') {
       const params = node.parameters || {};
-      
+
       // ตรวจสอบ genericAuthType (เช่น httpHeaderAuth, httpBasicAuth, httpQueryAuth, httpDigestAuth)
       if (params.authentication === 'genericCredentialType' && params.genericAuthType) {
         const authName = credentialTypeToPlatform(params.genericAuthType) || String(params.genericAuthType);
@@ -451,10 +451,10 @@ export function UploadSection() {
                 const keysList = Object.keys(parsedDescObj);
                 let descKey = keysList.find(k => k.toLowerCase() === 'description');
                 if (!descKey && keysList.length > 0) {
-                  descKey = keysList.find(k => 
-                    k.toLowerCase().includes('desc') || 
-                    k.includes('อธิบาย') || 
-                    k.includes('รายละเอียด') || 
+                  descKey = keysList.find(k =>
+                    k.toLowerCase().includes('desc') ||
+                    k.includes('อธิบาย') ||
+                    k.includes('รายละเอียด') ||
                     k.includes('สรุป')
                   );
                   if (!descKey) descKey = keysList[0];
@@ -488,10 +488,10 @@ export function UploadSection() {
             const keysList = Object.keys(parsedDescObj);
             let howToUseKey = keysList.find(k => k.toLowerCase() === 'howtouse');
             if (!howToUseKey && keysList.length > 1) {
-              howToUseKey = keysList.find(k => 
-                k.toLowerCase().includes('use') || 
-                k.toLowerCase().includes('how') || 
-                k.includes('ขั้นตอน') || 
+              howToUseKey = keysList.find(k =>
+                k.toLowerCase().includes('use') ||
+                k.toLowerCase().includes('how') ||
+                k.includes('ขั้นตอน') ||
                 k.includes('วิธี')
               );
             }
@@ -499,7 +499,7 @@ export function UploadSection() {
               extractedHowToUse = parsedDescObj[howToUseKey];
             }
           }
-        } catch {}
+        } catch { }
       }
 
       if (extractedHowToUse && extractedHowToUse.length > 0) {
@@ -862,13 +862,12 @@ export function UploadSection() {
                   </div>
                   {/* Validation Status Badge */}
                   {fileValidationStatus !== 'idle' && (
-                    <div className={`mt-3 flex items-center gap-2 rounded-lg px-3 py-2 text-[0.72rem] font-semibold ${
-                      fileValidationStatus === 'checking'
+                    <div className={`mt-3 flex items-center gap-2 rounded-lg px-3 py-2 text-[0.72rem] font-semibold ${fileValidationStatus === 'checking'
                         ? 'bg-[var(--surface-alt)] text-[var(--muted)] border border-[var(--border)]'
                         : fileValidationStatus === 'passed'
                           ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
                           : 'bg-red-500/10 text-red-500 border border-red-500/20'
-                    }`}>
+                      }`}>
                       {fileValidationStatus === 'checking' && (
                         <><span className="inline-block animate-spin">⟡</span> {lang === 'th' ? 'กำลังตรวจสอบ...' : 'Validating...'}</>
                       )}
@@ -924,11 +923,10 @@ export function UploadSection() {
 
                   {/* Validation Status for Failed/Checking states when file isn't loaded yet */}
                   {(fileValidationStatus === 'checking' || fileValidationStatus === 'failed') && (
-                    <div className={`flex items-start gap-2.5 rounded-lg px-4 py-3 text-[0.75rem] font-semibold ${
-                      fileValidationStatus === 'checking'
+                    <div className={`flex items-start gap-2.5 rounded-lg px-4 py-3 text-[0.75rem] font-semibold ${fileValidationStatus === 'checking'
                         ? 'bg-[var(--surface-alt)] text-[var(--muted)] border border-[var(--border)]'
                         : 'bg-red-500/10 text-red-500 border border-red-500/20'
-                    }`}>
+                      }`}>
                       {fileValidationStatus === 'checking' ? (
                         <><span className="inline-block animate-spin mt-0.5">⟡</span> <span>{statusMessage || (lang === 'th' ? 'กำลังตรวจสอบ...' : 'Validating...')}</span></>
                       ) : (
@@ -958,13 +956,12 @@ export function UploadSection() {
                     type="button"
                     onClick={handleGenerateDescription}
                     disabled={isGeneratingDesc || !rawJson || weeklyQuota.remaining <= 0}
-                    className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[0.7rem] font-bold tracking-wide transition-all duration-200 border ${
-                      rawJson && weeklyQuota.remaining > 0
+                    className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[0.7rem] font-bold tracking-wide transition-all duration-200 border ${rawJson && weeklyQuota.remaining > 0
                         ? 'bg-[var(--accent-soft)] text-[var(--accent)] border-[var(--accent)]/25 hover:bg-[var(--accent)]/15 hover:border-[var(--accent)]/40 cursor-pointer shadow-[0_0_8px_var(--accent-glow)] active:scale-95'
                         : 'bg-transparent text-[var(--muted-soft)] border-[var(--border)] cursor-not-allowed opacity-40'
-                    }`}
-                    title={!rawJson 
-                      ? (lang === 'th' ? 'อัพโหลดไฟล์ JSON ก่อนจึงจะกดช่วยสรุปได้' : 'Upload JSON file first to use AI') 
+                      }`}
+                    title={!rawJson
+                      ? (lang === 'th' ? 'อัพโหลดไฟล์ JSON ก่อนจึงจะกดช่วยสรุปได้' : 'Upload JSON file first to use AI')
                       : weeklyQuota.remaining <= 0
                         ? (lang === 'th' ? 'คุณใช้งาน AI ครบโควต้าในสัปดาห์นี้แล้ว' : 'You have exhausted your weekly AI quota')
                         : (lang === 'th' ? 'ให้ AI เขียนคำอธิบาย Flow ให้อัตโนมัติ' : 'Let AI write the description automatically')
@@ -1026,8 +1023,8 @@ export function UploadSection() {
                           type="button"
                           onClick={() => toggleTag(tag)}
                           className={`px-3 py-1.5 rounded-lg text-[0.75rem] font-medium transition-all duration-200 border ${isSelected
-                              ? 'bg-[var(--accent)] text-white border-[var(--accent)] shadow-sm shadow-[var(--accent-glow)]'
-                              : 'bg-[var(--surface-alt)] text-[var(--muted)] border-[var(--border)] hover:border-[var(--accent-soft)] hover:text-[var(--text)]'
+                            ? 'bg-[var(--accent)] text-white border-[var(--accent)] shadow-sm shadow-[var(--accent-glow)]'
+                            : 'bg-[var(--surface-alt)] text-[var(--muted)] border-[var(--border)] hover:border-[var(--accent-soft)] hover:text-[var(--text)]'
                             }`}
                         >
                           {tag}

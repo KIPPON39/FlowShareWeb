@@ -81,7 +81,7 @@ export async function POST(request: Request) {
     if (Array.isArray(user) && user.length > 0) {
       user = user[0];
     }
-    
+
     if (!user) {
       return NextResponse.json({ error: 'Invalid username or password' }, { status: 401 });
     }

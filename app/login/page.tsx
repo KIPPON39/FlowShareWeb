@@ -57,10 +57,10 @@ export default function LoginPage() {
         <div className="w-full max-w-sm">
           {/* Form Container */}
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)]/80 backdrop-blur-xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
-            
+
             {/* Decorative background blur */}
             <div className="absolute -top-12 -right-12 h-32 w-32 rounded-full bg-[var(--accent)]/10 blur-2xl pointer-events-none" />
-            
+
             <div className="text-center mb-8">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent)] text-white shadow-lg shadow-[var(--accent-glow)] mb-4">
                 <Zap size={20} fill="currentColor" />
