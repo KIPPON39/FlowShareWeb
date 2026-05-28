@@ -134,7 +134,7 @@ function DownloadFormModal({
   const {t} = useI18n();
       const [formState, setFormState] = useState<'idle' | 'submitting' | 'success'>('idle');
       const [requesterName, setRequesterName] = useState('');
-      const [recipient, setRecipient] = useState('');
+      const [requesterEmail, setRequesterEmail] = useState('');
       const [eventName, setEventName] = useState('');
       const [eventDate, setEventDate] = useState('');
       const [eventLocation, setEventLocation] = useState('');
@@ -142,6 +142,7 @@ function DownloadFormModal({
       const [sessionType, setSessionType] = useState('');
       const [topic, setTopic] = useState('');
       const [lectureDate, setLectureDate] = useState('');
+      const [sameAsEventDate, setSameAsEventDate] = useState(false);
       const [startTime, setStartTime] = useState('');
       const [endTime, setEndTime] = useState('');
       const [signerName, setSignerName] = useState('');
@@ -155,9 +156,12 @@ function DownloadFormModal({
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
+          skrequestID: '',
           flowID: workflowId,
           requesterName,
-          recipient,
+          requesterEmail,
+          recipient: speakerName,
+          recipientEmail: ownerEmail || '',
           event_name: eventName,
           event_date: eventDate,
           event_location: eventLocation,
@@ -166,7 +170,7 @@ function DownloadFormModal({
           speaker_position: '',
           session_type: sessionType,
           topic,
-          lecture_date: lectureDate,
+          lecture_date: sameAsEventDate ? eventDate : lectureDate,
           time_range: startTime && endTime ? `${startTime} - ${endTime}` : '',
           signer_name: signerName,
           signer_position: signerPosition
@@ -179,9 +183,9 @@ function DownloadFormModal({
       setTimeout(() => {
         onClose();
         setFormState('idle');
-        setRequesterName(''); setRecipient(''); setEventName(''); setEventDate('');
+        setRequesterName(''); setRequesterEmail(''); setEventName(''); setEventDate('');
         setEventLocation(''); setEventPurpose(''); setSessionType(''); setTopic('');
-        setLectureDate(''); setStartTime(''); setEndTime(''); setSignerName(''); setSignerPosition('');
+        setLectureDate(''); setSameAsEventDate(false); setStartTime(''); setEndTime(''); setSignerName(''); setSignerPosition('');
       }, 1500);
     } catch {
       setFormState('idle');
@@ -230,8 +234,8 @@ function DownloadFormModal({
                     <input type="text" required value={requesterName} onChange={(e) => setRequesterName(e.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-soft)]" placeholder={t('form.ph_name')} />
                   </div>
                   <div className="grid gap-1.5 md:col-span-2">
-                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.recipient')}</label>
-                    <input type="text" required value={recipient} onChange={(e) => setRecipient(e.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-soft)]" placeholder={t('form.ph_recipient')} />
+                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.requester_email')}</label>
+                    <input type="email" required value={requesterEmail} onChange={(e) => setRequesterEmail(e.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-soft)]" placeholder={t('form.ph_email')} />
                   </div>
                   <div className="grid gap-1.5 md:col-span-2">
                     <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.event_name')}</label>
@@ -258,8 +262,14 @@ function DownloadFormModal({
                     <input type="text" required value={topic} onChange={(e) => setTopic(e.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-soft)]" placeholder={t('form.ph_topic')} />
                   </div>
                   <div className="grid gap-1.5">
-                    <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.lecture_date')}</label>
-                    <input type="date" required value={lectureDate} onChange={(e) => setLectureDate(e.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all" />
+                    <div className="flex items-center justify-between">
+                      <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.lecture_date')}</label>
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <input type="checkbox" checked={sameAsEventDate} onChange={(e) => setSameAsEventDate(e.target.checked)} className="rounded border-[var(--border)] text-[var(--accent)] focus:ring-[var(--accent)] h-3.5 w-3.5 cursor-pointer transition-all" />
+                        <span className="text-[0.65rem] font-medium text-[var(--text-subtle)] hover:text-[var(--text)] transition-colors">{t('form.same_as_event')}</span>
+                      </label>
+                    </div>
+                    <input type="date" required={!sameAsEventDate} disabled={sameAsEventDate} value={sameAsEventDate ? eventDate : lectureDate} onChange={(e) => setLectureDate(e.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all disabled:opacity-50 disabled:cursor-not-allowed" />
                   </div>
                   <div className="grid gap-1.5">
                     <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">{t('form.time_range')}</label>
@@ -279,7 +289,7 @@ function DownloadFormModal({
                   </div>
                   <div className="flex gap-3 mt-4 md:col-span-2">
                     <button type="button" onClick={onClose} className="flex-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] py-2.5 text-[0.85rem] font-medium text-[var(--muted-strong)] hover:text-[var(--text)] hover:bg-[var(--surface-alt)] transition-all">{t('form.cancel')}</button>
-                    <button type="submit" disabled={formState === 'submitting'} className="flex-1 rounded-xl bg-[var(--accent)] py-2.5 text-[0.85rem] font-semibold text-white transition-all hover:opacity-90 active:scale-[0.97] disabled:opacity-60 shadow-sm shadow-[var(--accent-glow)]">{formState === 'submitting' ? t('form.submitting') : t('form.submit')}</button>
+                    <button type="submit" disabled={formState !== 'idle'} className="flex-1 rounded-xl bg-[var(--accent)] py-2.5 text-[0.85rem] font-semibold text-white transition-all hover:opacity-90 active:scale-[0.97] disabled:opacity-60 shadow-sm shadow-[var(--accent-glow)]">{formState === 'submitting' ? t('form.submitting') : formState === 'success' ? t('form.success') : t('form.submit')}</button>
                   </div>
                 </form>
               </>
