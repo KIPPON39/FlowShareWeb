@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { useI18n } from '@/lib/i18n';
+import { getIconBgFromTag } from '@/lib/tag-icon';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   DndContext,
@@ -824,7 +825,7 @@ export function UploadSection() {
               <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500 mb-2">
                 <CheckCircle2 size={40} />
               </div>
-              <h2 className="text-2xl font-bold text-[var(--text)]">สร้าง Flow สำเร็จ!</h2>
+              <h2 className="text-2xl font-bold text-[var(--text)]">{t('upload.success')}</h2>
               <p className="text-[0.95rem] text-[var(--muted)] leading-relaxed">
                 {statusMessage || t('upload.saved')}
               </p>
@@ -832,7 +833,7 @@ export function UploadSection() {
                 onClick={() => window.location.href = '/'}
                 className="mt-6 px-8 py-3 w-full rounded-xl bg-[var(--accent)] text-white font-bold text-[0.9rem] shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all"
               >
-                กลับไปหน้าหลัก
+                {t('upload.back_to_home')}
               </button>
             </motion.div>
           </motion.div>
@@ -1323,7 +1324,17 @@ export function UploadSection() {
             <div className="grid gap-6">
               <div className="flex items-center gap-4">
                 <div className="h-16 w-16 overflow-hidden rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-xl relative">
-                  <div className="absolute inset-0 bg-linear-to-br from-[var(--accent)]/10 to-transparent" />
+                  {tags[0] ? (
+                    <Image
+                      src={getIconBgFromTag(tags[0])}
+                      alt={tags[0]}
+                      fill
+                      className="object-contain p-2"
+                      sizes="64px"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-linear-to-br from-[var(--accent)]/10 to-transparent" />
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className={`min-h-[1.5rem] rounded-lg ${!title ? 'shimmer w-3/4' : ''}`}>
@@ -1338,7 +1349,7 @@ export function UploadSection() {
                         </span>
                       ))
                     ) : (
-                      <span className="text-[0.65rem] font-bold text-[var(--muted-soft)]">No tags selected</span>
+                      <span className="text-[0.65rem] font-bold text-[var(--muted-soft)]">{t('upload.no_tags_selected')}</span>
                     )}
                   </div>
                 </div>

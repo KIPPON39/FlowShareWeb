@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Kanit } from 'next/font/google';
 import './globals.css';
 import { I18nProvider } from '@/components/i18n-provider';
+import { ScrollToTop } from '@/components/scroll-to-top';
 
 const kanit = Kanit({
   subsets: ['latin', 'thai'],
@@ -12,6 +13,9 @@ const kanit = Kanit({
 export const metadata: Metadata = {
   title: 'FlowShare — Automation Workflow Library',
   description: 'Curated automation patterns for teams who want clarity before complexity.',
+  icons: {
+    icon: '/favicon.png',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -41,6 +45,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="bg-noise" />
         <I18nProvider>
           {children}
+          <ScrollToTop />
         </I18nProvider>
       </body>
     </html>

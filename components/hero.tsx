@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { ChevronDown, ChevronLeft, ChevronRight, Component, Download, ArrowRight } from 'lucide-react';
+import { ArrowRight, Download, Eye, FileJson, Play, Pause, ChevronLeft, ChevronRight, Zap, Component, ChevronDown } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { type WorkflowTemplate } from '@/lib/workflows';
 import Link from 'next/link';
@@ -126,6 +126,12 @@ export function Hero({ workflows = [], isLoading = false }: HeroProps) {
 
   return (
     <section id="explore" className="relative flex flex-col justify-center min-h-[calc(100vh-64px)] w-full overflow-hidden border-b border-[var(--border)]">
+      {/* Background Effect */}
+      <div className="absolute inset-0 z-0 pointer-events-none opacity-80 dark:opacity-60">
+        {/* Fade to bottom */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[var(--bg)] opacity-90 pointer-events-none" />
+      </div>
+
       <div className="relative z-10 grid gap-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full py-10 sm:py-16 lg:py-20 text-center">
         <div className="grid gap-5">
           <h1 className="mx-auto max-w-3xl text-[1.6rem] sm:text-4xl md:text-5xl lg:text-[3.25rem] font-semibold leading-[1.2] sm:leading-[1.12] tracking-tight text-[var(--hero-title)] break-words">
@@ -269,7 +275,7 @@ export function Hero({ workflows = [], isLoading = false }: HeroProps) {
                       {/* View detail hint on center card */}
                       {isCenter && (
                         <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 translate-y-full pt-3 flex items-center gap-1 text-[0.65rem] text-[var(--accent)] font-semibold opacity-70">
-                          <span>{lang === 'th' ? 'ดูรายละเอียด' : 'View Details'}</span>
+                          <span>{t('hero.view_details')}</span>
                           <ArrowRight size={10} />
                         </div>
                       )}

@@ -8,7 +8,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { type WorkflowTemplate, CATEGORY_MAPPINGS } from '@/lib/workflows';
 import { useI18n } from '@/lib/i18n';
 import Link from 'next/link';
-import { Zap, Users, Shield, Rocket, Code2, ArrowRight, ArrowUpRight, FileJson, Cpu, Database, Globe, ChevronLeft, ChevronRight, Download, Clock, TrendingUp, Eye, Mic, Mail, UserPlus } from 'lucide-react';
+import { Zap, Users, Shield, Rocket, Code2, ArrowRight, ArrowUpRight, FileJson, Cpu, Database, Globe, ChevronLeft, ChevronRight, Download, Clock, TrendingUp, Eye, Mic, Mail, UserPlus, Crown } from 'lucide-react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 
@@ -22,7 +22,7 @@ function useReveal() {
 
     const observer = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) { el.classList.add('visible'); observer.unobserve(el); } },
-      { threshold: 0.15 }
+      { threshold: 0, rootMargin: '-10% 0px' }
     );
     observer.observe(el);
     return () => observer.disconnect();
@@ -80,6 +80,98 @@ function WorkflowCardSkeleton() {
           <div className="h-6 w-6 rounded-full shimmer border-2 border-[var(--surface)]" />
           <div className="h-6 w-6 rounded-full shimmer border-2 border-[var(--surface)]" />
         </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Animated Counter Hook ─── */
+function useCountUp(target: number, duration: number = 2000) {
+  const [count, setCount] = useState(0);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    let startTime: number | null = null;
+    let animationFrameId: number;
+
+    const startAnimation = () => {
+      const step = (timestamp: number) => {
+        if (!startTime) startTime = timestamp;
+        const progress = Math.min((timestamp - startTime) / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 4); // easeOutQuart
+        setCount(Math.floor(ease * target));
+        if (progress < 1) {
+          animationFrameId = requestAnimationFrame(step);
+        } else {
+          setCount(target);
+        }
+      };
+      animationFrameId = requestAnimationFrame(step);
+    };
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          startAnimation();
+          observer.unobserve(el);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(el);
+
+    return () => {
+      observer.disconnect();
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    };
+  }, [target, duration]);
+
+  return { count, ref };
+}
+
+function StatItem({ label, value }: { label: string; value: number }) {
+  const { count, ref } = useCountUp(value, 2000);
+  return (
+    <div ref={ref} className="stat-item">
+      <span className="block text-xl sm:text-3xl font-bold text-[var(--text)] tabular-nums">
+        {count.toLocaleString()}
+      </span>
+      <span className="text-[0.7rem] sm:text-xs text-[var(--muted)] font-medium mt-0.5 block">
+        {label}
+      </span>
+    </div>
+  );
+}
+
+/* ─── Tech Marquee ─── */
+function TechMarquee() {
+  const techs = [
+    { name: 'n8n', icon: <Zap size={20} /> },
+    { name: 'Google Sheets', icon: <Database size={20} /> },
+    { name: 'Next.js', icon: <Globe size={20} /> },
+    { name: 'React', icon: <Cpu size={20} /> },
+    { name: 'TypeScript', icon: <Code2 size={20} /> },
+    { name: 'Tailwind CSS', icon: <Zap size={20} /> },
+    { name: 'Node.js', icon: <Database size={20} /> },
+  ];
+
+  return (
+    <div className="w-full overflow-hidden border-b border-[var(--border)] bg-[var(--surface)]/30 backdrop-blur-sm py-4 flex items-center pointer-events-none select-none">
+      <div className="flex animate-scroll whitespace-nowrap w-max">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="flex items-center justify-around min-w-[100vw] gap-8 px-4">
+            {techs.map((tech, idx) => (
+              <div key={idx} className="flex items-center gap-2 text-[var(--muted-strong)] opacity-50">
+                {tech.icon}
+                <span className="font-semibold text-[0.75rem] tracking-widest uppercase">{tech.name}</span>
+              </div>
+            ))}
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -156,6 +248,12 @@ export default function Home() {
     .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime())
     .slice(0, 5);
 
+  // Global top 3 workflows by views for "Popular" badge
+  const globalTop3Ids = [...workflows]
+    .sort((a, b) => (b.views || 0) - (a.views || 0))
+    .slice(0, 3)
+    .map(w => w.id);
+
   useEffect(() => {
     setVisibleCount(4);
   }, [searchQuery, selectedTags]);
@@ -194,6 +292,7 @@ export default function Home() {
       <Navbar />
 
       <Hero workflows={workflows} isLoading={isLoading} />
+      <TechMarquee />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-0">
         {/* ═══════════════ Flows Landing Section ═══════════════ */}
@@ -210,7 +309,7 @@ export default function Home() {
               href="/flows"
               className="futuristic-hover hidden sm:inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-2.5 text-[0.82rem] font-medium text-[var(--text)] hover:bg-[var(--surface-alt)] hover:border-[var(--border-strong)] transition-all active:scale-95 shadow-xs"
             >
-              {lang === 'th' ? 'ดู Flows ทั้งหมด' : 'View All Flows'}
+              {t('main.view_all_flows')}
               <ArrowRight size={14} />
             </Link>
           </div>
@@ -286,11 +385,15 @@ export default function Home() {
                 className="flex gap-5 overflow-x-auto py-2 pb-4 scroll-smooth snap-x snap-mandatory scrollbar-hide -mx-2 px-2"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
-                {filteredWorkflows.map((wf, i) => (
-                  <div key={i} className="w-[82vw] max-w-[82vw] sm:w-[380px] sm:max-w-[380px] md:w-[400px] md:max-w-[400px] flex-shrink-0 snap-start">
-                    <WorkflowCard {...wf} />
-                  </div>
-                ))}
+                {filteredWorkflows.map((wf, i) => {
+                  const rankIndex = globalTop3Ids.indexOf(wf.id);
+                  const rank = rankIndex !== -1 ? rankIndex + 1 : undefined;
+                  return (
+                    <div key={i} className="w-[82vw] max-w-[82vw] sm:w-[380px] sm:max-w-[380px] md:w-[400px] md:max-w-[400px] flex-shrink-0 snap-start">
+                      <WorkflowCard {...wf} rank={rank} />
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Right Arrow */}
@@ -320,7 +423,7 @@ export default function Home() {
               href="/flows"
               className="futuristic-hover inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-6 py-2.5 text-[0.85rem] font-medium text-[var(--text)] hover:bg-[var(--surface-alt)] transition-all active:scale-95 shadow-xs"
             >
-              {lang === 'th' ? 'ดู Flows ทั้งหมด' : 'View All Flows'}
+              {t('main.view_all_flows')}
               <ArrowRight size={14} />
             </Link>
           </div>
@@ -330,38 +433,10 @@ export default function Home() {
         <div ref={statsRef} className="reveal mt-20 sm:mt-28">
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] py-3 sm:py-5">
             <div className="grid grid-cols-2 sm:grid-cols-4">
-              <div className="stat-item">
-                <span className="block text-xl sm:text-3xl font-bold text-[var(--text)] tabular-nums">
-                  {workflows.length}
-                </span>
-                <span className="text-[0.7rem] sm:text-xs text-[var(--muted)] font-medium mt-0.5 block">
-                  {lang === 'th' ? 'เทมเพลต' : 'Templates'}
-                </span>
-              </div>
-              <div className="stat-item">
-                <span className="block text-xl sm:text-3xl font-bold text-[var(--text)] tabular-nums">
-                  {uniqueCreators}
-                </span>
-                <span className="text-[0.7rem] sm:text-xs text-[var(--muted)] font-medium mt-0.5 block">
-                  {lang === 'th' ? 'ผู้สร้าง' : 'Creators'}
-                </span>
-              </div>
-              <div className="stat-item">
-                <span className="block text-xl sm:text-3xl font-bold text-[var(--text)] tabular-nums">
-                  {totalDownloads.toLocaleString()}
-                </span>
-                <span className="text-[0.7rem] sm:text-xs text-[var(--muted)] font-medium mt-0.5 block">
-                  {lang === 'th' ? 'ดาวน์โหลดรวม' : 'Total Downloads'}
-                </span>
-              </div>
-              <div className="stat-item">
-                <span className="block text-xl sm:text-3xl font-bold text-[var(--text)] tabular-nums">
-                  {totalViews.toLocaleString()}
-                </span>
-                <span className="text-[0.7rem] sm:text-xs text-[var(--muted)] font-medium mt-0.5 block">
-                  {lang === 'th' ? 'ยอดดูรวม' : 'Total Views'}
-                </span>
-              </div>
+              <StatItem label={t('stats.templates')} value={workflows.length} />
+              <StatItem label={t('stats.creators')} value={uniqueCreators} />
+              <StatItem label={t('stats.total_downloads')} value={totalDownloads} />
+              <StatItem label={t('stats.total_views')} value={totalViews} />
             </div>
           </div>
         </div>
@@ -371,10 +446,10 @@ export default function Home() {
           <section className="mt-16 sm:mt-24">
             <div className="text-center mb-8">
               <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--text)]">
-                {lang === 'th' ? 'ผู้สร้างยอดนิยม' : 'Top Creators'}
+                {t('creators.title')}
               </h2>
               <p className="mt-2 text-[0.85rem] text-[var(--muted)]">
-                {lang === 'th' ? 'สมาชิกที่มีส่วนร่วมมากที่สุดในชุมชน' : 'Most active contributors in the community'}
+                {t('creators.desc')}
               </p>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
@@ -398,13 +473,13 @@ export default function Home() {
                       )}
                     </div>
                     {i === 0 && (
-                      <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[0.55rem] font-black text-white shadow-sm">🏆</span>
+                      <span className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-white shadow-sm border border-[var(--surface)]"><Crown size={12} fill="currentColor" /></span>
                     )}
                   </div>
                   <div className="text-center">
                     <div className="text-[0.85rem] font-semibold text-[var(--text)] truncate max-w-[120px]">{creator.name}</div>
                     <div className="text-[0.7rem] text-[var(--accent)] font-semibold mt-0.5">
-                      {creator.flowCount} {lang === 'th' ? 'Flows' : 'Flows'}
+                      {creator.flowCount} {t('creators.flows')}
                     </div>
                   </div>
                 </div>
@@ -418,10 +493,10 @@ export default function Home() {
           <section className="mt-16 sm:mt-24">
             <div className="text-center mb-8">
               <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--text)]">
-                {lang === 'th' ? 'เพิ่มล่าสุด' : 'Recently Added'}
+                {t('recent.title')}
               </h2>
               <p className="mt-2 text-[0.85rem] text-[var(--muted)]">
-                {lang === 'th' ? 'Workflow ที่เพิ่มเข้ามาล่าสุดในชุมชน' : 'Latest workflows shared by the community'}
+                {t('recent.desc')}
               </p>
             </div>
             <div className="grid gap-3">
@@ -480,7 +555,7 @@ export default function Home() {
           {/* ════ Flow Diagram Preview ════ */}
           <div className="mt-20 pt-12 border-t border-[var(--border)] relative max-w-4xl mx-auto">
             <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 bg-[var(--surface)] px-4 text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-[var(--muted-soft)] whitespace-nowrap">
-              {lang === 'th' ? 'สถาปัตยกรรมระบบ' : 'System Architecture'}
+              {t('arch.title')}
             </div>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 relative">
@@ -496,8 +571,8 @@ export default function Home() {
                   <FileJson size={24} />
                 </div>
                 <div className="text-center bg-[var(--surface)] px-1">
-                  <div className="text-[0.82rem] font-semibold text-[var(--text)]">{lang === 'th' ? '1. การนำเข้าข้อมูล' : '1. Data Import'}</div>
-                  <div className="text-[0.65rem] text-[var(--muted)]">{lang === 'th' ? 'อัปโหลดไฟล์ JSON จาก n8n' : 'Import JSON from n8n'}</div>
+                  <div className="text-[0.82rem] font-semibold text-[var(--text)]">{t('arch.step1_title')}</div>
+                  <div className="text-[0.65rem] text-[var(--muted)]">{t('arch.step1_desc')}</div>
                 </div>
               </div>
 
@@ -509,8 +584,8 @@ export default function Home() {
                   <Cpu size={24} />
                 </div>
                 <div className="text-center bg-[var(--surface)] px-1">
-                  <div className="text-[0.82rem] font-semibold text-[var(--text)]">{lang === 'th' ? '2. ประมวลผลอัตโนมัติ' : '2. Data Extraction'}</div>
-                  <div className="text-[0.65rem] text-[var(--muted)]">{lang === 'th' ? 'สกัดข้อมูลโหนดและสิทธิ์' : 'Parse Nodes & Access'}</div>
+                  <div className="text-[0.82rem] font-semibold text-[var(--text)]">{t('arch.step2_title')}</div>
+                  <div className="text-[0.65rem] text-[var(--muted)]">{t('arch.step2_desc')}</div>
                 </div>
               </div>
 
@@ -522,8 +597,8 @@ export default function Home() {
                   <Database size={24} />
                 </div>
                 <div className="text-center bg-[var(--surface)] px-1">
-                  <div className="text-[0.82rem] font-semibold text-[var(--text)]">{lang === 'th' ? '3. จัดเก็บส่วนกลาง' : '3. Central Storage'}</div>
-                  <div className="text-[0.65rem] text-[var(--muted)]">{lang === 'th' ? 'บันทึกลงฐานข้อมูลองค์กร' : 'Save to Central DB'}</div>
+                  <div className="text-[0.82rem] font-semibold text-[var(--text)]">{t('arch.step3_title')}</div>
+                  <div className="text-[0.65rem] text-[var(--muted)]">{t('arch.step3_desc')}</div>
                 </div>
               </div>
 
@@ -535,8 +610,8 @@ export default function Home() {
                   <Globe size={24} />
                 </div>
                 <div className="text-center bg-[var(--surface)] px-1">
-                  <div className="text-[0.82rem] font-semibold text-[var(--text)]">{lang === 'th' ? '4. พร้อมให้บริการ' : '4. Service Ready'}</div>
-                  <div className="text-[0.65rem] text-[var(--muted)]">{lang === 'th' ? 'ดาวน์โหลดและใช้งานได้ทันที' : 'Available for Deployment'}</div>
+                  <div className="text-[0.82rem] font-semibold text-[var(--text)]">{t('arch.step4_title')}</div>
+                  <div className="text-[0.65rem] text-[var(--muted)]">{t('arch.step4_desc')}</div>
                 </div>
               </div>
             </div>
@@ -552,12 +627,10 @@ export default function Home() {
             className="text-center mb-12"
           >
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[var(--text)]">
-              {lang === 'th' ? 'ขั้นตอนการทำงานของ FlowShare' : 'How FlowShare Works'}
+              {t('bento.title')}
             </h2>
             <p className="mt-4 mx-auto max-w-2xl text-[1rem] text-[var(--muted)] leading-relaxed">
-              {lang === 'th' 
-                ? 'กระบวนการที่ออกแบบมาเพื่อลดความซับซ้อน ตั้งแต่การค้นหาไปจนถึงการนำไปใช้งานจริง' 
-                : 'A streamlined process designed to simplify everything from discovery to deployment.'}
+              {t('bento.desc')}
             </p>
           </motion.div>
 
@@ -576,12 +649,10 @@ export default function Home() {
                   <Eye size={24} />
                 </div>
                 <h3 className="text-xl font-bold text-[var(--text)] mb-2">
-                  {lang === 'th' ? '1. สำรวจและเรียนรู้ Workflow' : '1. Explore and Learn Workflows'}
+                  {t('bento.step1_title')}
                 </h3>
                 <p className="text-[0.95rem] text-[var(--muted-strong)] max-w-md leading-relaxed font-medium">
-                  {lang === 'th'
-                    ? 'ศึกษาโครงสร้างการทำงานและ Pipeline ของโฟลวที่ถูกสร้างโดยบุคลากรในองค์กร เพื่อนำมาประยุกต์ใช้กับงานของคุณ (ข้อมูลโครงสร้างเชิงลึกสงวนสิทธิ์เฉพาะผู้ดูแลระบบ)'
-                    : 'Study the structure and pipeline of flows created by personnel in the organization. (Deep structural data is reserved for administrators).'}
+                  {t('bento.step1_desc')}
                 </p>
               </div>
             </motion.div>
@@ -600,12 +671,10 @@ export default function Home() {
                   <Download size={24} />
                 </div>
                 <h3 className="text-lg font-bold text-[var(--text)] mb-2">
-                  {lang === 'th' ? '2. ส่งคำขอดาวน์โหลด' : '2. Submit Download Request'}
+                  {t('bento.step2_title')}
                 </h3>
                 <p className="text-[0.85rem] text-[var(--muted-strong)] leading-relaxed">
-                  {lang === 'th'
-                    ? 'เมื่อพบโฟลวที่เหมาะสม สามารถส่งคำขอดาวน์โหลดผ่านระบบได้ทันที โดยระบุวัตถุประสงค์ ระบบจะดำเนินการแจ้งเตือนไปยังผู้สร้างอัตโนมัติ'
-                    : 'When you find a suitable flow, instantly submit a download request through the system. The creator will be automatically notified.'}
+                  {t('bento.step2_desc')}
                 </p>
               </div>
             </motion.div>
@@ -624,12 +693,10 @@ export default function Home() {
                   <Mic size={24} />
                 </div>
                 <h3 className="text-lg font-bold text-[var(--text)] mb-2">
-                  {lang === 'th' ? '3. เชิญเป็นวิทยากร' : '3. Invite as a Speaker'}
+                  {t('bento.step3_title')}
                 </h3>
                 <p className="text-[0.85rem] text-[var(--muted-strong)] leading-relaxed">
-                  {lang === 'th'
-                    ? 'หากต้องการเชิญผู้เชี่ยวชาญเจ้าของโฟลวมาบรรยายให้แก่ทีมของคุณ ระบบสามารถสร้างและส่งเอกสารคำเชิญได้อย่างเป็นทางการ'
-                    : 'If you wish to invite the expert creator to lecture your team, the system will generate and send a formal invitation document.'}
+                  {t('bento.step3_desc')}
                 </p>
               </div>
             </motion.div>
@@ -648,12 +715,10 @@ export default function Home() {
                   <Mail size={24} />
                 </div>
                 <h3 className="text-xl font-bold text-[var(--text)] mb-2">
-                  {lang === 'th' ? '4. รอรับการอนุมัติทางอีเมล' : '4. Await Email Approval'}
+                  {t('bento.step4_title')}
                 </h3>
                 <p className="text-[0.95rem] text-[var(--muted-strong)] max-w-md leading-relaxed font-medium">
-                  {lang === 'th'
-                    ? 'หลังจากส่งคำขอ ระบบจะติดตามสถานะให้โดยอัตโนมัติ เมื่อได้รับการอนุมัติ ไฟล์ JSON หรือเอกสารยืนยันจะถูกจัดส่งตรงไปยังอีเมลของคุณทันที'
-                    : 'After submission, the system tracks the status automatically. Upon approval, the JSON file or confirmation is delivered directly to your email.'}
+                  {t('bento.step4_desc')}
                 </p>
               </div>
             </motion.div>
@@ -669,8 +734,9 @@ export default function Home() {
             {/* Brand column */}
             <div className="lg:col-span-1">
               <Link href="/" className="flex items-center gap-2.5 group mb-4">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--accent)] text-white transition-transform duration-200 group-hover:scale-105">
-                  <Zap size={15} fill="currentColor" />
+                <div className="relative flex h-8 w-8 items-center justify-center rounded-[8px] overflow-hidden bg-[var(--surface-alt)] shadow-sm transition-transform duration-200 group-hover:scale-105 border border-[var(--border)]">
+                  <Image src="/logo_flowshare_lightmode.png" alt="FlowShare Logo" fill className="object-cover logo-light" sizes="32px" />
+                  <Image src="/logo_flowshare_darkmode.png" alt="FlowShare Logo" fill className="object-cover logo-dark" sizes="32px" />
                 </div>
                 <span className="text-[0.95rem] font-semibold tracking-tight text-[var(--text)]">FlowShare</span>
               </Link>

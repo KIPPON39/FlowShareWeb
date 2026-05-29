@@ -27,7 +27,7 @@ export default function UploadPage() {
       <main className="min-h-screen">
         <Navbar />
         <div className="mx-auto max-w-7xl px-4 py-20 text-center">
-          <span className="text-[var(--accent)] animate-pulse">Loading...</span>
+          <span className="text-[var(--accent)] animate-pulse">{t('upload.loading')}</span>
         </div>
       </main>
     );
@@ -38,8 +38,8 @@ export default function UploadPage() {
       <main className="min-h-screen">
         <Navbar />
         <div className="mx-auto max-w-7xl px-4 py-20 text-center">
-          <h1 className="text-2xl font-bold text-[var(--text)] mb-4">Access Denied</h1>
-          <p className="text-[var(--muted)]">Only Admins can create new workflows.</p>
+          <h1 className="text-2xl font-bold text-[var(--text)] mb-4">{t('upload.access_denied')}</h1>
+          <p className="text-[var(--muted)]">{t('upload.only_admin')}</p>
         </div>
       </main>
     );

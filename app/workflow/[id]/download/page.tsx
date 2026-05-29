@@ -79,7 +79,7 @@ export default function DownloadWorkflowPage() {
       }, 1500);
     } catch {
       setFormState('idle');
-      alert('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
+      alert(t('form.error_generic'));
     }
   };
 
@@ -99,7 +99,7 @@ export default function DownloadWorkflowPage() {
           <div className="mt-8 animate-pulse rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-8 h-[400px]" />
         ) : !workflow ? (
           <div className="mt-8 rounded-2xl border border-dashed border-[var(--border)] px-6 py-16 text-center">
-            <h3 className="text-base font-medium text-[var(--text)]">Workflow not found</h3>
+            <h3 className="text-base font-medium text-[var(--text)]">{t('form.not_found')}</h3>
           </div>
         ) : (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-8 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-10 shadow-xl">
@@ -107,7 +107,7 @@ export default function DownloadWorkflowPage() {
               <div className="flex flex-col items-center justify-center py-16 gap-4">
                 <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500"><Check size={40} /></div>
                 <p className="text-xl font-bold text-[var(--text)]">{t('form.success')}</p>
-                <p className="text-sm text-[var(--muted)]">Redirecting...</p>
+                <p className="text-sm text-[var(--muted)]">{t('form.redirecting')}</p>
               </div>
             ) : formState === 'idle' || formState === 'submitting' ? (
               <>
@@ -117,11 +117,11 @@ export default function DownloadWorkflowPage() {
                   
                   <div className="mt-6 grid gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-alt)]/60 p-4">
                     <div className="grid gap-1">
-                      <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[var(--muted-soft)]">Flow name</span>
+                      <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[var(--muted-soft)]">{t('form.flow_name_label')}</span>
                       <span className="text-[0.9rem] font-semibold leading-snug text-[var(--text)]">{flowTitle}</span>
                     </div>
                     <div className="grid gap-1 mt-2">
-                      <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[var(--muted-soft)]">Owner email</span>
+                      <span className="text-[0.65rem] font-bold uppercase tracking-wider text-[var(--muted-soft)]">{t('form.owner_email_label')}</span>
                       <span className="break-all font-mono text-[0.8rem] font-semibold text-[var(--accent)]">{ownerEmail || '-'}</span>
                     </div>
                   </div>
@@ -162,51 +162,51 @@ export default function DownloadWorkflowPage() {
 
                   <div className="flex gap-4 mt-6 pt-6 border-t border-[var(--border)]">
                     <button type="button" onClick={() => router.push(`/workflow/${workflow.id}`)} className="flex-[0.4] rounded-xl border border-[var(--border)] bg-[var(--surface)] py-3.5 text-[0.9rem] font-bold text-[var(--muted-strong)] hover:text-[var(--text)] hover:bg-[var(--surface-alt)] transition-all">{t('form.cancel')}</button>
-                    <button type="submit" className="flex-1 rounded-xl bg-[var(--accent)] py-3.5 text-[0.9rem] font-bold text-white transition-all hover:opacity-90 active:scale-[0.98] shadow-md shadow-[var(--accent-glow)]">ตรวจสอบข้อมูล (Preview)</button>
+                    <button type="submit" className="flex-1 rounded-xl bg-[var(--accent)] py-3.5 text-[0.9rem] font-bold text-white transition-all hover:opacity-90 active:scale-[0.98] shadow-md shadow-[var(--accent-glow)]">{t('form.preview_btn')}</button>
                   </div>
                 </form>
               </>
             ) : formState === 'preview' ? (
               <>
                 <div className="mb-8">
-                  <h1 className="text-2xl font-bold text-[var(--text)] tracking-tight">ตัวอย่างข้อมูลขอดาวน์โหลด</h1>
-                  <p className="text-[0.9rem] text-[var(--muted)] mt-2 leading-relaxed">กรุณาตรวจสอบข้อมูลให้ถูกต้องก่อนยืนยันส่งคำขอ</p>
+                  <h1 className="text-2xl font-bold text-[var(--text)] tracking-tight">{t('form.preview_download_title')}</h1>
+                  <p className="text-[0.9rem] text-[var(--muted)] mt-2 leading-relaxed">{t('form.preview_desc')}</p>
                 </div>
                 
                 <div className="grid gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] p-6 mb-8 text-[0.9rem]">
                   <div className="grid grid-cols-[120px_1fr] gap-4 pb-3 border-b border-[var(--border)]">
-                    <span className="font-bold text-[var(--muted-strong)]">ชื่อ Flow:</span>
+                    <span className="font-bold text-[var(--muted-strong)]">{t('form.flow_name_label')}</span>
                     <span className="font-semibold text-[var(--text)]">{flowTitle}</span>
                   </div>
                   <div className="grid grid-cols-[120px_1fr] gap-4 pb-3 border-b border-[var(--border)]">
-                    <span className="font-bold text-[var(--muted-strong)]">ชื่อของคุณ:</span>
+                    <span className="font-bold text-[var(--muted-strong)]">{t('form.your_name_label')}</span>
                     <span className="text-[var(--text)]">{name}</span>
                   </div>
                   <div className="grid grid-cols-[120px_1fr] gap-4 pb-3 border-b border-[var(--border)]">
-                    <span className="font-bold text-[var(--muted-strong)]">อีเมล:</span>
+                    <span className="font-bold text-[var(--muted-strong)]">{t('form.your_email_label')}</span>
                     <span className="text-[var(--text)]">{email}</span>
                   </div>
                   <div className="grid grid-cols-[120px_1fr] gap-4 pb-3 border-b border-[var(--border)]">
-                    <span className="font-bold text-[var(--muted-strong)]">เรียน (ผู้รับ):</span>
+                    <span className="font-bold text-[var(--muted-strong)]">{t('form.recipient_label')}</span>
                     <span className="text-[var(--text)]">{recipient}</span>
                   </div>
                   <div className="grid grid-cols-[120px_1fr] gap-4 pb-3 border-b border-[var(--border)]">
-                    <span className="font-bold text-[var(--muted-strong)]">เหตุผลที่ขอ:</span>
+                    <span className="font-bold text-[var(--muted-strong)]">{t('form.reason_label')}</span>
                     <span className="text-[var(--text)] whitespace-pre-wrap">{reason}</span>
                   </div>
                   <div className="grid grid-cols-[120px_1fr] gap-4 pb-3 border-b border-[var(--border)]">
-                    <span className="font-bold text-[var(--muted-strong)]">ชื่อผู้ลงนาม:</span>
+                    <span className="font-bold text-[var(--muted-strong)]">{t('form.signer_name_label')}</span>
                     <span className="text-[var(--text)]">{signerName}</span>
                   </div>
                   <div className="grid grid-cols-[120px_1fr] gap-4">
-                    <span className="font-bold text-[var(--muted-strong)]">ตำแหน่ง:</span>
+                    <span className="font-bold text-[var(--muted-strong)]">{t('form.signer_position_label')}</span>
                     <span className="text-[var(--text)]">{signerPosition}</span>
                   </div>
                 </div>
 
                 <div className="flex gap-4 pt-6 border-t border-[var(--border)]">
-                  <button type="button" onClick={() => setFormState('idle')} className="flex-[0.4] rounded-xl border border-[var(--border)] bg-[var(--surface)] py-3.5 text-[0.9rem] font-bold text-[var(--muted-strong)] hover:text-[var(--text)] hover:bg-[var(--surface-alt)] transition-all">กลับไปแก้ไขข้อมูล</button>
-                  <button type="button" onClick={handleSubmit} disabled={formState === 'submitting'} className="flex-1 rounded-xl bg-emerald-500 py-3.5 text-[0.9rem] font-bold text-white transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-60 shadow-md shadow-emerald-500/20">{formState === 'submitting' ? t('form.submitting') : 'ยืนยันและส่งคำขอ'}</button>
+                  <button type="button" onClick={() => setFormState('idle')} className="flex-[0.4] rounded-xl border border-[var(--border)] bg-[var(--surface)] py-3.5 text-[0.9rem] font-bold text-[var(--muted-strong)] hover:text-[var(--text)] hover:bg-[var(--surface-alt)] transition-all">{t('form.back_to_edit')}</button>
+                  <button type="button" onClick={handleSubmit} className="flex-1 rounded-xl bg-emerald-500 py-3.5 text-[0.9rem] font-bold text-white transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-60 shadow-md shadow-emerald-500/20">{t('form.confirm_and_submit')}</button>
                 </div>
               </>
             ) : null}
