@@ -7,6 +7,7 @@ import { Navbar } from '@/components/navbar';
 import { Loader2, Zap } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { HeroBackground } from '@/components/hero-background';
+import Image from 'next/image';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -34,7 +35,7 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to login');
+        throw new Error(data.error || t('auth.error.login_failed'));
       }
 
       // Use full page reload to ensure the session cookie is sent with the next request.
@@ -62,8 +63,9 @@ export default function LoginPage() {
             <div className="absolute -top-12 -right-12 h-32 w-32 rounded-full bg-[var(--accent)]/10 blur-2xl pointer-events-none" />
 
             <div className="text-center mb-8">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent)] text-white shadow-lg shadow-[var(--accent-glow)] mb-4">
-                <Zap size={20} fill="currentColor" />
+              <div className="mx-auto relative flex h-12 w-12 items-center justify-center rounded-[12px] overflow-hidden bg-[var(--surface-alt)] shadow-sm border border-[var(--border)] mb-4">
+                <Image src="/logo_flowshare_lightmode.png" alt="FlowShare Logo" fill className="object-cover logo-light" sizes="48px" />
+                <Image src="/logo_flowshare_darkmode.png" alt="FlowShare Logo" fill className="object-cover logo-dark" sizes="48px" />
               </div>
               <h1 className="text-2xl font-bold text-[var(--text)] tracking-tight">{t('auth.login_title')}</h1>
               <p className="text-[0.85rem] text-[var(--muted)] mt-1.5">{t('auth.login_subtitle')}</p>

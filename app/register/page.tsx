@@ -7,6 +7,7 @@ import { Navbar } from '@/components/navbar';
 import { Loader2, Zap } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { HeroBackground } from '@/components/hero-background';
+import Image from 'next/image';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -28,25 +29,25 @@ export default function RegisterPage() {
     setError('');
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError(t('auth.error.password_mismatch'));
       setIsLoading(false);
       return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters long');
+      setError(t('auth.error.password_length'));
       setIsLoading(false);
       return;
     }
 
     if (!email.trim()) {
-      setError('Email is required');
+      setError(t('auth.error.email_required'));
       setIsLoading(false);
       return;
     }
 
     if (!imageUrl.trim()) {
-      setError('Image URL is required');
+      setError(t('auth.error.image_url_required'));
       setIsLoading(false);
       return;
     }
@@ -87,8 +88,9 @@ export default function RegisterPage() {
             <div className="absolute -top-12 -left-12 h-32 w-32 rounded-full bg-[var(--accent)]/10 blur-2xl pointer-events-none" />
             
             <div className="text-center mb-8">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent)] text-white shadow-lg shadow-[var(--accent-glow)] mb-4">
-                <Zap size={20} fill="currentColor" />
+              <div className="mx-auto relative flex h-12 w-12 items-center justify-center rounded-[12px] overflow-hidden bg-[var(--surface-alt)] shadow-sm border border-[var(--border)] mb-4">
+                <Image src="/logo_flowshare_lightmode.png" alt="FlowShare Logo" fill className="object-cover logo-light" sizes="48px" />
+                <Image src="/logo_flowshare_darkmode.png" alt="FlowShare Logo" fill className="object-cover logo-dark" sizes="48px" />
               </div>
               <h1 className="text-2xl font-bold text-[var(--text)] tracking-tight">{t('auth.register_title')}</h1>
               <p className="text-[0.85rem] text-[var(--muted)] mt-1.5">{t('auth.register_subtitle')}</p>
@@ -118,7 +120,7 @@ export default function RegisterPage() {
 
               <div className="grid gap-1.5">
                 <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">
-                  Email
+                  {t('auth.email')}
                 </label>
                 <input
                   type="email"
@@ -126,14 +128,14 @@ export default function RegisterPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)]/50 py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-soft)]"
-                  placeholder="you@example.com"
+                  placeholder={t('auth.email_placeholder')}
                   autoComplete="email"
                 />
               </div>
 
               <div className="grid gap-1.5">
                 <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">
-                  Image URL
+                  {t('auth.image_url')}
                 </label>
                 <input
                   type="url"
@@ -141,7 +143,7 @@ export default function RegisterPage() {
                   value={imageUrl}
                   onChange={(e) => setImageUrl(e.target.value)}
                   className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)]/50 py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-soft)]"
-                  placeholder="https://example.com/avatar.jpg"
+                  placeholder={t('auth.image_url_placeholder')}
                 />
               </div>
 

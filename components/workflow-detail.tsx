@@ -109,9 +109,9 @@ import type { WorkflowTemplate } from '@/lib/workflows';
     return (
       <section className="grid gap-8 my-8 sm:my-14">
         <div className="rounded-xl border border-dashed border-[var(--border)] px-6 py-16 text-center">
-          <h3 className="text-base font-medium text-[var(--text)]">Workflow not found</h3>
+          <h3 className="text-base font-medium text-[var(--text)]">{t('form.not_found')}</h3>
           <p className="mx-auto mt-2 max-w-md text-[0.82rem] leading-relaxed text-[var(--muted)]">
-            This workflow may have been removed or the ID is incorrect.
+            {t('detail.not_found_desc')}
           </p>
         </div>
       </section>
@@ -238,7 +238,7 @@ import type { WorkflowTemplate } from '@/lib/workflows';
                   <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-alt)]/50 p-5 backdrop-blur-sm">
                     <h3 className="text-[0.7rem] font-medium uppercase tracking-[0.15em] text-[var(--muted-soft)] mb-4 flex items-center gap-2">
                       <Tag size={12} />
-                      Tags
+                      {t('detail.tags')}
                     </h3>
                     <div className="flex flex-wrap gap-2">
                       {tags.map((tag, i) => (
@@ -347,8 +347,8 @@ import type { WorkflowTemplate } from '@/lib/workflows';
                             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--surface-alt)] border border-[var(--border)] mb-3 shadow-sm text-[var(--muted-strong)]">
                               <Lock size={20} />
                             </div>
-                            <h4 className="text-[0.9rem] font-bold text-[var(--text)]">Access Restricted</h4>
-                            <p className="mt-1 text-[0.75rem] text-[var(--muted)]">Only Admins can view the raw JSON content.</p>
+                            <h4 className="text-[0.9rem] font-bold text-[var(--text)]">{t('detail.access_restricted')}</h4>
+                            <p className="mt-1 text-[0.75rem] text-[var(--muted)]">{t('detail.admin_only_json')}</p>
                           </div>
                         )}
                       </div>

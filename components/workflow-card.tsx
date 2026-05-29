@@ -1,10 +1,11 @@
 'use client';
 
-import { Download, UserPlus, Eye, Database, X, Check } from 'lucide-react';
+import { Download, UserPlus, Eye, Database, X, Check, TrendingUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useI18n } from '@/lib/i18n';
+import { getIconBgFromTag } from '@/lib/tag-icon';
 import { useRef, useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
@@ -21,11 +22,12 @@ interface WorkflowCardProps {
   downloads?: number;
   updatedAt?: string;
   createdAt?: string;
+  rank?: number;
 }
 
 // Modals have been extracted to dedicated pages
 
-export function WorkflowCard({ id, title, description, tags, keys, creators, nodes = 4, views, downloads, updatedAt, createdAt }: WorkflowCardProps) {
+export function WorkflowCard({ id, title, description, tags, keys, creators, nodes = 4, views, downloads, updatedAt, createdAt, rank }: WorkflowCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const { t } = useI18n();
   const router = useRouter();
@@ -63,10 +65,28 @@ export function WorkflowCard({ id, title, description, tags, keys, creators, nod
         <article
           ref={cardRef}
           onMouseMove={handleMouseMove}
-          className="workflow-card h-full group rounded-xl p-5 sm:p-6 flex flex-col gap-5 border border-[var(--border)] bg-[var(--surface)]"
+          className="workflow-card h-full group rounded-xl p-5 sm:p-6 flex flex-col gap-5 border border-[var(--border)] bg-[var(--surface)] relative overflow-hidden"
         >
+          {/* Faded background icon from first tag */}
+          <div 
+            className="absolute bottom-0 right-0 w-40 h-40 sm:w-44 sm:h-44 lg:w-48 lg:h-48 opacity-[0.08] pointer-events-none transition-transform group-hover:scale-110 group-hover:-rotate-3 duration-500 ease-out z-0 dark:opacity-[0.04]"
+            style={{ 
+              backgroundImage: `url(${getIconBgFromTag(tags?.[0])})`,
+              backgroundSize: 'contain',
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'center center'
+            }}
+          />
+          {/* Trending Badge */}
+          {rank && rank <= 3 && (
+            <div className="absolute top-0 right-0 z-10 flex h-6 items-center gap-1 rounded-bl-xl bg-gradient-to-r from-amber-500 to-orange-500 px-3 text-[0.65rem] font-bold text-white shadow-sm">
+              <TrendingUp size={12} strokeWidth={3} />
+              <span>POPULAR</span>
+            </div>
+          )}
+
           {/* Header */}
-          <div className="grid gap-3 text-left">
+          <div className="grid gap-3 text-left relative z-10">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="inline-flex items-center rounded-md bg-[var(--surface-alt)] px-2 py-0.5 text-[0.65rem] font-kanit font-medium tabular-nums text-[var(--muted-strong)] border border-[var(--border)]">
@@ -182,7 +202,7 @@ export function WorkflowCard({ id, title, description, tags, keys, creators, nod
           </div>
 
           {/* Tags & Keys */}
-          <div className="grid gap-3 text-left">
+          <div className="grid gap-3 text-left relative z-10">
             <div className="flex flex-wrap gap-1.5">
               {tags.map((tag, i) => {
                 const cleanTag = tag.replace(/^["'\[]+|["'\]]+$/g, '').trim();
@@ -210,7 +230,7 @@ export function WorkflowCard({ id, title, description, tags, keys, creators, nod
           </div>
 
           {/* Actions */}
-          <div className="flex flex-wrap gap-2 pt-1 mt-auto z-10">
+          <div className="flex flex-wrap gap-2 pt-1 mt-auto relative z-10">
             <Link
               href={`/workflow/${id}/download`}
               target="_blank"

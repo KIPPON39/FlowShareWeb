@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { Zap, Menu, X } from 'lucide-react';
+import Image from 'next/image';
+import { Menu, X } from 'lucide-react';
 import { ThemeToggle } from './theme-toggle';
 import { LanguageToggle } from './language-toggle';
 import { usePathname, useRouter } from 'next/navigation';
@@ -56,10 +57,23 @@ export function Navbar() {
       <div className="mx-auto flex max-w-7xl items-center justify-between">
         {/* Brand */}
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--accent)] text-white transition-transform duration-200 group-hover:scale-105">
-            <Zap size={16} fill="currentColor" />
+          <div className="relative flex h-9 w-9 items-center justify-center rounded-[10px] overflow-hidden bg-[var(--surface-alt)] shadow-sm transition-transform duration-200 group-hover:scale-105 border border-[var(--border)]">
+            <Image 
+              src="/logo_flowshare_lightmode.png" 
+              alt="FlowShare Logo" 
+              fill 
+              className="object-cover logo-light" 
+              sizes="36px"
+            />
+            <Image 
+              src="/logo_flowshare_darkmode.png" 
+              alt="FlowShare Logo" 
+              fill 
+              className="object-cover logo-dark" 
+              sizes="36px"
+            />
           </div>
-          <span className="text-[0.95rem] font-semibold tracking-tight navbar-brand-text">
+          <span className="text-[1rem] font-bold tracking-tight navbar-brand-text">
             FlowShare
           </span>
         </Link>
