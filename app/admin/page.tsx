@@ -3,7 +3,7 @@
 import { useState, useEffect, MouseEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import { Save, Download, Plus, Trash2, Loader2, RefreshCw, ExternalLink, Eye, EyeOff } from 'lucide-react';
+import { Save, Download, Plus, Trash2, Loader2, RefreshCw, ExternalLink, Eye, EyeOff, Info } from 'lucide-react';
 import { Navbar } from '@/components/navbar';
 import { useI18n } from '@/lib/i18n';
 
@@ -557,40 +557,33 @@ export default function AdminPage() {
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-[var(--text)]">{t('admin.templates_title')}</h2>
               <p className="text-sm text-[var(--muted)] mt-1">{t('admin.templates_desc')}</p>
+              <div className="mt-4 flex items-start gap-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl text-sm font-medium text-blue-700 dark:text-blue-400">
+                <Info size={18} className="flex-shrink-0 mt-0.5" />
+                <span>{t('admin.templates_hint')}</span>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <button
-                onClick={() => downloadTemplate('users-template.csv')}
+                onClick={() => downloadTemplate('AccountUser-Templete.xlsx')}
                 className="flex flex-col items-center justify-center p-6 bg-[var(--surface-alt)] border border-[var(--border)] rounded-xl hover:border-[var(--accent)] hover:shadow-md transition-all group"
               >
                 <div className="h-12 w-12 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                   <Download size={24} />
                 </div>
-                <span className="font-medium text-[var(--text)]">Users Sheet</span>
-                <span className="text-xs text-[var(--muted)] mt-1">users-template.csv</span>
+                <span className="font-medium text-[var(--text)]">Users Sheet Template</span>
+                <span className="text-xs text-[var(--muted)] mt-1">AccountUser-Templete.xlsx</span>
               </button>
 
               <button
-                onClick={() => downloadTemplate('flows-template.csv')}
+                onClick={() => downloadTemplate('FlowList-Templete.xlsx')}
                 className="flex flex-col items-center justify-center p-6 bg-[var(--surface-alt)] border border-[var(--border)] rounded-xl hover:border-[var(--accent)] hover:shadow-md transition-all group"
               >
                 <div className="h-12 w-12 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                   <Download size={24} />
                 </div>
-                <span className="font-medium text-[var(--text)]">Flows Sheet</span>
-                <span className="text-xs text-[var(--muted)] mt-1">flows-template.csv</span>
-              </button>
-
-              <button
-                onClick={() => downloadTemplate('social-links-template.csv')}
-                className="flex flex-col items-center justify-center p-6 bg-[var(--surface-alt)] border border-[var(--border)] rounded-xl hover:border-[var(--accent)] hover:shadow-md transition-all group"
-              >
-                <div className="h-12 w-12 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                  <Download size={24} />
-                </div>
-                <span className="font-medium text-[var(--text)]">Social Links Sheet</span>
-                <span className="text-xs text-[var(--muted)] mt-1">social-links-template.csv</span>
+                <span className="font-medium text-[var(--text)]">Flows & System Template</span>
+                <span className="text-xs text-[var(--muted)] mt-1">FlowList-Templete.xlsx</span>
               </button>
             </div>
           </section>
