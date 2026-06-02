@@ -62,7 +62,7 @@ export default function RegisterPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to register');
+        throw new Error(data.error || t('auth.error.register_failed'));
       }
 
       router.push(redirect);

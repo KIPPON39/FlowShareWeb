@@ -24,8 +24,8 @@ export async function GET(request: NextRequest) {
     );
 
     return NextResponse.json({ users: filtered });
-  } catch (error) {
-    console.error('Search users error:', error);
-    return NextResponse.json({ users: [] });
+  } catch (error: any) {
+    console.error('[SearchUsers] API Error:', error?.message || error);
+    return NextResponse.json({ error: 'Failed to search users' }, { status: 500 });
   }
 }

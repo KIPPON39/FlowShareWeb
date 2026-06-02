@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, X } from 'lucide-react';
+import { Check, X, Mail, Send, Loader2 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { Navbar } from '@/components/navbar';
 import { Breadcrumb } from '@/components/breadcrumb';
@@ -109,7 +109,34 @@ export default function DownloadWorkflowPage() {
                 <p className="text-xl font-bold text-[var(--text)]">{t('form.success')}</p>
                 <p className="text-sm text-[var(--muted)]">{t('form.redirecting')}</p>
               </div>
-            ) : formState === 'idle' || formState === 'submitting' ? (
+            ) : formState === 'submitting' ? (
+              <div className="flex flex-col items-center justify-center py-20 gap-6 text-center">
+                <div className="relative">
+                  <motion.div
+                    animate={{ y: [-10, 10, -10] }}
+                    transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                    className="z-10 relative flex h-24 w-24 items-center justify-center rounded-full bg-[var(--accent)]/10 text-[var(--accent)]"
+                  >
+                    <Mail size={48} />
+                  </motion.div>
+                  <motion.div
+                    initial={{ scale: 0, opacity: 0, x: -20, y: 20 }}
+                    animate={{ scale: [0, 1, 1], opacity: [0, 1, 0], x: [-10, 30, 40], y: [10, -30, -40] }}
+                    transition={{ repeat: Infinity, duration: 1.5 }}
+                    className="absolute top-0 right-0 text-[var(--accent)]"
+                  >
+                    <Send size={24} />
+                  </motion.div>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-[var(--text)] mb-2">{t('form.sending_title')}</h3>
+                  <p className="text-[0.9rem] text-[var(--muted)] flex items-center justify-center gap-2">
+                    <Loader2 size={16} className="animate-spin" />
+                    {t('form.sending_desc')}
+                  </p>
+                </div>
+              </div>
+            ) : formState === 'idle' ? (
               <>
                 <div className="mb-8">
                   <h1 className="text-2xl font-bold text-[var(--text)] tracking-tight">{t('form.download_title')}</h1>

@@ -73,9 +73,14 @@ export function Navbar() {
               sizes="36px"
             />
           </div>
-          <span className="text-[1rem] font-bold tracking-tight navbar-brand-text">
-            FlowShare
-          </span>
+          <div className="flex flex-col justify-center">
+            <span className="text-[1rem] font-bold tracking-tight navbar-brand-text leading-none mt-1">
+              FlowShare
+            </span>
+            <span className="text-[0.65rem] text-[var(--muted-soft)] font-medium mt-0.5 tracking-wide">
+              by KKU Library
+            </span>
+          </div>
         </Link>
 
         {/* Desktop Nav */}
@@ -119,6 +124,15 @@ export function Navbar() {
                     <p className="text-[0.85rem] font-medium text-[var(--text)] truncate">{user.username}</p>
                     {user.email && <p className="text-[0.75rem] text-[var(--muted)] truncate">{user.email}</p>}
                   </div>
+                  {user.role?.toLowerCase() === 'admin' && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setProfileOpen(false)}
+                      className="block w-full text-left rounded-lg px-3 py-2 text-[0.85rem] font-medium text-[var(--text)] hover:bg-[var(--surface-alt)] transition-colors mb-1"
+                    >
+                      Admin Panel
+                    </Link>
+                  )}
                   <button
                     onClick={handleLogout}
                     className="w-full text-left rounded-lg px-3 py-2 text-[0.85rem] font-medium text-red-500 hover:bg-red-500/10 transition-colors"
@@ -190,6 +204,15 @@ export function Navbar() {
                     {user.email && <p className="text-[0.75rem] text-[var(--muted)] truncate">{user.email}</p>}
                   </div>
                 </div>
+                {user.role?.toLowerCase() === 'admin' && (
+                  <Link
+                    href="/admin"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block w-full text-left rounded-lg px-4 py-2.5 text-[0.85rem] font-medium text-[var(--text)] hover:bg-[var(--surface-alt)] transition-colors"
+                  >
+                    Admin Panel
+                  </Link>
+                )}
                 <button
                   onClick={() => {
                     handleLogout();
