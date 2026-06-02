@@ -36,7 +36,9 @@ export async function POST(request: Request) {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
-          ...(process.env.N8N_WEBHOOK_SECRET ? { 'x-flowshare-secret': process.env.N8N_WEBHOOK_SECRET } : {}),
+          ...(process.env.N8N_WEBHOOK_SECRET 
+            ? { 'x-flowshare-secret': process.env.N8N_WEBHOOK_SECRET, 'x-api-key': process.env.N8N_WEBHOOK_SECRET } 
+            : { 'x-api-key': 'your-secret-api-key-1', 'x-flowshare-secret': 'your-secret-api-key-1' }),
         },
         body: JSON.stringify({
           fileName,
