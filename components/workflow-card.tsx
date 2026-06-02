@@ -23,11 +23,12 @@ interface WorkflowCardProps {
   updatedAt?: string;
   createdAt?: string;
   rank?: number;
+  isNew?: boolean;
 }
 
 // Modals have been extracted to dedicated pages
 
-export function WorkflowCard({ id, title, description, tags, keys, creators, nodes = 4, views, downloads, updatedAt, createdAt, rank }: WorkflowCardProps) {
+export function WorkflowCard({ id, title, description, tags, keys, creators, nodes = 4, views, downloads, updatedAt, createdAt, rank, isNew }: WorkflowCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const { t } = useI18n();
   const router = useRouter();
@@ -82,6 +83,14 @@ export function WorkflowCard({ id, title, description, tags, keys, creators, nod
             <div className="absolute top-0 right-0 z-10 flex h-6 items-center gap-1 rounded-bl-xl bg-gradient-to-r from-amber-500 to-orange-500 px-3 text-[0.65rem] font-bold text-white shadow-sm">
               <TrendingUp size={12} strokeWidth={3} />
               <span>POPULAR</span>
+            </div>
+          )}
+          
+          {/* Latest Badge */}
+          {!rank && isNew && (
+            <div className="absolute top-0 right-0 z-10 flex h-6 items-center gap-1 rounded-bl-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-3 text-[0.65rem] font-bold text-white shadow-sm">
+              <Check size={12} strokeWidth={3} />
+              <span>LATEST</span>
             </div>
           )}
 
@@ -168,7 +177,7 @@ export function WorkflowCard({ id, title, description, tags, keys, creators, nod
                         </div>
                         <div className="flex flex-col min-w-0">
                           <span className="text-[0.8rem] font-medium text-[var(--text)] truncate">{c.name}</span>
-                          <span className="text-[0.65rem] text-[var(--muted)]">{t('upload.contributor')}</span>
+                          <span className="text-[0.65rem] text-[var(--muted)]">{i === 0 ? t('upload.creator') : t('upload.contributor')}</span>
                         </div>
                       </div>
                     ))}

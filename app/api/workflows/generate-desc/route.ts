@@ -141,6 +141,10 @@ export async function POST(request: Request) {
     // 1. พยายามเรียก n8n generator webhook
     const n8nGeneratorUrl = process.env.N8N_GENERATOR_WEBHOOK_URL || 'http://localhost:5678/webhook/generate-description';
 
+    const { getAdminSettings } = await import('@/lib/admin-settings');
+    const settings = getAdminSettings();
+    const sheetId = settings.sheetIdFlows || process.env.GOOGLE_SHEET_ID_FLOWS || '';
+
     function cleanDescription(desc: string, currentTopic: string) {
         if (!desc || !currentTopic) return desc;
         const escapedTopic = currentTopic.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -159,8 +163,11 @@ export async function POST(request: Request) {
     try {
       const n8nResponse = await fetch(n8nGeneratorUrl, {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ sessionId, topic, context, language }),
+        headers: { 
+          'content-type': 'application/json',
+          ...(process.env.N8N_WEBHOOK_SECRET ? { 'x-flowshare-secret': process.env.N8N_WEBHOOK_SECRET } : {}),
+        },
+        body: JSON.stringify({ sessionId, topic, context, language, sheetId }),
       });
 
       if (n8nResponse.ok) {

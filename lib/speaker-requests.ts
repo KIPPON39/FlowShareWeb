@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getAdminSettings } from './admin-settings';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -51,8 +52,12 @@ export async function createSpeakerRequest(request: Request) {
   const skrequestID = `SPK-${year}${month}${day}-${randomHex}`;
   const date = `${year}-${month}-${day}`;
 
+  const settings = getAdminSettings();
+  const sheetId = settings.sheetIdSpeakerRequests || process.env.GOOGLE_SHEET_ID_SPEAKER_REQUESTS || '';
+
   const speakerRequest = {
     skrequestID,
+    sheetId,
     flowID,
     requesterName,
     requesterEmail,

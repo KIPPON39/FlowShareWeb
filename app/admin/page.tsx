@@ -3,7 +3,7 @@
 import { useState, useEffect, MouseEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import { Save, Download, Plus, Trash2, Loader2, RefreshCw, ExternalLink } from 'lucide-react';
+import { Save, Download, Plus, Trash2, Loader2, RefreshCw, ExternalLink, Eye, EyeOff } from 'lucide-react';
 import { Navbar } from '@/components/navbar';
 import { useI18n } from '@/lib/i18n';
 
@@ -25,6 +25,11 @@ export default function AdminPage() {
   const [pendingSaveAction, setPendingSaveAction] = useState<(() => Promise<void>) | null>(null);
   const [confirmDetails, setConfirmDetails] = useState({ keyLabel: '', oldVal: '', newVal: '' });
   const [mounted, setMounted] = useState(false);
+  const [visibleIds, setVisibleIds] = useState<Record<string, boolean>>({});
+
+  const toggleVisibility = (key: string) => {
+    setVisibleIds(prev => ({ ...prev, [key]: !prev[key] }));
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -289,20 +294,25 @@ export default function AdminPage() {
                 <div className="flex flex-col sm:flex-row gap-3">
                   <div className="flex-1 space-y-2">
                     <div className="text-[0.8rem] text-[var(--muted)] flex items-center gap-2">
-                      <span>{t('admin.current_id')} {currentSettings.sheetIdUsers ? <span className="font-mono text-[var(--text)]">{currentSettings.sheetIdUsers}</span> : <span className="text-[var(--text)]">{t('admin.no_data')}</span>}</span>
+                      <span>{t('admin.current_id')} {currentSettings.sheetIdUsers ? <span className="font-mono text-[var(--text)]">{visibleIds.sheetIdUsers ? currentSettings.sheetIdUsers : '••••••••••••••••••••'}</span> : <span className="text-[var(--text)]">{t('admin.no_data')}</span>}</span>
                       {currentSettings.sheetIdUsers && (
                         <a href={`https://docs.google.com/spreadsheets/d/${currentSettings.sheetIdUsers}`} target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline flex items-center gap-1">
                           {t('admin.open_sheet')} <ExternalLink size={12} />
                         </a>
                       )}
                     </div>
-                    <input
-                      type="text"
-                      value={settings.sheetIdUsers}
-                      onChange={(e) => setSettings({ ...settings, sheetIdUsers: e.target.value })}
-                      className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-lg px-4 py-2 text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50"
-                      placeholder="e.g. 1BxiMVs0XRYFgwnm..."
-                    />
+                    <div className="relative">
+                      <input
+                        type={visibleIds.sheetIdUsers ? "text" : "password"}
+                        value={settings.sheetIdUsers}
+                        onChange={(e) => setSettings({ ...settings, sheetIdUsers: e.target.value })}
+                        className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-lg px-4 py-2 pr-10 text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50"
+                        placeholder="e.g. 1BxiMVs0XRYFgwnm..."
+                      />
+                      <button type="button" onClick={() => toggleVisibility('sheetIdUsers')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted)] hover:text-[var(--text)]">
+                        {visibleIds.sheetIdUsers ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
                   </div>
                   <div className="flex items-end">
                     <button
@@ -323,20 +333,25 @@ export default function AdminPage() {
                 <div className="flex flex-col sm:flex-row gap-3">
                   <div className="flex-1 space-y-2">
                     <div className="text-[0.8rem] text-[var(--muted)] flex items-center gap-2">
-                      <span>{t('admin.current_id')} {currentSettings.sheetIdFlows ? <span className="font-mono text-[var(--text)]">{currentSettings.sheetIdFlows}</span> : <span className="text-[var(--text)]">{t('admin.no_data')}</span>}</span>
+                      <span>{t('admin.current_id')} {currentSettings.sheetIdFlows ? <span className="font-mono text-[var(--text)]">{visibleIds.sheetIdFlows ? currentSettings.sheetIdFlows : '••••••••••••••••••••'}</span> : <span className="text-[var(--text)]">{t('admin.no_data')}</span>}</span>
                       {currentSettings.sheetIdFlows && (
                         <a href={`https://docs.google.com/spreadsheets/d/${currentSettings.sheetIdFlows}`} target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline flex items-center gap-1">
                           {t('admin.open_sheet')} <ExternalLink size={12} />
                         </a>
                       )}
                     </div>
-                    <input
-                      type="text"
-                      value={settings.sheetIdFlows}
-                      onChange={(e) => setSettings({ ...settings, sheetIdFlows: e.target.value })}
-                      className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-lg px-4 py-2 text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50"
-                      placeholder="e.g. 1BxiMVs0XRYFgwnm..."
-                    />
+                    <div className="relative">
+                      <input
+                        type={visibleIds.sheetIdFlows ? "text" : "password"}
+                        value={settings.sheetIdFlows}
+                        onChange={(e) => setSettings({ ...settings, sheetIdFlows: e.target.value })}
+                        className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-lg px-4 py-2 pr-10 text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50"
+                        placeholder="e.g. 1BxiMVs0XRYFgwnm..."
+                      />
+                      <button type="button" onClick={() => toggleVisibility('sheetIdFlows')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted)] hover:text-[var(--text)]">
+                        {visibleIds.sheetIdFlows ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
                   </div>
                   <div className="flex items-end">
                     <button
@@ -357,20 +372,25 @@ export default function AdminPage() {
                 <div className="flex flex-col sm:flex-row gap-3">
                   <div className="flex-1 space-y-2">
                     <div className="text-[0.8rem] text-[var(--muted)] flex items-center gap-2">
-                      <span>{t('admin.current_id')} {currentSettings.sheetIdDownloadRequests ? <span className="font-mono text-[var(--text)]">{currentSettings.sheetIdDownloadRequests}</span> : <span className="text-[var(--text)]">{t('admin.no_data')}</span>}</span>
+                      <span>{t('admin.current_id')} {currentSettings.sheetIdDownloadRequests ? <span className="font-mono text-[var(--text)]">{visibleIds.sheetIdDownloadRequests ? currentSettings.sheetIdDownloadRequests : '••••••••••••••••••••'}</span> : <span className="text-[var(--text)]">{t('admin.no_data')}</span>}</span>
                       {currentSettings.sheetIdDownloadRequests && (
                         <a href={`https://docs.google.com/spreadsheets/d/${currentSettings.sheetIdDownloadRequests}`} target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline flex items-center gap-1">
                           {t('admin.open_sheet')} <ExternalLink size={12} />
                         </a>
                       )}
                     </div>
-                    <input
-                      type="text"
-                      value={settings.sheetIdDownloadRequests}
-                      onChange={(e) => setSettings({ ...settings, sheetIdDownloadRequests: e.target.value })}
-                      className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-lg px-4 py-2 text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50"
-                      placeholder="e.g. 1BxiMVs0XRYFgwnm..."
-                    />
+                    <div className="relative">
+                      <input
+                        type={visibleIds.sheetIdDownloadRequests ? "text" : "password"}
+                        value={settings.sheetIdDownloadRequests}
+                        onChange={(e) => setSettings({ ...settings, sheetIdDownloadRequests: e.target.value })}
+                        className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-lg px-4 py-2 pr-10 text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50"
+                        placeholder="e.g. 1BxiMVs0XRYFgwnm..."
+                      />
+                      <button type="button" onClick={() => toggleVisibility('sheetIdDownloadRequests')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted)] hover:text-[var(--text)]">
+                        {visibleIds.sheetIdDownloadRequests ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
                   </div>
                   <div className="flex items-end">
                     <button
@@ -391,20 +411,25 @@ export default function AdminPage() {
                 <div className="flex flex-col sm:flex-row gap-3">
                   <div className="flex-1 space-y-2">
                     <div className="text-[0.8rem] text-[var(--muted)] flex items-center gap-2">
-                      <span>{t('admin.current_id')} {currentSettings.sheetIdSpeakerRequests ? <span className="font-mono text-[var(--text)]">{currentSettings.sheetIdSpeakerRequests}</span> : <span className="text-[var(--text)]">{t('admin.no_data')}</span>}</span>
+                      <span>{t('admin.current_id')} {currentSettings.sheetIdSpeakerRequests ? <span className="font-mono text-[var(--text)]">{visibleIds.sheetIdSpeakerRequests ? currentSettings.sheetIdSpeakerRequests : '••••••••••••••••••••'}</span> : <span className="text-[var(--text)]">{t('admin.no_data')}</span>}</span>
                       {currentSettings.sheetIdSpeakerRequests && (
                         <a href={`https://docs.google.com/spreadsheets/d/${currentSettings.sheetIdSpeakerRequests}`} target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline flex items-center gap-1">
                           {t('admin.open_sheet')} <ExternalLink size={12} />
                         </a>
                       )}
                     </div>
-                    <input
-                      type="text"
-                      value={settings.sheetIdSpeakerRequests}
-                      onChange={(e) => setSettings({ ...settings, sheetIdSpeakerRequests: e.target.value })}
-                      className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-lg px-4 py-2 text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50"
-                      placeholder="e.g. 1BxiMVs0XRYFgwnm..."
-                    />
+                    <div className="relative">
+                      <input
+                        type={visibleIds.sheetIdSpeakerRequests ? "text" : "password"}
+                        value={settings.sheetIdSpeakerRequests}
+                        onChange={(e) => setSettings({ ...settings, sheetIdSpeakerRequests: e.target.value })}
+                        className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-lg px-4 py-2 pr-10 text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50"
+                        placeholder="e.g. 1BxiMVs0XRYFgwnm..."
+                      />
+                      <button type="button" onClick={() => toggleVisibility('sheetIdSpeakerRequests')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted)] hover:text-[var(--text)]">
+                        {visibleIds.sheetIdSpeakerRequests ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
                   </div>
                   <div className="flex items-end">
                     <button
@@ -425,20 +450,25 @@ export default function AdminPage() {
                 <div className="flex flex-col sm:flex-row gap-3">
                   <div className="flex-1 space-y-2">
                     <div className="text-[0.8rem] text-[var(--muted)] flex items-center gap-2">
-                      <span>{t('admin.current_id')} {currentSettings.sheetIdSocialLinks ? <span className="font-mono text-[var(--text)]">{currentSettings.sheetIdSocialLinks}</span> : <span className="text-[var(--text)]">{t('admin.no_data')}</span>}</span>
+                      <span>{t('admin.current_id')} {currentSettings.sheetIdSocialLinks ? <span className="font-mono text-[var(--text)]">{visibleIds.sheetIdSocialLinks ? currentSettings.sheetIdSocialLinks : '••••••••••••••••••••'}</span> : <span className="text-[var(--text)]">{t('admin.no_data')}</span>}</span>
                       {currentSettings.sheetIdSocialLinks && (
                         <a href={`https://docs.google.com/spreadsheets/d/${currentSettings.sheetIdSocialLinks}`} target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline flex items-center gap-1">
                           {t('admin.open_sheet')} <ExternalLink size={12} />
                         </a>
                       )}
                     </div>
-                    <input
-                      type="text"
-                      value={settings.sheetIdSocialLinks}
-                      onChange={(e) => setSettings({ ...settings, sheetIdSocialLinks: e.target.value })}
-                      className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-lg px-4 py-2 text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50"
-                      placeholder="e.g. 1BxiMVs0XRYFgwnm..."
-                    />
+                    <div className="relative">
+                      <input
+                        type={visibleIds.sheetIdSocialLinks ? "text" : "password"}
+                        value={settings.sheetIdSocialLinks}
+                        onChange={(e) => setSettings({ ...settings, sheetIdSocialLinks: e.target.value })}
+                        className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-lg px-4 py-2 pr-10 text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50"
+                        placeholder="e.g. 1BxiMVs0XRYFgwnm..."
+                      />
+                      <button type="button" onClick={() => toggleVisibility('sheetIdSocialLinks')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted)] hover:text-[var(--text)]">
+                        {visibleIds.sheetIdSocialLinks ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
                   </div>
                   <div className="flex items-end">
                     <button

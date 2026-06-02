@@ -39,15 +39,23 @@ export function getAdminSettings(): AdminSettings {
   ensureSettingsFile();
   try {
     const data = fs.readFileSync(SETTINGS_FILE_PATH, 'utf8');
-    return JSON.parse(data) as AdminSettings;
+    const parsed = JSON.parse(data) as AdminSettings;
+    return {
+      ...parsed,
+      sheetIdUsers: parsed.sheetIdUsers || process.env.GOOGLE_SHEET_ID_USERS || '',
+      sheetIdFlows: parsed.sheetIdFlows || process.env.GOOGLE_SHEET_ID_FLOWS || '',
+      sheetIdDownloadRequests: parsed.sheetIdDownloadRequests || process.env.GOOGLE_SHEET_ID_DOWNLOAD_REQUESTS || '',
+      sheetIdSpeakerRequests: parsed.sheetIdSpeakerRequests || process.env.GOOGLE_SHEET_ID_SPEAKER_REQUESTS || '',
+      sheetIdSocialLinks: parsed.sheetIdSocialLinks || process.env.GOOGLE_SHEET_ID_SOCIAL_LINKS || '',
+    };
   } catch (error) {
     console.error('Error reading settings.json:', error);
     return { 
-      sheetIdUsers: '', 
-      sheetIdFlows: '', 
-      sheetIdDownloadRequests: '', 
-      sheetIdSpeakerRequests: '', 
-      sheetIdSocialLinks: '' 
+      sheetIdUsers: process.env.GOOGLE_SHEET_ID_USERS || '', 
+      sheetIdFlows: process.env.GOOGLE_SHEET_ID_FLOWS || '', 
+      sheetIdDownloadRequests: process.env.GOOGLE_SHEET_ID_DOWNLOAD_REQUESTS || '', 
+      sheetIdSpeakerRequests: process.env.GOOGLE_SHEET_ID_SPEAKER_REQUESTS || '', 
+      sheetIdSocialLinks: process.env.GOOGLE_SHEET_ID_SOCIAL_LINKS || '' 
     };
   }
 }

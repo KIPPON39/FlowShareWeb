@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getAdminSettings } from '@/lib/admin-settings';
 import {
   SAMPLE_WORKFLOWS,
   normalizeList,
@@ -8,7 +9,7 @@ import {
   type WorkflowTemplate,
 } from '@/lib/workflows';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 30;
 
 function shouldUseMockWorkflows() {
   return process.env.ENABLE_MOCK_WORKFLOWS === 'true';
@@ -69,15 +70,22 @@ function parseJsonCell<T>(value: string | undefined, fallback: T): T {
 }
 
 async function loadFromN8n() {
-  const listWebhookUrl = process.env.N8N_LIST_WEBHOOK_URL;
+  let listWebhookUrl = process.env.N8N_LIST_WEBHOOK_URL;
   if (!listWebhookUrl) return null;
 
   try {
+    const settings = getAdminSettings();
+    const sheetId = settings.sheetIdFlows || process.env.GOOGLE_SHEET_ID_FLOWS || '';
+    if (sheetId) {
+      const separator = listWebhookUrl.includes('?') ? '&' : '?';
+      listWebhookUrl = `${listWebhookUrl}${separator}sheetId=${encodeURIComponent(sheetId)}`;
+    }
+
     const response = await fetch(listWebhookUrl, {
       headers: process.env.N8N_WEBHOOK_SECRET
         ? { 'x-flowshare-secret': process.env.N8N_WEBHOOK_SECRET }
         : undefined,
-      cache: 'no-store',
+      next: { revalidate: 30 },
     });
 
     if (!response.ok) {
@@ -176,6 +184,9 @@ export async function POST(request: Request) {
   let n8nResponse: Response;
 
   try {
+    const settings = getAdminSettings();
+    const sheetIdFlows = settings.sheetIdFlows || process.env.GOOGLE_SHEET_ID_FLOWS || '';
+
     n8nResponse = await fetch(webhookUrl, {
       method: 'POST',
       headers: {
@@ -186,6 +197,7 @@ export async function POST(request: Request) {
         action: 'upsert_workflow',
         workflow,
         source: 'flowshare-web',
+        sheetId: sheetIdFlows,
       }),
     });
   } catch (error) {

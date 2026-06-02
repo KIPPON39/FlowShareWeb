@@ -103,13 +103,15 @@ export function Navbar() {
             <div className="relative">
               <button
                 onClick={() => setProfileOpen(!profileOpen)}
-                className="flex items-center justify-center h-8 w-8 rounded-full bg-gradient-to-tr from-[var(--accent)] to-blue-500 text-white shadow-sm transition-transform hover:scale-105 active:scale-95 overflow-hidden"
+                className="relative flex items-center justify-center h-8 w-8 rounded-full bg-gradient-to-tr from-[var(--accent)] to-blue-500 text-white shadow-sm transition-transform hover:scale-105 active:scale-95 overflow-hidden"
               >
                 {user.imageUrl ? (
-                  <img
+                  <Image
                     src={user.imageUrl}
                     alt={user.username}
-                    className="h-full w-full object-cover"
+                    fill
+                    sizes="32px"
+                    className="object-cover rounded-full"
                     referrerPolicy="no-referrer"
                   />
                 ) : (
@@ -186,12 +188,14 @@ export function Navbar() {
             {user ? (
               <div className="space-y-3">
                 <div className="flex items-center gap-3 px-2">
-                  <div className="flex items-center justify-center h-10 w-10 rounded-full bg-gradient-to-tr from-[var(--accent)] to-blue-500 text-white shadow-sm overflow-hidden">
+                  <div className="relative flex items-center justify-center h-10 w-10 rounded-full bg-gradient-to-tr from-[var(--accent)] to-blue-500 text-white shadow-sm overflow-hidden">
                     {user.imageUrl ? (
-                      <img
+                      <Image
                         src={user.imageUrl}
                         alt={user.username}
-                        className="h-full w-full object-cover"
+                        fill
+                        sizes="32px"
+                        className="object-cover rounded-full"
                         referrerPolicy="no-referrer"
                       />
                     ) : (

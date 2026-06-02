@@ -23,7 +23,7 @@ function useReveal() {
 
     const observer = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) { el.classList.add('visible'); observer.unobserve(el); } },
-      { threshold: 0, rootMargin: '-10% 0px' }
+      { threshold: 0, rootMargin: '0px' }
     );
     observer.observe(el);
     return () => observer.disconnect();
@@ -264,7 +264,7 @@ export default function Home() {
 
     async function loadWorkflows() {
       try {
-        const response = await fetch('/api/workflows', { cache: 'no-store' });
+        const response = await fetch('/api/workflows');
         const data = await response.json();
 
         if (!isMounted) return;
@@ -430,6 +430,59 @@ export default function Home() {
           </div>
         </div>
 
+        {/* ═══════════════ Recent Activity Section ═══════════════ */}
+        {recentWorkflows.length > 0 && (
+          <div className="pt-12 sm:pt-16 scroll-mt-20">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--text)]">
+                  {t('recent.title')}
+                </h2>
+                <p className="text-[0.85rem] text-[var(--muted)] mt-1">{t('recent.desc')}</p>
+              </div>
+            </div>
+            
+            <div className="relative group/scroll">
+              {/* Left Arrow */}
+              <button
+                onClick={() => {
+                  const container = document.getElementById('recent-scroll-container');
+                  if (container) container.scrollBy({ left: -400, behavior: 'smooth' });
+                }}
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 z-20 hidden sm:flex h-11 w-11 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] shadow-lg text-[var(--muted)] hover:text-[var(--text)] hover:border-[var(--accent)]/40 transition-all duration-200 opacity-0 group-hover/scroll:opacity-100 active:scale-90 backdrop-blur-md"
+                aria-label="Scroll left"
+              >
+                <ChevronLeft size={20} />
+              </button>
+
+              {/* Scrollable Container */}
+              <div
+                id="recent-scroll-container"
+                className="flex gap-5 overflow-x-auto py-2 pb-4 scroll-smooth snap-x snap-mandatory scrollbar-hide -mx-2 px-2"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
+                {recentWorkflows.map((wf, i) => (
+                  <div key={i} className="w-[82vw] max-w-[82vw] sm:w-[380px] sm:max-w-[380px] md:w-[400px] md:max-w-[400px] flex-shrink-0 snap-start">
+                    <WorkflowCard {...wf} isNew={true} />
+                  </div>
+                ))}
+              </div>
+
+              {/* Right Arrow */}
+              <button
+                onClick={() => {
+                  const container = document.getElementById('recent-scroll-container');
+                  if (container) container.scrollBy({ left: 400, behavior: 'smooth' });
+                }}
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 z-20 hidden sm:flex h-11 w-11 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] shadow-lg text-[var(--muted)] hover:text-[var(--text)] hover:border-[var(--accent)]/40 transition-all duration-200 opacity-0 group-hover/scroll:opacity-100 active:scale-90 backdrop-blur-md"
+                aria-label="Scroll right"
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* ═══════════════ Stats Bar ═══════════════ */}
         <div ref={statsRef} className="reveal mt-20 sm:mt-28">
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] py-3 sm:py-5">
@@ -489,55 +542,7 @@ export default function Home() {
           </section>
         )}
 
-        {/* ═══════════════ Recent Activity Section ═══════════════ */}
-        {recentWorkflows.length > 0 && (
-          <section className="mt-16 sm:mt-24">
-            <div className="text-center mb-8">
-              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--text)]">
-                {t('recent.title')}
-              </h2>
-              <p className="mt-2 text-[0.85rem] text-[var(--muted)]">
-                {t('recent.desc')}
-              </p>
-            </div>
-            <div className="grid gap-3">
-              {recentWorkflows.map((wf, i) => (
-                <Link
-                  key={wf.id}
-                  href={`/workflow/${wf.id}`}
-                  className="group flex items-center gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 transition-all duration-200 hover:border-[var(--accent)]/30 hover:shadow-md hover:-translate-y-0.5"
-                >
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-[var(--accent-soft)] text-[var(--accent)] text-[0.75rem] font-black">
-                    {String(i + 1).padStart(2, '0')}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[0.9rem] font-semibold text-[var(--text)] group-hover:text-[var(--accent)] transition-colors truncate">{wf.title}</div>
-                    <div className="flex items-center gap-3 mt-1 text-[0.7rem] text-[var(--muted)]">
-                      <span className="flex items-center gap-1"><Users size={10} /> {wf.creators?.[0]?.name || 'Unknown'}</span>
-                      {wf.createdAt && (
-                        <span className="flex items-center gap-1">
-                          <Clock size={10} />
-                          {new Date(wf.createdAt).toLocaleDateString(lang === 'th' ? 'th-TH' : 'en-US', { month: 'short', day: 'numeric' })}
-                        </span>
-                      )}
-                      {(wf.downloads ?? 0) > 0 && (
-                        <span className="flex items-center gap-1"><Download size={10} /> {wf.downloads}</span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="hidden sm:flex flex-wrap gap-1.5 max-w-[200px]">
-                    {wf.tags?.slice(0, 2).map((tag, j) => (
-                      <span key={j} className="inline-flex px-2 py-0.5 rounded-full text-[0.6rem] font-semibold uppercase tracking-wide bg-[var(--tag-alt-bg)] text-[var(--tag-alt-text)] border border-[var(--border)]">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                  <ArrowRight size={14} className="text-[var(--muted-light)] group-hover:text-[var(--accent)] transition-colors flex-shrink-0" />
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
+
 
         {/* ═══════════════ Features Section ═══════════════ */}
         <section className="mt-20 sm:mt-28">

@@ -92,7 +92,7 @@ export default function FlowsPage() {
     let isMounted = true;
     async function loadWorkflows() {
       try {
-        const response = await fetch('/api/workflows', { cache: 'no-store' });
+        const response = await fetch('/api/workflows');
         const data = await response.json();
         if (!isMounted) return;
         if (Array.isArray(data.workflows) && data.workflows.length) {

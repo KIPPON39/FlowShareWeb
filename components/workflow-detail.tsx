@@ -76,7 +76,7 @@ import type { WorkflowTemplate } from '@/lib/workflows';
         async function loadData() {
           try {
             // Load Workflow
-            const response = await fetch('/api/workflows', { cache: 'no-store' });
+            const response = await fetch('/api/workflows');
             const data = await response.json();
             const allWorkflows: WorkflowTemplate[] = data.workflows || [];
             const found = allWorkflows.find(wf => wf.id === params.id);
@@ -283,13 +283,13 @@ import type { WorkflowTemplate } from '@/lib/workflows';
                     <h3 className="text-[0.7rem] font-medium uppercase tracking-[0.15em] text-[var(--muted-soft)] mb-4">{t('detail.team')}</h3>
                     <div className="grid gap-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                       {creators.map((creator, i) => (
-                        <div key={i} className="flex items-center gap-3">
-                          <div className="h-9 w-9 overflow-hidden rounded-full border-2 border-[var(--surface)] bg-[var(--surface-alt)] shadow-sm">
+                        <div key={i} className="group flex items-center gap-3 rounded-full bg-[var(--surface)] border border-[var(--border)] p-1.5 pr-4 shadow-sm transition-all hover:shadow-md hover:border-[var(--accent)]/40">
+                          <div className="relative h-9 w-9 overflow-hidden rounded-full border-2 border-[var(--background)] shadow-inner ring-2 ring-[var(--surface-alt)] group-hover:ring-[var(--accent)]/30 transition-all flex items-center justify-center bg-gradient-to-br from-[var(--accent)]/40 to-[var(--accent)]/20">
                             {creator.imageUrl || creator.avatar ? (
                               <img
                                 src={creator.imageUrl || creator.avatar}
                                 alt={creator.name}
-                                className="h-full w-full object-cover"
+                                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
                                 referrerPolicy="no-referrer"
                               />
                             ) : (
@@ -298,13 +298,14 @@ import type { WorkflowTemplate } from '@/lib/workflows';
                                 alt={creator.name}
                                 width={36}
                                 height={36}
+                                className="transition-transform duration-300 group-hover:scale-110"
                                 referrerPolicy="no-referrer"
                               />
                             )}
                           </div>
                           <div className="flex flex-col">
-                            <span className="text-xs font-bold text-[var(--text)] tracking-tight leading-tight">{creator.name}</span>
-                            <span className="text-[0.6rem] font-medium text-[var(--muted)] uppercase tracking-wider mt-0.5">
+                            <span className="text-sm font-bold text-[var(--text)] tracking-tight leading-tight group-hover:text-[var(--accent)] transition-colors">{creator.name}</span>
+                            <span className="text-[0.6rem] font-bold text-[var(--muted)] uppercase tracking-wider mt-0.5">
                               {i === 0 ? t('upload.creator') : t('upload.contributor')}
                             </span>
                           </div>
