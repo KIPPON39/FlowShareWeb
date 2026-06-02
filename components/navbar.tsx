@@ -106,12 +106,10 @@ export function Navbar() {
                 className="relative flex items-center justify-center h-8 w-8 rounded-full bg-gradient-to-tr from-[var(--accent)] to-blue-500 text-white shadow-sm transition-transform hover:scale-105 active:scale-95 overflow-hidden"
               >
                 {user.imageUrl ? (
-                  <Image
+                  <img
                     src={user.imageUrl}
                     alt={user.username}
-                    fill
-                    sizes="32px"
-                    className="object-cover rounded-full"
+                    className="h-full w-full object-cover rounded-full"
                     referrerPolicy="no-referrer"
                   />
                 ) : (
@@ -190,12 +188,10 @@ export function Navbar() {
                 <div className="flex items-center gap-3 px-2">
                   <div className="relative flex items-center justify-center h-10 w-10 rounded-full bg-gradient-to-tr from-[var(--accent)] to-blue-500 text-white shadow-sm overflow-hidden">
                     {user.imageUrl ? (
-                      <Image
+                      <img
                         src={user.imageUrl}
                         alt={user.username}
-                        fill
-                        sizes="32px"
-                        className="object-cover rounded-full"
+                        className="h-full w-full object-cover rounded-full"
                         referrerPolicy="no-referrer"
                       />
                     ) : (
