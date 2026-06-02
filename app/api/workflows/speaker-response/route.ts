@@ -19,6 +19,7 @@ export async function POST(req: Request) {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
+        ...(process.env.N8N_WEBHOOK_SECRET ? { 'x-flowshare-secret': process.env.N8N_WEBHOOK_SECRET } : {}),
       },
       body: JSON.stringify({
         skrequestID,
