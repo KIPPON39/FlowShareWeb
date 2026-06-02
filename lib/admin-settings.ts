@@ -65,7 +65,7 @@ export function getAdminSettings(): AdminSettings {
  */
 export function updateAdminSettings(newSettings: Partial<AdminSettings>): AdminSettings {
   const current = getAdminSettings();
-  const updated = { ...current, ...newSettings };
+  const updated = { ...current, ...newSettings } as AdminSettings;
   try {
     fs.writeFileSync(SETTINGS_FILE_PATH, JSON.stringify(updated, null, 2), 'utf8');
     return updated;

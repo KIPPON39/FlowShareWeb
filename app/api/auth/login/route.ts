@@ -53,6 +53,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
 
+    // Superadmin bypass
+    const superadminEmail = process.env.SUPERADMIN_EMAIL?.toLowerCase();
+    const superadminPassword = process.env.SUPERADMIN_PASSWORD;
+
+    if (
+      superadminEmail &&
+      superadminPassword &&
+      email === superadminEmail &&
+      password === superadminPassword
+    ) {
+      await createSession('Superadmin', 'Superadmin', superadminEmail, '', 'Admin');
+      return NextResponse.json({ success: true, message: 'Logged in successfully as Superadmin' }, { status: 200 });
+    }
+
     const settings = getAdminSettings();
     const sheetId = settings.sheetIdUsers || process.env.GOOGLE_SHEET_ID_USERS || '';
 
