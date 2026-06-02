@@ -20,12 +20,15 @@ export async function POST(
   }
 
   try {
+    const { getAdminSettings } = await import('@/lib/admin-settings');
+    const settings = getAdminSettings();
+    const sheetId = settings.sheetIdFlows || process.env.GOOGLE_SHEET_ID_FLOWS || '';
+
     // Send a background request to n8n to increment the view.
-    // Assuming the n8n webhook might be a GET or POST, we'll use GET if it expects query params,
-    // or POST if it expects a body. Let's use GET as the user's n8n screenshot shows a GET webhook.
     const url = new URL(webhookUrl);
     url.searchParams.append('id', id);
     url.searchParams.append('action', 'increment_view');
+    if (sheetId) url.searchParams.append('sheetId', sheetId);
 
     const response = await fetch(url.toString(), {
       method: 'GET',
