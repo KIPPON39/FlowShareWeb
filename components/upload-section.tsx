@@ -1329,7 +1329,7 @@ export function UploadSection() {
                       src={getIconBgFromTag(tags[0])}
                       alt={tags[0]}
                       fill
-                      className="object-contain p-2"
+                      className="object-contain p-2 icon-adaptive"
                       sizes="64px"
                     />
                   ) : (

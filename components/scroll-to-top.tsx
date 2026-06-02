@@ -91,13 +91,16 @@ export function ScrollToTop() {
         style={{ width: '80px', height: '80px', borderRadius: '16px' }}
         aria-label="Scroll to top"
       >
-        <Image
-          src={`/rocket_frames/rocket_${currentFrame.toString().padStart(2, '0')}.png`}
-          alt="Scroll up rocket"
-          fill
-          className="object-contain"
-          unoptimized
-        />
+        {Array.from({ length: 10 }, (_, i) => i + 1).map((frame) => (
+          <Image
+            key={frame}
+            src={`/rocket_frames/${frame}.svg`}
+            alt={`Scroll up rocket frame ${frame}`}
+            fill
+            className={`object-contain ${currentFrame === frame ? 'opacity-100' : 'opacity-0'}`}
+            unoptimized
+          />
+        ))}
       </button>
     </div>
   );

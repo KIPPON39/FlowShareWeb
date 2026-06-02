@@ -69,7 +69,7 @@ export function WorkflowCard({ id, title, description, tags, keys, creators, nod
         >
           {/* Faded background icon from first tag */}
           <div 
-            className="absolute bottom-0 right-0 w-40 h-40 sm:w-44 sm:h-44 lg:w-48 lg:h-48 opacity-[0.08] pointer-events-none transition-transform group-hover:scale-110 group-hover:-rotate-3 duration-500 ease-out z-0 dark:opacity-[0.04]"
+            className="absolute bottom-0 right-0 w-40 h-40 sm:w-44 sm:h-44 lg:w-48 lg:h-48 opacity-[0.08] pointer-events-none transition-transform group-hover:scale-110 group-hover:-rotate-3 duration-500 ease-out z-0 dark:opacity-[0.04] icon-adaptive"
             style={{ 
               backgroundImage: `url(${getIconBgFromTag(tags?.[0])})`,
               backgroundSize: 'contain',

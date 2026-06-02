@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   title: 'FlowShare — Automation Workflow Library',
   description: 'Curated automation patterns for teams who want clarity before complexity.',
   icons: {
-    icon: '/favicon.png',
+    icon: '/favicon.svg',
   },
 };
 

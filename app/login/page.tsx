@@ -64,8 +64,8 @@ export default function LoginPage() {
 
             <div className="text-center mb-8">
               <div className="mx-auto relative flex h-12 w-12 items-center justify-center rounded-[12px] overflow-hidden bg-[var(--surface-alt)] shadow-sm border border-[var(--border)] mb-4">
-                <Image src="/logo_flowshare_lightmode.png" alt="FlowShare Logo" fill className="object-cover logo-light" sizes="48px" />
-                <Image src="/logo_flowshare_darkmode.png" alt="FlowShare Logo" fill className="object-cover logo-dark" sizes="48px" />
+                <Image src="/logo_flowshare_lightmode.svg" alt="FlowShare Logo" fill className="object-cover logo-light" sizes="48px" />
+                <Image src="/logo_flowshare_darkmode.svg" alt="FlowShare Logo" fill className="object-cover logo-dark" sizes="48px" />
               </div>
               <h1 className="text-2xl font-bold text-[var(--text)] tracking-tight">{t('auth.login_title')}</h1>
               <p className="text-[0.85rem] text-[var(--muted)] mt-1.5">{t('auth.login_subtitle')}</p>
