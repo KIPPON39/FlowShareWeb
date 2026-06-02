@@ -45,11 +45,11 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const username = String(body.username || '').trim();
+    const email = String(body.email || '').trim().toLowerCase();
     const password = String(body.password || '');
 
-    if (!username || !password) {
-      return NextResponse.json({ error: 'Username and password are required' }, { status: 400 });
+    if (!email || !password) {
+      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
 
     const n8nResponse = await fetch(loginWebhookUrl, {
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
         'content-type': 'application/json',
         ...(process.env.N8N_WEBHOOK_SECRET ? { 'x-flowshare-secret': process.env.N8N_WEBHOOK_SECRET } : {}),
       },
-      body: JSON.stringify({ username }),
+      body: JSON.stringify({ email }),
     });
 
     let data: Record<string, any> = {};
@@ -97,7 +97,9 @@ export async function POST(request: Request) {
     }
 
     const userEmail =
-      pickFirstString(user, ['email', 'Email', 'userEmail', 'user_email']) || username;
+      pickFirstString(user, ['email', 'Email', 'userEmail', 'user_email']) || email;
+    const fetchedUsername = 
+      pickFirstString(user, ['username', 'Username', 'userName', 'user_name']) || email;
     const userImageUrl = pickFirstString(user, [
       'imageUrl',
       'image_url',
@@ -109,7 +111,7 @@ export async function POST(request: Request) {
     const rawRole = pickFirstString(user, ['role', 'Role', 'userRole']) || 'User';
     const userRole = rawRole.replace(/[^a-zA-Z]/g, '');
 
-    await createSession(username, username, userEmail, userImageUrl, userRole);
+    await createSession(fetchedUsername, fetchedUsername, userEmail, userImageUrl, userRole);
 
     return NextResponse.json({ success: true, message: 'Logged in successfully' }, { status: 200 });
   } catch (error) {

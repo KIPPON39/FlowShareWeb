@@ -14,7 +14,7 @@ export default function LoginPage() {
   const redirect = searchParams.get('redirect') || '/flows';
   const { t } = useI18n();
 
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -28,7 +28,7 @@ export default function LoginPage() {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
@@ -78,16 +78,16 @@ export default function LoginPage() {
             <form onSubmit={handleSubmit} className="grid gap-5">
               <div className="grid gap-1.5">
                 <label className="text-[0.75rem] font-semibold text-[var(--text-subtle)] uppercase tracking-wider">
-                  {t('auth.username')}
+                  Email
                 </label>
                 <input
-                  type="text"
+                  type="email"
                   required
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-alt)]/50 py-2.5 px-4 text-[0.85rem] text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all placeholder:text-[var(--muted-soft)]"
-                  placeholder={t('auth.username_placeholder')}
-                  autoComplete="username"
+                  placeholder="you@example.com"
+                  autoComplete="email"
                 />
               </div>
 
