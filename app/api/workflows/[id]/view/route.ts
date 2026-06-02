@@ -22,7 +22,7 @@ export async function POST(
 
   try {
     const { getAdminSettings } = await import('@/lib/admin-settings');
-    const settings = getAdminSettings();
+    const settings = await getAdminSettings();
     const sheetId = settings.sheetIdFlows || process.env.GOOGLE_SHEET_ID_FLOWS || '';
 
     // Send a background request to n8n to increment the view.

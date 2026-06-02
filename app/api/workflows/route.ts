@@ -74,7 +74,7 @@ async function loadFromN8n() {
   if (!listWebhookUrl) return null;
 
   try {
-    const settings = getAdminSettings();
+    const settings = await getAdminSettings();
     const sheetId = settings.sheetIdFlows || process.env.GOOGLE_SHEET_ID_FLOWS || '';
     if (sheetId) {
       const separator = listWebhookUrl.includes('?') ? '&' : '?';
@@ -184,7 +184,7 @@ export async function POST(request: Request) {
   let n8nResponse: Response;
 
   try {
-    const settings = getAdminSettings();
+    const settings = await getAdminSettings();
     const sheetIdFlows = settings.sheetIdFlows || process.env.GOOGLE_SHEET_ID_FLOWS || '';
 
     n8nResponse = await fetch(webhookUrl, {

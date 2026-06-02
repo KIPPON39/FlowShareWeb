@@ -6,8 +6,8 @@ const GOOGLE_SERVICE_ACCOUNT_EMAIL = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
 // Handle newlines in the private key from .env correctly
 const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
-function getSheetIdUsers() {
-  const settings = getAdminSettings();
+async function getSheetIdUsers() {
+  const settings = await getAdminSettings();
   return settings.sheetIdUsers || process.env.GOOGLE_SHEET_ID_USERS;
 }
 
@@ -39,7 +39,7 @@ async function getAuthClient() {
  * Assumes Sheet1 with columns: Username | PasswordHash | CreatedAt
  */
 export async function getUserByUsername(username: string) {
-  const GOOGLE_SHEET_ID_USERS = getSheetIdUsers();
+  const GOOGLE_SHEET_ID_USERS = await getSheetIdUsers();
   if (!GOOGLE_SHEET_ID_USERS) {
     console.warn('GOOGLE_SHEET_ID_USERS is not set.');
     return null;
@@ -84,7 +84,7 @@ export async function getUserByUsername(username: string) {
  * Creates a new user in the Google Sheet.
  */
 export async function createUser(username: string, passwordHash: string, email: string = '', imageUrl: string = '', role: string = 'User') {
-  const GOOGLE_SHEET_ID_USERS = getSheetIdUsers();
+  const GOOGLE_SHEET_ID_USERS = await getSheetIdUsers();
   if (!GOOGLE_SHEET_ID_USERS) {
     throw new Error('GOOGLE_SHEET_ID_USERS is not set.');
   }
@@ -115,7 +115,7 @@ export async function createUser(username: string, passwordHash: string, email: 
  * (n8n register webhook saves email/imageUrl in additional columns)
  */
 export async function searchUsers(query: string, limit = 10) {
-  const GOOGLE_SHEET_ID_USERS = getSheetIdUsers();
+  const GOOGLE_SHEET_ID_USERS = await getSheetIdUsers();
   if (!GOOGLE_SHEET_ID_USERS) {
     console.warn('GOOGLE_SHEET_ID_USERS is not set.');
     return [];

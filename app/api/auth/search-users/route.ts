@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const settings = getAdminSettings();
+    const settings = await getAdminSettings();
     const sheetId = settings.sheetIdUsers || process.env.GOOGLE_SHEET_ID_USERS || '';
 
     const separator = searchWebhookUrl.includes('?') ? '&' : '?';

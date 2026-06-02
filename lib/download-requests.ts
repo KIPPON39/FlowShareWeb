@@ -48,7 +48,7 @@ export async function createDownloadRequest(request: Request) {
   const timestampStr = new Date().toISOString();
   const dateStr = timestampStr.split('T')[0];
 
-  const settings = getAdminSettings();
+  const settings = await getAdminSettings();
   const sheetId = settings.sheetIdDownloadRequests || process.env.GOOGLE_SHEET_ID_DOWNLOAD_REQUESTS || '';
 
   const downloadRequest = {

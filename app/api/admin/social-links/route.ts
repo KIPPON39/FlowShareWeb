@@ -3,7 +3,7 @@ import { getAdminSettings } from '@/lib/admin-settings';
 import { getSession } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
-  const settings = getAdminSettings();
+  const settings = await getAdminSettings();
   const sheetId = settings.sheetIdSocialLinks || '';
 
   if (!sheetId) {
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const settings = getAdminSettings();
+  const settings = await getAdminSettings();
   const sheetId = settings.sheetIdSocialLinks || '';
 
   if (!sheetId) {

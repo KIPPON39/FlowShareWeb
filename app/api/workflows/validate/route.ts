@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     const n8nValidatorUrl = process.env.N8N_VALIDATOR_WEBHOOK_URL || 'http://localhost:5678/webhook/check-file';
     
     const { getAdminSettings } = await import('@/lib/admin-settings');
-    const settings = getAdminSettings();
+    const settings = await getAdminSettings();
     const sheetId = settings.sheetIdFlows || process.env.GOOGLE_SHEET_ID_FLOWS || '';
     
     try {

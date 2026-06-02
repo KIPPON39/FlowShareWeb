@@ -67,7 +67,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true, message: 'Logged in successfully as Superadmin' }, { status: 200 });
     }
 
-    const settings = getAdminSettings();
+    const settings = await getAdminSettings();
     const sheetId = settings.sheetIdUsers || process.env.GOOGLE_SHEET_ID_USERS || '';
 
     const n8nResponse = await fetch(loginWebhookUrl, {

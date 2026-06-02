@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     const n8nUrl = process.env.N8N_SPEAKER_RESPONSE_URL || 'https://libn.kku.ac.th/webhook/speaker-response';
 
     const { getAdminSettings } = await import('@/lib/admin-settings');
-    const settings = getAdminSettings();
+    const settings = await getAdminSettings();
     const sheetId = settings.sheetIdSpeakerRequests || process.env.GOOGLE_SHEET_ID_SPEAKER_REQUESTS || '';
 
     const response = await fetch(n8nUrl, {

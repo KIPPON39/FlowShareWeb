@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   const n8nUrl = process.env.N8N_SPEAKER_CHECKSTATUS_URL || 'https://libn.kku.ac.th/webhook/speaker-status';
 
   const { getAdminSettings } = await import('@/lib/admin-settings');
-  const settings = getAdminSettings();
+  const settings = await getAdminSettings();
   const sheetId = settings.sheetIdSpeakerRequests || process.env.GOOGLE_SHEET_ID_SPEAKER_REQUESTS || '';
 
   try {

@@ -1,5 +1,4 @@
-import fs from 'fs';
-import path from 'path';
+import { get } from '@vercel/edge-config';
 
 export interface AdminSettings {
   sheetIdUsers: string;
@@ -10,71 +9,80 @@ export interface AdminSettings {
   [key: string]: string;
 }
 
-const SETTINGS_FILE_PATH = path.join(process.cwd(), 'data', 'settings.json');
-
 /**
- * Ensures the settings file exists. If not, creates it with empty values.
+ * Gets the current admin settings from Edge Config or Environment Variables.
  */
-function ensureSettingsFile() {
-  const dir = path.dirname(SETTINGS_FILE_PATH);
+export async function getAdminSettings(): Promise<AdminSettings> {
   try {
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
+    let parsed: Partial<AdminSettings> = {};
+    if (process.env.EDGE_CONFIG) {
+      parsed = (await get('adminSettings')) || {};
     }
-    if (!fs.existsSync(SETTINGS_FILE_PATH)) {
-      const defaultSettings: AdminSettings = {
-        sheetIdUsers: '',
-        sheetIdFlows: '',
-        sheetIdDownloadRequests: '',
-        sheetIdSpeakerRequests: '',
-        sheetIdSocialLinks: '',
-      };
-      fs.writeFileSync(SETTINGS_FILE_PATH, JSON.stringify(defaultSettings, null, 2), 'utf8');
-    }
-  } catch (error) {
-    console.warn('Could not write to settings file, likely on a read-only filesystem (e.g., Vercel):', error);
-  }
-}
-
-/**
- * Gets the current admin settings.
- */
-export function getAdminSettings(): AdminSettings {
-  ensureSettingsFile();
-  try {
-    const data = fs.readFileSync(SETTINGS_FILE_PATH, 'utf8');
-    const parsed = JSON.parse(data) as AdminSettings;
+    
     return {
-      ...parsed,
       sheetIdUsers: parsed.sheetIdUsers || process.env.GOOGLE_SHEET_ID_USERS || '',
       sheetIdFlows: parsed.sheetIdFlows || process.env.GOOGLE_SHEET_ID_FLOWS || '',
       sheetIdDownloadRequests: parsed.sheetIdDownloadRequests || process.env.GOOGLE_SHEET_ID_DOWNLOAD_REQUESTS || '',
       sheetIdSpeakerRequests: parsed.sheetIdSpeakerRequests || process.env.GOOGLE_SHEET_ID_SPEAKER_REQUESTS || '',
       sheetIdSocialLinks: parsed.sheetIdSocialLinks || process.env.GOOGLE_SHEET_ID_SOCIAL_LINKS || '',
+      ...parsed,
     };
   } catch (error) {
-    console.error('Error reading settings.json:', error);
-    return { 
-      sheetIdUsers: process.env.GOOGLE_SHEET_ID_USERS || '', 
-      sheetIdFlows: process.env.GOOGLE_SHEET_ID_FLOWS || '', 
-      sheetIdDownloadRequests: process.env.GOOGLE_SHEET_ID_DOWNLOAD_REQUESTS || '', 
-      sheetIdSpeakerRequests: process.env.GOOGLE_SHEET_ID_SPEAKER_REQUESTS || '', 
-      sheetIdSocialLinks: process.env.GOOGLE_SHEET_ID_SOCIAL_LINKS || '' 
+    console.error('Error reading from Edge Config:', error);
+    return {
+      sheetIdUsers: process.env.GOOGLE_SHEET_ID_USERS || '',
+      sheetIdFlows: process.env.GOOGLE_SHEET_ID_FLOWS || '',
+      sheetIdDownloadRequests: process.env.GOOGLE_SHEET_ID_DOWNLOAD_REQUESTS || '',
+      sheetIdSpeakerRequests: process.env.GOOGLE_SHEET_ID_SPEAKER_REQUESTS || '',
+      sheetIdSocialLinks: process.env.GOOGLE_SHEET_ID_SOCIAL_LINKS || ''
     };
   }
 }
 
 /**
- * Updates the admin settings.
+ * Updates the admin settings in Edge Config via Vercel REST API.
  */
-export function updateAdminSettings(newSettings: Partial<AdminSettings>): AdminSettings {
-  const current = getAdminSettings();
+export async function updateAdminSettings(newSettings: Partial<AdminSettings>): Promise<AdminSettings> {
+  const current = await getAdminSettings();
   const updated = { ...current, ...newSettings } as AdminSettings;
+
+  if (!process.env.EDGE_CONFIG || !process.env.VERCEL_API_TOKEN) {
+    console.warn('EDGE_CONFIG or VERCEL_API_TOKEN missing, cannot update Edge Config. Returning updated object without saving.');
+    return updated; 
+  }
+
   try {
-    fs.writeFileSync(SETTINGS_FILE_PATH, JSON.stringify(updated, null, 2), 'utf8');
+    // Extract Edge Config ID from URL
+    // e.g. https://edge-config.vercel.com/ecfg_xxxxxxxx?token=...
+    const url = new URL(process.env.EDGE_CONFIG);
+    const edgeConfigId = url.pathname.split('/')[1];
+
+    const updateResponse = await fetch(`https://api.vercel.com/v1/edge-config/${edgeConfigId}/items`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${process.env.VERCEL_API_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        items: [
+          {
+            operation: 'upsert',
+            key: 'adminSettings',
+            value: updated,
+          },
+        ],
+      }),
+    });
+
+    if (!updateResponse.ok) {
+      const errorText = await updateResponse.text();
+      console.error('Failed to update Edge Config:', updateResponse.status, errorText);
+      throw new Error('Failed to update Edge Config');
+    }
+
     return updated;
   } catch (error) {
-    console.error('Error writing to settings.json:', error);
+    console.error('Error updating Edge Config:', error);
     throw new Error('Failed to save settings');
   }
 }

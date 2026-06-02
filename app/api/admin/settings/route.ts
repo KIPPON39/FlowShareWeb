@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const settings = getAdminSettings();
+    const settings = await getAdminSettings();
     return NextResponse.json(settings);
   } catch (error) {
     console.error('Error fetching admin settings:', error);
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const updated = updateAdminSettings(body);
+    const updated = await updateAdminSettings(body);
     return NextResponse.json(updated);
   } catch (error) {
     console.error('Error updating admin settings:', error);

@@ -142,7 +142,7 @@ export async function POST(request: Request) {
     const n8nGeneratorUrl = process.env.N8N_GENERATOR_WEBHOOK_URL || 'http://localhost:5678/webhook/generate-description';
 
     const { getAdminSettings } = await import('@/lib/admin-settings');
-    const settings = getAdminSettings();
+    const settings = await getAdminSettings();
     const sheetId = settings.sheetIdFlows || process.env.GOOGLE_SHEET_ID_FLOWS || '';
 
     function cleanDescription(desc: string, currentTopic: string) {

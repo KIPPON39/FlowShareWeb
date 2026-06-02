@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     const randomHex = crypto.randomBytes(4).toString('hex').toUpperCase(); // 8 chars (over 4.2 billion combinations per day)
     const userid = `FS-USR-${year}${month}${day}-${randomHex}`; // e.g. FS-USR-20260527-A1B2C3D4
 
-    const settings = getAdminSettings();
+    const settings = await getAdminSettings();
     const sheetId = settings.sheetIdUsers || process.env.GOOGLE_SHEET_ID_USERS || '';
 
     const n8nResponse = await fetch(registerWebhookUrl, {
