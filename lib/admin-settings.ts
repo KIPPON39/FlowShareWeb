@@ -17,18 +17,22 @@ const SETTINGS_FILE_PATH = path.join(process.cwd(), 'data', 'settings.json');
  */
 function ensureSettingsFile() {
   const dir = path.dirname(SETTINGS_FILE_PATH);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-  if (!fs.existsSync(SETTINGS_FILE_PATH)) {
-    const defaultSettings: AdminSettings = {
-      sheetIdUsers: '',
-      sheetIdFlows: '',
-      sheetIdDownloadRequests: '',
-      sheetIdSpeakerRequests: '',
-      sheetIdSocialLinks: '',
-    };
-    fs.writeFileSync(SETTINGS_FILE_PATH, JSON.stringify(defaultSettings, null, 2), 'utf8');
+  try {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    if (!fs.existsSync(SETTINGS_FILE_PATH)) {
+      const defaultSettings: AdminSettings = {
+        sheetIdUsers: '',
+        sheetIdFlows: '',
+        sheetIdDownloadRequests: '',
+        sheetIdSpeakerRequests: '',
+        sheetIdSocialLinks: '',
+      };
+      fs.writeFileSync(SETTINGS_FILE_PATH, JSON.stringify(defaultSettings, null, 2), 'utf8');
+    }
+  } catch (error) {
+    console.warn('Could not write to settings file, likely on a read-only filesystem (e.g., Vercel):', error);
   }
 }
 
