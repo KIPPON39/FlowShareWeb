@@ -1,10 +1,15 @@
 import { google } from 'googleapis';
+import { getAdminSettings } from './admin-settings';
 
 // Ensure these are set in your .env
 const GOOGLE_SERVICE_ACCOUNT_EMAIL = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
 // Handle newlines in the private key from .env correctly
 const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
-const GOOGLE_SHEET_ID_USERS = process.env.GOOGLE_SHEET_ID_USERS;
+
+function getSheetIdUsers() {
+  const settings = getAdminSettings();
+  return settings.sheetIdUsers || process.env.GOOGLE_SHEET_ID_USERS;
+}
 
 let cachedAuth: any = null;
 
@@ -34,6 +39,7 @@ async function getAuthClient() {
  * Assumes Sheet1 with columns: Username | PasswordHash | CreatedAt
  */
 export async function getUserByUsername(username: string) {
+  const GOOGLE_SHEET_ID_USERS = getSheetIdUsers();
   if (!GOOGLE_SHEET_ID_USERS) {
     console.warn('GOOGLE_SHEET_ID_USERS is not set.');
     return null;
@@ -43,10 +49,10 @@ export async function getUserByUsername(username: string) {
     const auth = await getAuthClient();
     const sheets = google.sheets({ version: 'v4', auth });
 
-    // Read the sheet. Adjust range to A:F to include Email, ImageUrl, and Role.
+    // Read the sheet. Adjust range to A:I to include all columns.
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: GOOGLE_SHEET_ID_USERS,
-      range: 'Sheet1!A:F',
+      range: 'Users!A:I',
     });
 
     const rows = response.data.values;
@@ -55,14 +61,15 @@ export async function getUserByUsername(username: string) {
     // Skip header row
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i];
-      if (row[0] === username) {
+      if (row[1] === username) {
         return {
-          username: row[0],
-          passwordHash: row[1],
-          createdAt: row[2],
-          email: row[3] || '',
-          imageUrl: row[4] || '',
-          role: row[5] || 'User',
+          userid: row[0],
+          username: row[1],
+          email: row[2] || '',
+          passwordHash: row[3],
+          createdAt: row[4] || '',
+          imageUrl: row[5] || '',
+          role: row[6] || 'User',
         };
       }
     }
@@ -77,6 +84,7 @@ export async function getUserByUsername(username: string) {
  * Creates a new user in the Google Sheet.
  */
 export async function createUser(username: string, passwordHash: string, email: string = '', imageUrl: string = '', role: string = 'User') {
+  const GOOGLE_SHEET_ID_USERS = getSheetIdUsers();
   if (!GOOGLE_SHEET_ID_USERS) {
     throw new Error('GOOGLE_SHEET_ID_USERS is not set.');
   }
@@ -85,14 +93,15 @@ export async function createUser(username: string, passwordHash: string, email: 
   const sheets = google.sheets({ version: 'v4', auth });
 
   const createdAt = new Date().toISOString();
+  const userid = crypto.randomUUID();
 
   await sheets.spreadsheets.values.append({
     spreadsheetId: GOOGLE_SHEET_ID_USERS,
-    range: 'Sheet1!A:F',
+    range: 'Users!A:I',
     valueInputOption: 'USER_ENTERED',
     requestBody: {
       values: [
-        [username, passwordHash, createdAt, email, imageUrl, role],
+        [userid, username, email, passwordHash, createdAt, imageUrl, role],
       ],
     },
   });
@@ -106,6 +115,7 @@ export async function createUser(username: string, passwordHash: string, email: 
  * (n8n register webhook saves email/imageUrl in additional columns)
  */
 export async function searchUsers(query: string, limit = 10) {
+  const GOOGLE_SHEET_ID_USERS = getSheetIdUsers();
   if (!GOOGLE_SHEET_ID_USERS) {
     console.warn('GOOGLE_SHEET_ID_USERS is not set.');
     return [];
@@ -117,7 +127,7 @@ export async function searchUsers(query: string, limit = 10) {
 
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: GOOGLE_SHEET_ID_USERS,
-      range: 'Sheet1!A:F',
+      range: 'Users!A:I',
     });
 
     const rows = response.data.values;
@@ -129,9 +139,9 @@ export async function searchUsers(query: string, limit = 10) {
     // Skip header row
     for (let i = 1; i < rows.length && results.length < limit; i++) {
       const row = rows[i];
-      const username = (row[0] || '').trim();
-      const email = (row[3] || '').trim();
-      const imageUrl = (row[4] || '').trim();
+      const username = (row[1] || '').trim();
+      const email = (row[2] || '').trim();
+      const imageUrl = (row[5] || '').trim();
 
       if (
         username.toLowerCase().includes(q) ||

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createSession } from '@/lib/auth';
+import { getAdminSettings } from '@/lib/admin-settings';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 
@@ -42,6 +43,9 @@ export async function POST(request: Request) {
     const randomHex = crypto.randomBytes(4).toString('hex').toUpperCase(); // 8 chars (over 4.2 billion combinations per day)
     const userid = `FS-USR-${year}${month}${day}-${randomHex}`; // e.g. FS-USR-20260527-A1B2C3D4
 
+    const settings = getAdminSettings();
+    const sheetId = settings.sheetIdUsers || process.env.GOOGLE_SHEET_ID_USERS || '';
+
     const n8nResponse = await fetch(registerWebhookUrl, {
       method: 'POST',
       headers: {
@@ -49,6 +53,7 @@ export async function POST(request: Request) {
         ...(process.env.N8N_WEBHOOK_SECRET ? { 'x-flowshare-secret': process.env.N8N_WEBHOOK_SECRET } : {}),
       },
       body: JSON.stringify({
+        sheetId,
         userid,
         username,
         email,

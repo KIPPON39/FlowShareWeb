@@ -2,6 +2,7 @@
 
 import { Upload, Send, Plus, X, Bot, Database, Terminal, CloudUpload, Lightbulb, UserPlus, Tag, ChevronDown, GripVertical, CheckCircle2, XCircle, AlertTriangle, Lock } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { useI18n } from '@/lib/i18n';
@@ -318,6 +319,11 @@ export function UploadSection() {
   const [contributors, setContributors] = useState<{ id: string; name: string; email: string; imageUrl?: string }[]>([]);
   const [newEmail, setNewEmail] = useState('');
   const [contributorQuery, setContributorQuery] = useState('');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const [contributorResults, setContributorResults] = useState<{ username: string; email: string; imageUrl: string }[]>([]);
   const [isSearchingUsers, setIsSearchingUsers] = useState(false);
   const [showContributorDropdown, setShowContributorDropdown] = useState(false);
@@ -809,36 +815,39 @@ export function UploadSection() {
 
   return (
     <section id="upload" className="grid gap-8 my-8 sm:my-12 pb-28 lg:pb-12 relative">
-      <AnimatePresence>
-        {submitState === 'saved' && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
-          >
+      {mounted && createPortal(
+        <AnimatePresence>
+          {submitState === 'saved' && (
             <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              className="bg-[var(--surface)] border border-[var(--border)] p-8 rounded-2xl shadow-2xl max-w-md w-full text-center flex flex-col items-center gap-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
             >
-              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500 mb-2">
-                <CheckCircle2 size={40} />
-              </div>
-              <h2 className="text-2xl font-bold text-[var(--text)]">{t('upload.success')}</h2>
-              <p className="text-[0.95rem] text-[var(--muted)] leading-relaxed">
-                {statusMessage || t('upload.saved')}
-              </p>
-              <button 
-                onClick={() => window.location.href = '/'}
-                className="mt-6 px-8 py-3 w-full rounded-xl bg-[var(--accent)] text-white font-bold text-[0.9rem] shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all"
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                className="bg-[var(--surface)] border border-[var(--border)] p-8 rounded-2xl shadow-2xl max-w-md w-full text-center flex flex-col items-center gap-4"
               >
-                {t('upload.back_to_home')}
-              </button>
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500 mb-2">
+                  <CheckCircle2 size={40} />
+                </div>
+                <h2 className="text-2xl font-bold text-[var(--text)]">{t('upload.success')}</h2>
+                <p className="text-[0.95rem] text-[var(--muted)] leading-relaxed">
+                  {statusMessage || t('upload.saved')}
+                </p>
+                <button 
+                  onClick={() => window.location.href = '/'}
+                  className="mt-6 px-8 py-3 w-full rounded-xl bg-[var(--accent)] text-white font-bold text-[0.9rem] shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all"
+                >
+                  {t('upload.back_to_home')}
+                </button>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* Progress Bar */}
       <div className="grid gap-2">
@@ -1109,37 +1118,43 @@ export function UploadSection() {
                 <span className="text-red-500 text-[0.72rem] font-semibold mt-[-4px] pl-1">* {lang === 'th' ? 'กรุณาเข้าสู่ระบบก่อนอัพโหลด' : 'Please log in before uploading'}</span>
               )}
 
-              <div className="flex flex-wrap gap-2 mb-4">
+              <div className="flex flex-wrap items-center gap-2 mb-6">
                 {creatorEmail && (
-                  <div className="flex items-center gap-2 rounded-xl bg-[var(--accent-soft)] pl-3 pr-3 py-2 border border-[var(--accent)]/20">
-                    <div className="h-6 w-6 rounded-full bg-[var(--accent)] flex items-center justify-center text-[0.6rem] font-bold text-white overflow-hidden">
+                  <div className="group flex items-center gap-2.5 rounded-full bg-gradient-to-r from-[var(--accent)]/10 to-[var(--accent)]/5 pl-1.5 pr-4 py-1.5 border border-[var(--accent)]/20 shadow-sm transition-all hover:shadow-md hover:border-[var(--accent)]/40">
+                    <div className="relative h-8 w-8 rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-hover)] flex items-center justify-center text-[0.75rem] font-bold text-white shadow-inner ring-2 ring-[var(--background)] overflow-hidden">
                       {creatorImageUrl ? (
-                        <img
+                        <Image
                           src={creatorImageUrl}
                           alt={creatorUsername || nameFromEmail(creatorEmail)}
-                          className="h-full w-full object-cover"
+                          fill
+                          sizes="32px"
+                          className="object-cover transition-transform duration-300 group-hover:scale-110"
                           referrerPolicy="no-referrer"
                         />
                       ) : (
                         (creatorUsername || nameFromEmail(creatorEmail)).charAt(0).toUpperCase()
                       )}
                     </div>
-                    <span className="text-xs font-bold text-[var(--accent)]">{creatorUsername || nameFromEmail(creatorEmail)}</span>
-                    <span className="rounded-md bg-[var(--surface)] px-2 py-0.5 text-[0.55rem] font-black uppercase tracking-widest text-[var(--accent)]">{t('upload.creator')}</span>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-[var(--text)] tracking-tight leading-tight">{creatorUsername || nameFromEmail(creatorEmail)}</span>
+                      <span className="text-[0.6rem] font-bold uppercase tracking-wider text-[var(--accent)] leading-tight mt-0.5">{t('upload.creator')}</span>
+                    </div>
                   </div>
                 )}
                 {contributors.map((c) => (
-                  <div key={c.id} className="flex items-center gap-2 rounded-xl bg-[var(--surface-alt)] pl-3 pr-2 py-2 border border-[var(--border)]">
-                    <div className="h-6 w-6 rounded-full bg-[var(--accent-soft)] flex items-center justify-center text-[0.6rem] font-bold text-[var(--accent)] overflow-hidden">
+                  <div key={c.id} className="group flex items-center gap-2.5 rounded-full bg-[var(--surface-alt)] pl-1.5 pr-2 py-1.5 border border-[var(--border)] shadow-sm transition-all hover:shadow-md hover:border-[var(--border-strong)]">
+                    <div className="relative h-8 w-8 rounded-full bg-[var(--surface)] flex items-center justify-center text-[0.75rem] font-bold text-[var(--text-subtle)] shadow-inner ring-2 ring-[var(--background)] overflow-hidden">
                       {c.imageUrl ? (
-                        <img src={c.imageUrl} alt={c.name} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                        <Image src={c.imageUrl} alt={c.name} fill sizes="32px" className="object-cover transition-transform duration-300 group-hover:scale-110" referrerPolicy="no-referrer" />
                       ) : (
                         c.name.charAt(0).toUpperCase()
                       )}
                     </div>
-                    <span className="text-xs font-bold text-[var(--text-subtle)]">{c.name}</span>
-                    <span className="rounded-md bg-[var(--surface)] px-2 py-0.5 text-[0.55rem] font-black uppercase tracking-widest text-[var(--muted)]">{t('upload.contributor')}</span>
-                    <button onClick={() => removeContributor(c.id)} className="text-[var(--muted)] hover:text-red-500">
+                    <div className="flex flex-col pr-1">
+                      <span className="text-sm font-semibold text-[var(--text-subtle)] tracking-tight leading-tight">{c.name}</span>
+                      <span className="text-[0.6rem] font-bold uppercase tracking-wider text-[var(--muted)] leading-tight mt-0.5">{t('upload.contributor')}</span>
+                    </div>
+                    <button onClick={() => removeContributor(c.id)} className="h-6 w-6 flex items-center justify-center rounded-full bg-[var(--surface)] border border-[var(--border)] text-[var(--muted)] hover:text-red-500 hover:bg-red-500/10 hover:border-red-500/20 transition-all">
                       <X size={12} />
                     </button>
                   </div>
@@ -1173,7 +1188,7 @@ export function UploadSection() {
                       >
                         <div className="h-8 w-8 rounded-full bg-[var(--accent-soft)] flex items-center justify-center text-[0.65rem] font-bold text-[var(--accent)] overflow-hidden flex-shrink-0">
                           {user.imageUrl ? (
-                            <img src={user.imageUrl} alt={user.username} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                            <Image src={user.imageUrl} alt={user.username} fill sizes="32px" className="object-cover" referrerPolicy="no-referrer" />
                           ) : (
                             user.username.charAt(0).toUpperCase()
                           )}
@@ -1403,15 +1418,17 @@ export function UploadSection() {
                 <div className="flex -space-x-3 overflow-hidden">
                   {creatorEmail && (
                     <div
-                      className="inline-block h-8 w-8 rounded-xl ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-transparent bg-[var(--surface)] shadow-lg overflow-hidden border border-[var(--accent)]"
+                      className="relative inline-block h-8 w-8 rounded-full border-2 border-[var(--surface)] shadow-sm overflow-hidden bg-gradient-to-br from-[var(--accent)]/40 to-[var(--accent)]/20 transition-transform hover:scale-110 hover:z-50 hover:ring-2 hover:ring-[var(--accent)]/30"
                       style={{ zIndex: contributors.length + 1 }}
-                      title={`${nameFromEmail(creatorEmail)} (Creator)`}
+                      title={`${creatorUsername || nameFromEmail(creatorEmail)} (${t('upload.creator')})`}
                     >
                       {creatorImageUrl ? (
-                        <img
+                        <Image
                           src={creatorImageUrl}
                           alt={nameFromEmail(creatorEmail)}
-                          className="h-full w-full object-cover"
+                          fill
+                          sizes="32px"
+                          className="object-cover"
                           referrerPolicy="no-referrer"
                         />
                       ) : (
@@ -1428,9 +1445,9 @@ export function UploadSection() {
                   {contributors.map((c, i) => (
                     <div
                       key={c.id}
-                      className="inline-block h-8 w-8 rounded-xl ring-2 ring-[var(--surface-alt)] ring-offset-2 ring-offset-transparent bg-[var(--surface)] shadow-lg overflow-hidden border border-[var(--border)]"
+                      className="relative inline-block h-8 w-8 rounded-full border-2 border-[var(--surface)] shadow-sm overflow-hidden bg-gradient-to-br from-[#f4d7d0] to-[#e5a79a] transition-transform hover:scale-110 hover:z-50 hover:ring-2 hover:ring-[var(--accent)]/30"
                       style={{ zIndex: contributors.length - i }}
-                      title={c.name}
+                      title={`${c.name} (${t('upload.contributor')})`}
                     >
                       <Image
                         src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${c.name}`}
@@ -1498,50 +1515,53 @@ export function UploadSection() {
       </div>
 
       {/* Mobile Sticky Action Bar */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[var(--surface)]/90 backdrop-blur-md border-t border-[var(--border)] p-4 px-6 shadow-2xl flex flex-col gap-3">
-        {statusMessage && (
-          <div className={`text-[0.7rem] font-bold text-center leading-relaxed ${submitState === 'error' ? 'text-red-500' : 'text-[var(--accent)]'}`}>
-            {statusMessage}
+      {mounted && createPortal(
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[9999] bg-[var(--surface)]/90 backdrop-blur-md border-t border-[var(--border)] p-4 px-6 shadow-2xl flex flex-col gap-3">
+          {statusMessage && (
+            <div className={`text-[0.7rem] font-bold text-center leading-relaxed ${submitState === 'error' ? 'text-red-500' : 'text-[var(--accent)]'}`}>
+              {statusMessage}
+            </div>
+          )}
+          <div className="flex items-center justify-between text-[0.7rem] font-bold text-[var(--muted-strong)]">
+            <span>{t('upload.completion_progress') || 'Completion Progress'}</span>
+            <span className={completedStepsCount === requirements.length ? 'text-emerald-500' : ''}>
+              {Math.round(progressPercent)}%
+            </span>
           </div>
-        )}
-        <div className="flex items-center justify-between text-[0.7rem] font-bold text-[var(--muted-strong)]">
-          <span>{t('upload.completion_progress') || 'Completion Progress'}</span>
-          <span className={completedStepsCount === requirements.length ? 'text-emerald-500' : ''}>
-            {Math.round(progressPercent)}%
-          </span>
-        </div>
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => {
-              const firstUnmet = requirements.find(r => !r.isMet);
-              if (firstUnmet) {
-                scrollToField(firstUnmet.id);
-                setHasAttemptedSubmit(true);
-              }
-            }}
-            className="flex-1 rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-3 text-[0.75rem] font-bold text-[var(--text-subtle)] text-center transition-all"
-          >
-            {completedStepsCount}/{requirements.length} {lang === 'th' ? 'เสร็จสิ้น' : 'Steps'}
-          </button>
-          <button
-            onClick={(e) => {
-              if (!canShipWorkflow) {
-                e.preventDefault();
-                setHasAttemptedSubmit(true);
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => {
                 const firstUnmet = requirements.find(r => !r.isMet);
-                if (firstUnmet) scrollToField(firstUnmet.id);
-                return;
-              }
-              submitWorkflow();
-            }}
-            disabled={submitState === 'saving'}
-            className={`flex-[2] futuristic-hover group flex items-center justify-center gap-2 rounded-xl bg-[var(--accent)] py-3 text-[0.8rem] font-bold text-white shadow-md shadow-[var(--accent-glow)] transition-all ${!canShipWorkflow ? 'opacity-50' : 'active:scale-95'}`}
-          >
-            <Send size={14} />
-            <span className="uppercase tracking-wider">{submitState === 'saving' ? t('upload.shipping') : t('upload.ship_workflow')}</span>
-          </button>
-        </div>
-      </div>
+                if (firstUnmet) {
+                  scrollToField(firstUnmet.id);
+                  setHasAttemptedSubmit(true);
+                }
+              }}
+              className="flex-1 rounded-xl border border-[var(--border)] bg-[var(--surface-alt)] py-3 text-[0.75rem] font-bold text-[var(--text-subtle)] text-center transition-all"
+            >
+              {completedStepsCount}/{requirements.length} {lang === 'th' ? 'เสร็จสิ้น' : 'Steps'}
+            </button>
+            <button
+              onClick={(e) => {
+                if (!canShipWorkflow) {
+                  e.preventDefault();
+                  setHasAttemptedSubmit(true);
+                  const firstUnmet = requirements.find(r => !r.isMet);
+                  if (firstUnmet) scrollToField(firstUnmet.id);
+                  return;
+                }
+                submitWorkflow();
+              }}
+              disabled={submitState === 'saving'}
+              className={`flex-[2] futuristic-hover group flex items-center justify-center gap-2 rounded-xl bg-[var(--accent)] py-3 text-[0.8rem] font-bold text-white shadow-md shadow-[var(--accent-glow)] transition-all ${!canShipWorkflow ? 'opacity-50' : 'active:scale-95'}`}
+            >
+              <Send size={14} />
+              <span className="uppercase tracking-wider">{submitState === 'saving' ? t('upload.shipping') : t('upload.ship_workflow')}</span>
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
     </section>
   );
 }

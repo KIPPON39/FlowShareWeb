@@ -27,18 +27,23 @@ export async function POST(request: Request) {
     //    เพื่อหลีกเลี่ยงปัญหา binary encoding ของ n8n (binaryMode: separate)
     const n8nValidatorUrl = process.env.N8N_VALIDATOR_WEBHOOK_URL || 'http://localhost:5678/webhook/check-file';
     
+    const { getAdminSettings } = await import('@/lib/admin-settings');
+    const settings = getAdminSettings();
+    const sheetId = settings.sheetIdFlows || process.env.GOOGLE_SHEET_ID_FLOWS || '';
+    
     try {
       const n8nResponse = await fetch(n8nValidatorUrl, {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
-          ...(process.env.N8N_WEBHOOK_SECRET ? { 'x-api-key': process.env.N8N_WEBHOOK_SECRET } : { 'x-api-key': 'your-secret-api-key-1' }),
+          ...(process.env.N8N_WEBHOOK_SECRET ? { 'x-flowshare-secret': process.env.N8N_WEBHOOK_SECRET } : {}),
         },
         body: JSON.stringify({
           fileName,
           fileSize,
           mimeType: file.type || 'application/json',
           fileContent: fileText,
+          sheetId,
         }),
       });
 

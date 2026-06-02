@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getAdminSettings } from './admin-settings';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -47,8 +48,12 @@ export async function createDownloadRequest(request: Request) {
   const timestampStr = new Date().toISOString();
   const dateStr = timestampStr.split('T')[0];
 
+  const settings = getAdminSettings();
+  const sheetId = settings.sheetIdDownloadRequests || process.env.GOOGLE_SHEET_ID_DOWNLOAD_REQUESTS || '';
+
   const downloadRequest = {
     dlrequestID: `DR-${year}${month}${day}-${randomHex}`,
+    sheetId,
     flowID: workflowId,
     requesterName,
     date: dateStr,

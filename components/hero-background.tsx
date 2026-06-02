@@ -51,7 +51,7 @@ const scriptCache = new Map<string, Promise<void>>();
 const THEME_OPTIONS: Record<ThemeMode, VantaThemeOptions> = {
   light: {
     backgroundColor: 0xfafafa,
-    color: 0xa73b24,
+    color: 0xdb6b4d,
     points: 7,
     maxDistance: 14,
     spacing: 40,
@@ -69,11 +69,11 @@ const THEME_OPTIONS: Record<ThemeMode, VantaThemeOptions> = {
 
 const SHADER_OPTIONS = {
   light: {
-    bgColor1: '#ffffff',
-    bgColor2: '#fff4ee',
-    brightness: 1.26,
-    color1: '#a73b24',
-    color2: '#e27a5d',
+    bgColor1: '#fdf8f6',
+    bgColor2: '#fae3da',
+    brightness: 1.15,
+    color1: '#db6b4d',
+    color2: '#efa691',
     color3: '#fff1e8',
     grain: 'off',
     uDensity: 1.1,

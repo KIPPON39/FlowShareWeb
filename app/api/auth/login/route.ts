@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createSession } from '@/lib/auth';
+import { getAdminSettings } from '@/lib/admin-settings';
 import bcrypt from 'bcryptjs';
 
 function pickPasswordHash(user: Record<string, unknown>) {
@@ -52,13 +53,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
 
+    const settings = getAdminSettings();
+    const sheetId = settings.sheetIdUsers || process.env.GOOGLE_SHEET_ID_USERS || '';
+
     const n8nResponse = await fetch(loginWebhookUrl, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
         ...(process.env.N8N_WEBHOOK_SECRET ? { 'x-flowshare-secret': process.env.N8N_WEBHOOK_SECRET } : {}),
       },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, sheetId }),
     });
 
     let data: Record<string, any> = {};

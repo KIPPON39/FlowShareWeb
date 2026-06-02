@@ -37,7 +37,7 @@ export default function InviteSpeakerPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const response = await fetch('/api/workflows', { cache: 'no-store' });
+        const response = await fetch('/api/workflows');
         const data = await response.json();
         const allWorkflows: WorkflowTemplate[] = data.workflows || [];
         const found = allWorkflows.find(wf => wf.id === params.id);
