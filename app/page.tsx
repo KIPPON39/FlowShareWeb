@@ -576,7 +576,7 @@ export default function Home() {
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm text-blue-600 dark:text-blue-400 transition-transform group-hover:-translate-y-1">
                   <FileJson size={24} />
                 </div>
-                <div className="text-center bg-[var(--surface)] px-1">
+                <div className="text-center px-1">
                   <div className="text-[0.82rem] font-semibold text-[var(--text)]">{t('arch.step1_title')}</div>
                   <div className="text-[0.65rem] text-[var(--muted)]">{t('arch.step1_desc')}</div>
                 </div>
@@ -589,7 +589,7 @@ export default function Home() {
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm text-amber-600 dark:text-amber-400 transition-transform group-hover:-translate-y-1">
                   <Cpu size={24} />
                 </div>
-                <div className="text-center bg-[var(--surface)] px-1">
+                <div className="text-center px-1">
                   <div className="text-[0.82rem] font-semibold text-[var(--text)]">{t('arch.step2_title')}</div>
                   <div className="text-[0.65rem] text-[var(--muted)]">{t('arch.step2_desc')}</div>
                 </div>
@@ -602,7 +602,7 @@ export default function Home() {
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm text-purple-600 dark:text-purple-400 transition-transform group-hover:-translate-y-1">
                   <Database size={24} />
                 </div>
-                <div className="text-center bg-[var(--surface)] px-1">
+                <div className="text-center px-1">
                   <div className="text-[0.82rem] font-semibold text-[var(--text)]">{t('arch.step3_title')}</div>
                   <div className="text-[0.65rem] text-[var(--muted)]">{t('arch.step3_desc')}</div>
                 </div>
@@ -615,7 +615,7 @@ export default function Home() {
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm text-emerald-600 dark:text-emerald-400 transition-transform group-hover:-translate-y-1">
                   <Globe size={24} />
                 </div>
-                <div className="text-center bg-[var(--surface)] px-1">
+                <div className="text-center px-1">
                   <div className="text-[0.82rem] font-semibold text-[var(--text)]">{t('arch.step4_title')}</div>
                   <div className="text-[0.65rem] text-[var(--muted)]">{t('arch.step4_desc')}</div>
                 </div>

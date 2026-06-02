@@ -268,6 +268,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'detail.admin_only_json': 'เฉพาะผู้ดูแลระบบเท่านั้นที่สามารถดูเนื้อหา JSON ได้',
     'detail.not_found_desc': 'Workflow นี้อาจถูกลบไปแล้วหรือ ID ไม่ถูกต้อง',
 
+
+
     // Breadcrumb
     'breadcrumb.go_back': 'ย้อนกลับ',
     'breadcrumb.creator_space': 'พื้นที่ผู้สร้าง',
@@ -593,6 +595,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'detail.access_restricted': 'Access Restricted',
     'detail.admin_only_json': 'Only Admins can view the raw JSON content.',
     'detail.not_found_desc': 'This workflow may have been removed or the ID is incorrect.',
+
+
 
     // Breadcrumb
     'breadcrumb.go_back': 'Go Back',

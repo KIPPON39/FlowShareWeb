@@ -1,63 +1,84 @@
 <div align="center">
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+
+# FlowShare Web 🚀
+**The centralized automation platform for organizational personnel, by FlowShare.**
 </div>
 
-# Run and deploy your AI Studio app
+---
 
-This contains everything you need to run your app locally.
+## 🌟 Overview
+**FlowShare Web** is a Next.js platform designed to act as a central hub for automation workflows. It allows teams to discover, share, and request automation templates across the organization. It integrates deeply with **n8n** and **Google Sheets** to provide a serverless edge-data architecture, eliminating the need for traditional relational databases.
 
-View your app in AI Studio: https://ai.studio/apps/18ce3ccc-9d08-43c4-87d4-019f3ac8c2f7
+## ✨ Features
+- 🔐 **Secure Authentication**: Managed via Google Sheets with a robust Superadmin bypass system.
+- 🧩 **Workflow Hub**: Browse, view JSON, download, and invite speakers for automation templates.
+- 🤖 **AI Integration**: Powered by the Gemini API to automatically extract metadata and credentials from n8n JSON exports.
+- 📊 **Dynamic Admin Panel**: Manage all underlying Google Sheets IDs and dynamic settings (like Social Media Links) without touching code.
+- 🌍 **Internationalization (i18n)**: Fully supports English and Thai natively via Context API.
+- 💅 **Modern Aesthetics**: Built with TailwindCSS and Lucide Icons for a beautiful, responsive UI.
 
-## Run Locally
+---
 
-**Prerequisites:**  Node.js
+## 🚀 Getting Started
 
+### Prerequisites
+Before running the project locally, ensure you have:
+- Node.js (v18+)
+- npm or yarn
+- An active [n8n](https://n8n.io/) instance with configured webhooks
+- A Google Service Account (for Google Sheets integrations)
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+### Installation Guide
 
-## Backend bridge with n8n and Google Sheets
-
-FlowShare reads workflows from `/api/workflows` and submits new workflows to n8n. n8n should handle the Google Sheets write/read operations.
-
-### Environment variables
-
-Copy `.env.example` to `.env.local` or add these values to your existing `.env`:
-
-- `N8N_WORKFLOW_WEBHOOK_URL`: n8n POST webhook that receives new workflows.
-- `N8N_WEBHOOK_SECRET`: optional shared secret sent as `x-flowshare-secret`.
-- `N8N_LIST_WEBHOOK_URL`: optional n8n GET webhook that returns workflows from Google Sheets.
-- `GOOGLE_SHEETS_CSV_URL`: optional published Google Sheet CSV URL used when no list webhook is set.
-
-### n8n POST workflow
-
-Create a Webhook node with method `POST`, then append/upsert the incoming `workflow` object into Google Sheets.
-
-FlowShare sends this shape:
-
-```json
-{
-  "action": "upsert_workflow",
-  "source": "flowshare-web",
-  "workflow": {
-    "id": "ai-renewal-health-monitor",
-    "title": "AI Renewal Health Monitor",
-    "description": "Workflow summary",
-    "tags": ["Community"],
-    "keys": ["Google Sheets", "OpenAI API"],
-    "creators": [{ "name": "You", "email": "me@example.com" }],
-    "nodes": 2,
-    "steps": [{ "id": "1", "title": "Fetch data", "nodeName": "Google Sheets" }],
-    "createdAt": "2026-05-07T00:00:00.000Z"
-  }
-}
+**1. Clone the repository:**
+```bash
+git clone <your-repo-url>
+cd FlowShareWeb
 ```
 
-Recommended Google Sheet columns:
+**2. Install dependencies:**
+```bash
+npm install
+```
 
-`id,title,description,tags,keys,creators,nodes,steps,created_at`
+**3. Set up Environment Variables:**
+You need to configure the environment variables for your application to communicate with n8n and Google Sheets.
+```bash
+# Copy the example environment file
+cp .env.example .env
+```
+*(Open `.env` in your text editor and fill in your webhook URLs and API keys. Refer to the `.env.example` file for detailed comments on each variable).*
 
-Store `tags` and `keys` as comma-separated text. Store `creators` and `steps` as JSON strings.
+**4. Run the Development Server:**
+```bash
+npm run dev
+```
+Open your browser and navigate to [http://localhost:3000](http://localhost:3000) to see the application running.
+
+---
+
+## 🛠️ Environment Variables Configuration
+
+The `.env` file requires several webhook endpoints from your n8n workflows and your Google Sheets setup. 
+
+### Essential Variables You Must Configure:
+- `N8N_WEBHOOK_SECRET`: Secure token to validate requests between this app and your n8n workflows (`x-flowshare-secret`).
+- `GEMINI_API_KEY`: Used to power the "Auto Extract" AI features during flow uploads.
+- `SUPERADMIN_EMAIL` / `SUPERADMIN_PASSWORD`: Use these to bypass standard login if your Google Sheets connection breaks. This guarantees you will always have access to the `/admin` panel.
+
+> **💡 Tip:** See the `.env.example` file for a full list of all 20+ variables grouped logically (Auth, n8n Webhooks, Google Sheets, AI).
+
+---
+
+## 📂 Architecture
+
+- **Frontend**: [Next.js 15 (App Router)](https://nextjs.org/), TailwindCSS, Lucide Icons.
+- **Backend/API**: Next.js Serverless Route Handlers (`app/api/*`).
+- **Database/Storage**: Google Sheets (bridged automatically via n8n workflows).
+- **Styling**: Vanilla CSS Variables (`globals.css`) combined with Tailwind utility classes for maximum flexibility.
+
+---
+
+## 📄 License
+© 2026 FlowShare. All rights reserved.

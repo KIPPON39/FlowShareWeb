@@ -1186,7 +1186,7 @@ export function UploadSection() {
                         onClick={() => addContributorFromSearch(user)}
                         className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--accent-soft)] transition-colors border-b border-[var(--border)] last:border-b-0"
                       >
-                        <div className="h-8 w-8 rounded-full bg-[var(--accent-soft)] flex items-center justify-center text-[0.65rem] font-bold text-[var(--accent)] overflow-hidden flex-shrink-0">
+                        <div className="relative h-8 w-8 rounded-full bg-[var(--accent-soft)] flex items-center justify-center text-[0.65rem] font-bold text-[var(--accent)] overflow-hidden flex-shrink-0">
                           {user.imageUrl ? (
                             <Image src={user.imageUrl} alt={user.username} fill sizes="32px" className="object-cover" referrerPolicy="no-referrer" />
                           ) : (
