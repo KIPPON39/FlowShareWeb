@@ -59,14 +59,14 @@ export function Navbar() {
         <Link href="/" className="flex items-center gap-3 group">
           <div className="relative flex h-9 w-9 items-center justify-center rounded-[10px] overflow-hidden bg-[var(--surface-alt)] shadow-sm transition-transform duration-200 group-hover:scale-105 border border-[var(--border)]">
             <Image 
-              src="/logo_flowshare_lightmode.png" 
+              src="/logo_flowshare_lightmode.svg" 
               alt="FlowShare Logo" 
               fill 
               className="object-cover logo-light" 
               sizes="36px"
             />
             <Image 
-              src="/logo_flowshare_darkmode.png" 
+              src="/logo_flowshare_darkmode.svg" 
               alt="FlowShare Logo" 
               fill 
               className="object-cover logo-dark" 

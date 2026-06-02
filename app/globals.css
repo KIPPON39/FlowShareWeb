@@ -677,3 +677,11 @@
   /* fly past top of screen */
 }
 
+/* ─── Adaptive Icons ─── */
+.icon-adaptive {
+  transition: filter 300ms ease;
+}
+
+[data-theme="dark"] .icon-adaptive {
+  filter: brightness(0) invert(1);
+}
